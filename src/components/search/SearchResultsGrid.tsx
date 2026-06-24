@@ -1,0 +1,42 @@
+import { FamilySearchCard } from "@/components/search/FamilySearchCard";
+import { Card } from "@/components/ui/Card";
+import type { PublicListing } from "@/types/database";
+
+interface SearchResultsGridProps {
+  listings: PublicListing[];
+  coverPhotos: Record<string, string>;
+  savedListingIds?: string[];
+  showSaveButton?: boolean;
+}
+
+export function SearchResultsGrid({
+  listings,
+  coverPhotos,
+  savedListingIds = [],
+  showSaveButton = true,
+}: SearchResultsGridProps) {
+  if (listings.length === 0) {
+    return (
+      <Card variant="outline" padding="lg" className="text-center py-16">
+        <p className="text-lg font-medium text-forest mb-2">No families match your search</p>
+        <p className="text-sm text-charcoal-light max-w-md mx-auto">
+          Try adjusting your filters or searching a different destination to discover host families.
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
+      {listings.map((listing) => (
+        <FamilySearchCard
+          key={listing.id}
+          listing={listing}
+          coverPhotoUrl={coverPhotos[listing.id] ?? null}
+          isSaved={savedListingIds.includes(listing.id)}
+          showSaveButton={showSaveButton}
+        />
+      ))}
+    </div>
+  );
+}

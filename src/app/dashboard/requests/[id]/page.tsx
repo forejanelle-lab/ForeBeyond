@@ -1,0 +1,115 @@
+import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Calendar, Users } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { ApprovedStayLinks } from "@/components/stays/HostRequestActions";
+import { StayRequestStatusBadge } from "@/components/stays/StayRequestStatusBadge";
+import { formatDateRange } from "@/lib/stay-requests";
+import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
+import { Container } from "@/components/ui/Container";
+import type { PublicListing, StayBooking, StayRequest } from "@/types/database";
+
+export const metadata = { title: "Stay Request" };
+
+export default async function TravelerRequestDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect(`/auth/sign-in?redirect=/dashboard/requests/${id}`);
+
+  const { data: request } = await supabase
+    .from("stay_requests")
+    .select("*")
+    .eq("id", id)
+    .eq("traveler_id", user.id)
+    .single();
+
+  if (!request) notFound();
+
+  const typedRequest = request as StayRequest;
+
+  const [{ data: listing }, { data: host }, { data: booking }] = await Promise.all([
+    typedRequest.listing_id
+      ? supabase.from("public_listings").select("title, city, country").eq("id", typedRequest.listing_id).single()
+      : Promise.resolve({ data: null }),
+    supabase.from("profiles").select("full_name").eq("id", typedRequest.host_id).single(),
+    supabase.from("stay_bookings").select("trip_id").eq("stay_request_id", id).maybeSingle(),
+  ]);
+
+  const hostName = (host as { full_name: string | null } | null)?.full_name?.split(" ")[0] ?? "Host";
+  const tripId = (booking as Pick<StayBooking, "trip_id"> | null)?.trip_id ?? null;
+
+  return (
+    <Container size="md" className="py-10 md:py-16">
+      <Link href="/dashboard/requests" className="inline-flex items-center gap-2 text-sm text-forest hover:underline mb-6">
+        <ArrowLeft className="h-4 w-4" />
+        All requests
+      </Link>
+
+      <div className="flex items-center gap-3 mb-6">
+        <StayRequestStatusBadge status={typedRequest.status} />
+        <Badge variant="outline">Request #{typedRequest.id.slice(0, 8)}</Badge>
+      </div>
+
+      <h1 className="text-3xl font-bold text-forest mb-2">
+        {(listing as Pick<PublicListing, "title"> | null)?.title ?? "Stay request"}
+      </h1>
+      <p className="text-charcoal-light mb-8">Host: {hostName}</p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card variant="outline" padding="md">
+            <h2 className="font-semibold text-forest mb-3">Your introduction</h2>
+            <p className="text-charcoal-light whitespace-pre-wrap">{typedRequest.message}</p>
+          </Card>
+
+          <Card variant="outline" padding="md" className="space-y-3">
+            <p className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-forest" />
+              {formatDateRange(typedRequest.start_date, typedRequest.end_date)}
+            </p>
+            <p className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4 text-forest" />
+              {typedRequest.guest_count} guest{typedRequest.guest_count !== 1 ? "s" : ""}
+            </p>
+          </Card>
+
+          {typedRequest.host_response && (
+            <Card variant="outline" padding="md">
+              <h2 className="font-semibold text-forest mb-3">Host response</h2>
+              <p className="text-charcoal-light whitespace-pre-wrap">{typedRequest.host_response}</p>
+            </Card>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          {typedRequest.status === "approved" && (
+            <ApprovedStayLinks tripId={tripId} />
+          )}
+          {typedRequest.status === "pending" && (
+            <Card variant="outline" padding="md">
+              <p className="text-sm text-charcoal-light">
+                Waiting for {hostName} to review your request. You&apos;ll be able to message and pay once approved.
+              </p>
+            </Card>
+          )}
+          {typedRequest.status === "rejected" && (
+            <Card variant="outline" padding="md">
+              <p className="text-sm text-charcoal-light">
+                This request was declined. Browse other families to find your match.
+              </p>
+              <Link href="/search" className="inline-block mt-3 text-sm font-medium text-forest hover:underline">
+                Search families
+              </Link>
+            </Card>
+          )}
+        </div>
+      </div>
+    </Container>
+  );
+}

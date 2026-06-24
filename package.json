@@ -1,0 +1,44 @@
+{
+  "name": "fore-beyond",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "node scripts/run-migrations.mjs",
+    "db:fix-signup": "node scripts/run-sql.mjs supabase/migrations/003_fix_signup_trigger.sql",
+    "db:phase2": "node scripts/run-sql.mjs supabase/setup-phase2.sql",
+    "db:phase3": "node scripts/run-sql.mjs supabase/setup-phase3.sql",
+    "db:phase4": "node scripts/run-sql.mjs supabase/setup-phase4.sql",
+    "db:phase5": "node scripts/run-sql.mjs supabase/setup-phase5.sql",
+    "db:phase6": "node scripts/run-sql.mjs supabase/setup-phase6.sql",
+    "db:phase7": "node scripts/run-sql.mjs supabase/setup-phase7.sql",
+    "db:phase8": "node scripts/run-sql.mjs supabase/setup-phase8.sql",
+    "db:phase9": "node scripts/run-sql.mjs supabase/setup-phase9.sql",
+    "db:seed": "node scripts/seed-sample-users.mjs",
+    "db:discover": "node scripts/discover-db-url.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.8",
+    "@vercel/analytics": "^2.0.1",
+    "lucide-react": "^0.511.0",
+    "next": "^15.3.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@tailwindcss/postcss": "^4.1.8",
+    "@types/node": "^22.15.29",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.28.0",
+    "eslint-config-next": "^15.3.3",
+    "pg": "^8.22.0",
+    "tailwindcss": "^4.1.8",
+    "typescript": "^5.8.3"
+  }
+}
