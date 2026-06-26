@@ -37,7 +37,7 @@ const DEMO_USER = {
     familyActivities: ["Cooking together", "Neighborhood walks", "Local market visits", "Language lessons"],
     houseRules: ["Shoes off indoors", "Quiet hours after 10pm", "Respect local customs"],
     photoUrl:
-      "https://images.unsplash.com/photo-1528164344705-475426870970?w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&q=80",
   },
   experiences: [
     {
@@ -306,10 +306,95 @@ async function seedHostProfile(client, userId, hostProfile) {
   );
 }
 
+async function consolidateDemoHostListing(client, demoHostId, listingTitle) {
+  // Move published Maria listings from stale demo host accounts onto demo@forebeyond.demo
+  await client.query(
+    `UPDATE host_listings hl
+     SET host_id = $1, updated_at = NOW()
+     FROM auth.users u
+     WHERE hl.host_id = u.id
+       AND u.email LIKE '%@forebeyond.demo'
+       AND u.id <> $1
+       AND hl.title = $2
+       AND hl.status = 'published'`,
+    [demoHostId, listingTitle]
+  );
+
+  const { rows: canonicalRows } = await client.query(
+    `SELECT id FROM host_listings
+     WHERE host_id = $1 AND title = $2 AND status = 'published'
+     ORDER BY published_at DESC NULLS LAST, updated_at DESC
+     LIMIT 1`,
+    [demoHostId, listingTitle]
+  );
+  const canonicalId = canonicalRows[0]?.id;
+  if (!canonicalId) return null;
+
+  // Archive duplicate draft/extra listings for the demo host
+  await client.query(
+    `UPDATE host_listings
+     SET status = 'archived', updated_at = NOW()
+     WHERE host_id = $1 AND title = $2 AND id <> $3 AND status <> 'archived'`,
+    [demoHostId, listingTitle, canonicalId]
+  );
+
+  // Point stay data at the canonical listing + demo host
+  await client.query(
+    `UPDATE stay_requests
+     SET host_id = $1, listing_id = $2, updated_at = NOW()
+     WHERE traveler_id <> $1
+       AND (
+         listing_id IN (SELECT id FROM host_listings WHERE host_id = $1 AND title = $3)
+         OR host_id IN (
+           SELECT u.id FROM auth.users u
+           WHERE u.email LIKE '%@forebeyond.demo' AND u.id <> $1
+         )
+       )`,
+    [demoHostId, canonicalId, listingTitle]
+  );
+
+  await client.query(
+    `UPDATE trips
+     SET host_id = $1, listing_id = $2
+     WHERE listing_id IN (SELECT id FROM host_listings WHERE host_id = $1 AND title = $3)
+        OR host_id IN (
+          SELECT u.id FROM auth.users u
+          WHERE u.email LIKE '%@forebeyond.demo' AND u.id <> $1
+        )`,
+    [demoHostId, canonicalId, listingTitle]
+  );
+
+  await client.query(
+    `UPDATE stay_bookings
+     SET host_id = $1, listing_id = $2, updated_at = NOW()
+     WHERE listing_id IN (SELECT id FROM host_listings WHERE host_id = $1 AND title = $3)
+        OR host_id IN (
+          SELECT u.id FROM auth.users u
+          WHERE u.email LIKE '%@forebeyond.demo' AND u.id <> $1
+        )`,
+    [demoHostId, canonicalId, listingTitle]
+  );
+
+  await client.query(
+    `UPDATE conversations
+     SET host_id = $1, updated_at = NOW()
+     WHERE host_id IN (
+       SELECT u.id FROM auth.users u
+       WHERE u.email LIKE '%@forebeyond.demo' AND u.id <> $1
+     )`,
+    [demoHostId]
+  );
+
+  return canonicalId;
+}
+
 async function seedListing(client, userId, listing) {
   const existing = await client.query(
-    "SELECT id FROM host_listings WHERE host_id = $1 ORDER BY created_at LIMIT 1",
-    [userId]
+    `SELECT id, status FROM host_listings
+     WHERE host_id = $1 AND title = $2
+     ORDER BY CASE WHEN status = 'published' THEN 0 ELSE 1 END, created_at
+     LIMIT 1`,
+    [userId, listing.title]
   );
 
   let listingId = existing.rows[0]?.id;
@@ -366,7 +451,8 @@ async function seedListing(client, userId, listing) {
     [listingId, listing.photoUrl]
   );
 
-  return listingId;
+  const canonicalId = await consolidateDemoHostListing(client, userId, listing.title);
+  return canonicalId ?? listingId;
 }
 
 async function seedExperiences(client, userId, experiences) {
@@ -572,7 +658,7 @@ async function seedCompletedTripWithReviews(client, travelerId, hostId, listingI
   const moderationTripId = "f1000000-0000-4000-8000-000000000002";
 
   await client.query(
-    `UPDATE profiles SET is_trust_moderator = TRUE, is_admin = TRUE WHERE id = $1`,
+    `UPDATE profiles SET is_trust_moderator = FALSE, is_admin = FALSE WHERE id = $1`,
     [hostId]
   );
 

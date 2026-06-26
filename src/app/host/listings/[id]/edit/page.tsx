@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ListingWizard } from "@/components/listings/ListingWizard";
 import { Container } from "@/components/ui/Container";
-import type { HostListing, ListingPhoto, Profile } from "@/types/database";
+import type { HostListing, ListingContactDetails, ListingPhoto, Profile } from "@/types/database";
 
 export const metadata = { title: "Edit Listing" };
 
@@ -31,6 +31,12 @@ export default async function EditListingPage({
     .eq("listing_id", id)
     .order("sort_order");
 
+  const { data: contactDetails } = await supabase
+    .from("listing_contact_details")
+    .select("contact_email, contact_address")
+    .eq("listing_id", id)
+    .maybeSingle();
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name")
@@ -50,6 +56,7 @@ export default async function EditListingPage({
         hostName={(profile as Pick<Profile, "full_name"> | null)?.full_name}
         listing={listing as HostListing}
         existingPhotos={(photos as ListingPhoto[]) ?? []}
+        contactDetails={contactDetails as Pick<ListingContactDetails, "contact_email" | "contact_address"> | null}
         mode="edit"
       />
     </Container>

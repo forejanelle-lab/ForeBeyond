@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isPlatformAdmin } from "@/lib/navigation-menu";
 import type { Profile } from "@/types/database";
 
 export const ADMIN_NAV = [
@@ -36,7 +37,7 @@ export async function requireAdmin(
     "id" | "full_name" | "email" | "is_admin" | "is_trust_moderator" | "role"
   > | null;
 
-  if (!typedProfile?.is_admin) {
+  if (!isPlatformAdmin(user.email ?? "", typedProfile?.is_admin ?? false)) {
     notFound();
   }
 

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getStayMessagingLockReason, isStayMessagingOpen } from "@/lib/messaging";
 import { ChatThread } from "@/components/messaging/ChatThread";
 import { Container } from "@/components/ui/Container";
 import type { Conversation, StayRequest } from "@/types/database";
@@ -37,14 +38,16 @@ export default async function ConversationPage({
     supabase.from("profiles").select("full_name").eq("id", otherId).single(),
     supabase
       .from("stay_requests")
-      .select("status")
+      .select("status, end_date")
       .eq("id", typedConversation.stay_request_id)
       .single(),
   ]);
 
   const otherName =
     (otherProfile as { full_name: string | null } | null)?.full_name?.split(" ")[0] ?? "Guest";
-  const unlocked = (stayRequest as Pick<StayRequest, "status"> | null)?.status === "approved";
+  const stayRequestData = stayRequest as Pick<StayRequest, "status" | "end_date"> | null;
+  const unlocked = isStayMessagingOpen(stayRequestData);
+  const lockReason = getStayMessagingLockReason(stayRequestData);
 
   return (
     <Container className="py-4 md:py-6 max-w-2xl">
@@ -62,6 +65,7 @@ export default async function ConversationPage({
         userId={user.id}
         otherPartyName={otherName}
         unlocked={unlocked}
+        lockReason={lockReason}
       />
     </Container>
   );

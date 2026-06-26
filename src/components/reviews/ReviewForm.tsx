@@ -65,8 +65,7 @@ export function ReviewForm({
     return (
       <Card variant="outline" padding="md" className="bg-sage/30">
         <p className="text-sm text-forest font-medium">
-          Thank you! Your review has been submitted
-          {rating >= 4 ? " and is now visible." : " and is pending moderation."}
+          Thank you! Your review has been posted.
         </p>
       </Card>
     );

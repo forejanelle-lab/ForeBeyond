@@ -47,6 +47,14 @@
   ::selection {
     @apply bg-sage text-forest;
   }
+
+  details > summary {
+    list-style: none;
+  }
+
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
 }
 
 @layer utilities {
@@ -60,5 +68,18 @@
 
   .gradient-gold {
     background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-light) 100%);
+  }
+
+  .card-premium {
+    @apply rounded-2xl bg-white shadow-lg border border-sage-dark/20;
+  }
+
+  .hero-overlay {
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.75) 0%,
+      rgb(0 0 0 / 0.35) 45%,
+      rgb(0 0 0 / 0.15) 100%
+    );
   }
 }

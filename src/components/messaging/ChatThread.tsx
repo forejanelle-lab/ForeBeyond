@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Check, CheckCheck, ImagePlus, Send } from "lucide-react";
+import { Check, CheckCheck, Send } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   buildReadMap,
@@ -20,6 +20,7 @@ interface ChatThreadProps {
   userId: string;
   otherPartyName: string;
   unlocked: boolean;
+  lockReason?: string;
   compact?: boolean;
 }
 
@@ -29,6 +30,7 @@ export function ChatThread({
   userId,
   otherPartyName,
   unlocked,
+  lockReason = "Messaging unlocks after the host approves your stay request.",
   compact = false,
 }: ChatThreadProps) {
   const [messages, setMessages] = useState<StayMessage[]>([]);
@@ -36,9 +38,7 @@ export function ChatThread({
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const readMap = buildReadMap(reads);
   const otherUserIdRef = useRef<string | null>(null);
 
@@ -176,46 +176,10 @@ export function ChatThread({
     await sendMessage({ body: body.trim(), messageType: "text" });
   }
 
-  async function handleImageUpload(files: FileList | null) {
-    if (!files?.length) return;
-    const file = files[0];
-    if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be under 5MB");
-      return;
-    }
-
-    setUploading(true);
-    setError("");
-    const supabase = createClient();
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `${userId}/${conversationId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("message-attachments")
-      .upload(path, file, { upsert: false });
-
-    if (uploadError) {
-      setError(uploadError.message);
-      setUploading(false);
-      return;
-    }
-
-    const { data: urlData } = supabase.storage.from("message-attachments").getPublicUrl(path);
-    await sendMessage({ attachmentUrl: urlData.publicUrl, messageType: "image" });
-    setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
-  }
-
   if (!unlocked) {
     return (
       <Card variant="outline" padding="md">
-        <p className="text-sm text-charcoal-light">
-          Messaging unlocks after the host approves your stay request.
-        </p>
+        <p className="text-sm text-charcoal-light">{lockReason}</p>
       </Card>
     );
   }
@@ -308,22 +272,6 @@ export function ChatThread({
           <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
         )}
         <div className="flex items-end gap-2">
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading || isLoading}
-            className="shrink-0 flex h-11 w-11 items-center justify-center rounded-full border border-sage-dark bg-white hover:bg-sage/40 transition-colors"
-            aria-label="Upload image"
-          >
-            <ImagePlus className="h-5 w-5 text-forest" />
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            className="hidden"
-            onChange={(e) => handleImageUpload(e.target.files)}
-          />
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -341,7 +289,7 @@ export function ChatThread({
             type="submit"
             variant="primary"
             size="md"
-            isLoading={isLoading || uploading}
+            isLoading={isLoading}
             className="shrink-0 h-11 w-11 !p-0 rounded-full"
             aria-label="Send message"
           >

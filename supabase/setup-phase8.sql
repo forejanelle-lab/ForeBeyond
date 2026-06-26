@@ -142,12 +142,8 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF NEW.rating >= 4 THEN
-    NEW.moderation_status := 'approved';
-    NEW.moderated_at := NOW();
-  ELSE
-    NEW.moderation_status := 'pending';
-  END IF;
+  NEW.moderation_status := 'approved';
+  NEW.moderated_at := NOW();
   RETURN NEW;
 END;
 $$;

@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { Compass, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { sampleImages } from "@/lib/sample-images";
+import { PageHero } from "@/components/design/PageHero";
+import { SearchMapPlaceholder } from "@/components/design/SearchMapPlaceholder";
 import { SearchFiltersPanel } from "@/components/search/SearchFiltersPanel";
 import { SearchResultsGrid } from "@/components/search/SearchResultsGrid";
 import { SearchAnalyticsTracker } from "@/components/analytics/SearchAnalyticsTracker";
-import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import {
   filterListingsClientSide,
@@ -66,16 +68,20 @@ async function SearchResults({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 lg:gap-8">
+    <>
       <SearchFiltersPanel countries={countries} resultCount={filtered.length} />
-      <div>
-        <SearchResultsGrid
-          listings={filtered}
-          coverPhotos={coverPhotos}
-          savedListingIds={savedListingIds}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_minmax(240px,320px)] gap-6 md:gap-8">
+        <div className="space-y-6 min-w-0">
+          <SearchResultsGrid
+            listings={filtered}
+            coverPhotos={coverPhotos}
+            savedListingIds={savedListingIds}
+            layout="list"
+          />
+        </div>
+        <SearchMapPlaceholder listings={filtered} />
       </div>
-    </div>
+    </>
   );
 }
 
@@ -87,36 +93,38 @@ export default async function SearchFamiliesPage({
   const params = await searchParams;
 
   return (
-    <Container className="py-10 md:py-16 lg:py-20">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
-        <div>
-          <Badge variant="gold" className="mb-4">
-            <Compass className="h-3 w-3" />
-            Search Families
-          </Badge>
-          <h1 className="text-3xl md:text-4xl font-bold text-forest">
-            Find your host family
-          </h1>
-          <p className="mt-2 text-charcoal-light max-w-2xl">
-            Discover verified families offering authentic cultural immersion around the world.
+    <>
+      <PageHero
+        image={sampleImages.japanStreet}
+        imageAlt="Families offering cultural stays"
+        eyebrow="Search Families"
+        title="Find your host family"
+        subtitle="Discover verified families offering authentic cultural immersion around the world."
+        height="md"
+      />
+
+      <Container className="py-10 md:py-14">
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <p className="text-sm text-charcoal-light hidden md:block">
+            Filter by budget, language, meals, and verification status
           </p>
+          <Link
+            href="/saved"
+            className="inline-flex items-center gap-2 text-sm font-medium text-forest hover:underline"
+          >
+            <Heart className="h-4 w-4" />
+            Saved families
+          </Link>
         </div>
-        <Link
-          href="/saved"
-          className="inline-flex items-center gap-2 text-sm font-medium text-forest hover:underline"
-        >
-          <Heart className="h-4 w-4" />
-          Saved families
-        </Link>
-      </div>
 
-      <Suspense fallback={null}>
-        <SearchAnalyticsTracker />
-      </Suspense>
+        <Suspense fallback={null}>
+          <SearchAnalyticsTracker />
+        </Suspense>
 
-      <Suspense fallback={<p className="text-sm text-charcoal-light">Loading families...</p>}>
-        <SearchResults searchParams={params} />
-      </Suspense>
-    </Container>
+        <Suspense fallback={<p className="text-sm text-charcoal-light">Loading families...</p>}>
+          <SearchResults searchParams={params} />
+        </Suspense>
+      </Container>
+    </>
   );
 }

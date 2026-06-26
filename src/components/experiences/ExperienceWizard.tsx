@@ -16,10 +16,13 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ExperiencePhotoUpload } from "@/components/experiences/ExperiencePhotoUpload";
+import { ExperienceVisibilityToggle } from "@/components/experiences/ExperienceVisibilityToggle";
+import { EXPERIENCE_VISIBILITY_LABELS } from "@/lib/experience-visibility";
 import type {
   ExperienceCategory,
   ExperiencePhoto,
   ExperienceStatus,
+  ExperienceVisibility,
   HostExperience,
 } from "@/types/database";
 
@@ -60,7 +63,12 @@ export function ExperienceWizard({
   );
   const [includes, setIncludes] = useState<string[]>(experience?.includes ?? []);
   const [requirements, setRequirements] = useState<string[]>(experience?.requirements ?? []);
+  const [customInclude, setCustomInclude] = useState("");
+  const [customRequirement, setCustomRequirement] = useState("");
   const [photos, setPhotos] = useState<ExperiencePhoto[]>(existingPhotos);
+  const [visibility, setVisibility] = useState<ExperienceVisibility>(
+    experience?.visibility ?? "all_members"
+  );
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -114,6 +122,7 @@ export function ExperienceWizard({
       price_per_person: pricePerPerson ? parseInt(pricePerPerson, 10) : null,
       includes,
       requirements,
+      visibility,
       status,
       published_at: status === "published" ? new Date().toISOString() : null,
     };
@@ -249,7 +258,15 @@ export function ExperienceWizard({
             <div>
               <h2 className="text-xl font-semibold text-forest">Experience details</h2>
               <p className="text-sm text-charcoal-light mt-1">Set pricing, duration, and what travelers should know.</p>
+              <p className="text-xs text-charcoal-light mt-3 rounded-xl bg-sage/40 p-3 border border-sage-dark/20">
+                <strong className="text-forest">Experiences with accommodations:</strong> To foster
+                community, experiences included with a stay should be free when possible — travelers
+                are more likely to book families who share culture generously. If there is significant
+                additional cost beyond your nightly rate, note it clearly in your description and
+                pricing.
+              </p>
             </div>
+            <ExperienceVisibilityToggle value={visibility} onChange={setVisibility} />
             <Input
               label="Meeting point"
               value={meetingPoint}
@@ -291,8 +308,8 @@ export function ExperienceWizard({
             </div>
 
             {[
-              { label: "What's included", items: EXPERIENCE_INCLUDES, selected: includes, set: setIncludes },
-              { label: "Requirements", items: EXPERIENCE_REQUIREMENTS, selected: requirements, set: setRequirements },
+              { label: "What's included", items: EXPERIENCE_INCLUDES, selected: includes, set: setIncludes, custom: customInclude, setCustom: setCustomInclude },
+              { label: "Requirements", items: EXPERIENCE_REQUIREMENTS, selected: requirements, set: setRequirements, custom: customRequirement, setCustom: setCustomRequirement },
             ].map((group) => (
               <div key={group.label}>
                 <p className="text-sm font-medium text-charcoal mb-2">{group.label}</p>
@@ -312,6 +329,45 @@ export function ExperienceWizard({
                     </button>
                   ))}
                 </div>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    value={group.custom}
+                    onChange={(e) => group.setCustom(e.target.value)}
+                    placeholder={`Add custom ${group.label.toLowerCase()}...`}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      const value = group.custom.trim();
+                      if (value && !group.selected.includes(value)) {
+                        group.set([...group.selected, value]);
+                        group.setCustom("");
+                      }
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+                {group.selected.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {group.selected.map((item) => (
+                      <Badge key={item} variant="outline" className="text-xs">
+                        {item}
+                        <button
+                          type="button"
+                          className="ml-1 text-charcoal-light hover:text-forest"
+                          onClick={() => group.set(group.selected.filter((i) => i !== item))}
+                          aria-label={`Remove ${item}`}
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -341,13 +397,16 @@ export function ExperienceWizard({
             <div>
               <h2 className="text-xl font-semibold text-forest">Review & publish</h2>
               <p className="text-sm text-charcoal-light mt-1">
-                Your experience will appear in the marketplace and can be booked independently of accommodations.
+                {visibility === "approved_guests_only"
+                  ? "Only travelers with an approved stay at your accommodation will see and book this experience."
+                  : "Your experience will appear in the marketplace and can be booked independently of accommodations."}
               </p>
             </div>
             <div className="rounded-xl bg-sage/40 p-4 space-y-2 text-sm">
               <p><strong className="text-forest">Title:</strong> {generateExperienceTitle(category, city, country)}</p>
               <p><strong className="text-forest">Category:</strong> {EXPERIENCE_CATEGORIES.find((c) => c.value === category)?.label}</p>
               <p><strong className="text-forest">Location:</strong> {[city, country].filter(Boolean).join(", ")}</p>
+              <p><strong className="text-forest">Visibility:</strong> {EXPERIENCE_VISIBILITY_LABELS[visibility].label}</p>
               <p><strong className="text-forest">Photos:</strong> {photos.length} uploaded</p>
             </div>
           </div>

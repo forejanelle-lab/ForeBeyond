@@ -7,6 +7,7 @@ interface SearchResultsGridProps {
   coverPhotos: Record<string, string>;
   savedListingIds?: string[];
   showSaveButton?: boolean;
+  layout?: "grid" | "list";
 }
 
 export function SearchResultsGrid({
@@ -14,6 +15,7 @@ export function SearchResultsGrid({
   coverPhotos,
   savedListingIds = [],
   showSaveButton = true,
+  layout = "list",
 }: SearchResultsGridProps) {
   if (listings.length === 0) {
     return (
@@ -27,7 +29,7 @@ export function SearchResultsGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
+    <div className={layout === "list" ? "space-y-4" : "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6"}>
       {listings.map((listing) => (
         <FamilySearchCard
           key={listing.id}
@@ -35,6 +37,7 @@ export function SearchResultsGrid({
           coverPhotoUrl={coverPhotos[listing.id] ?? null}
           isSaved={savedListingIds.includes(listing.id)}
           showSaveButton={showSaveButton}
+          layout={layout}
         />
       ))}
     </div>

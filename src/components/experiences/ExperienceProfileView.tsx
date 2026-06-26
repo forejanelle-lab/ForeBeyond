@@ -3,6 +3,7 @@ import { Clock, Globe, MapPin, Shield, Users } from "lucide-react";
 import { ListingTrustPanel } from "@/components/listings/ListingTrustPanel";
 import { BookExperienceForm } from "@/components/experiences/BookExperienceForm";
 import { SaveExperienceButton } from "@/components/experiences/SaveExperienceButton";
+import { ExperienceCoverFallback } from "@/components/experiences/ExperienceCoverFallback";
 import {
   formatDuration,
   formatPrice,
@@ -34,7 +35,7 @@ export function ExperienceProfileView({
     <>
       <Section background="cream" className="!py-0">
         <div className="relative h-64 md:h-96 bg-sage">
-          {coverPhoto && (
+          {coverPhoto ? (
             <Image
               src={coverPhoto.file_url}
               alt={experience.title ?? "Experience"}
@@ -43,6 +44,8 @@ export function ExperienceProfileView({
               priority
               sizes="100vw"
             />
+          ) : (
+            <ExperienceCoverFallback size="lg" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <Container className="absolute bottom-0 left-0 right-0 pb-6 md:pb-8">

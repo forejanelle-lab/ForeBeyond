@@ -1,15 +1,23 @@
+"use client";
+
 import { Suspense } from "react";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Mail } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { AuthBrandHeader } from "@/components/auth/AuthBrandHeader";
+import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 
-function CheckEmailContent({ searchParams }: { searchParams: { email?: string } }) {
-  const email = searchParams.email || "your email";
+function CheckEmailContent() {
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") ?? "";
+  const autoResend = searchParams.get("resend") === "1";
+  const existing = searchParams.get("existing") === "1";
 
   return (
     <Container size="sm" className="py-16 md:py-24">
+      <AuthBrandHeader />
       <Card variant="elevated" padding="lg" className="text-center">
         <div className="flex justify-center mb-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sage">
@@ -18,42 +26,52 @@ function CheckEmailContent({ searchParams }: { searchParams: { email?: string } 
         </div>
 
         <h1 className="text-2xl font-bold text-forest">Check your email</h1>
-        <p className="mt-3 text-charcoal-light leading-relaxed">
-          We sent a verification link to{" "}
-          <span className="font-medium text-charcoal">{email}</span>.
-          Click the link to verify your account and continue.
-        </p>
+        {existing ? (
+          <p className="mt-3 text-charcoal-light leading-relaxed">
+            An account with{" "}
+            <span className="font-medium text-charcoal">{email || "this email"}</span> already
+            exists but isn&apos;t verified yet. We can send a fresh verification link below.
+          </p>
+        ) : (
+          <p className="mt-3 text-charcoal-light leading-relaxed">
+            We sent a verification link to{" "}
+            <span className="font-medium text-charcoal">{email || "your email"}</span>.
+            Click the link to verify your account and continue.
+          </p>
+        )}
 
         <div className="mt-8 space-y-3">
-          <Link href="/auth/verify-email">
-            <Button variant="primary" size="md" className="w-full">
-              I&apos;ve verified my email
-            </Button>
-          </Link>
-          <Link href="/auth/sign-in">
-            <Button variant="ghost" size="md" className="w-full">
-              Back to sign in
-            </Button>
-          </Link>
+          <ButtonLink href="/auth/verify-email" variant="primary" size="md" className="w-full">
+            I&apos;ve verified my email
+          </ButtonLink>
+          <ButtonLink href="/auth/sign-in" variant="ghost" size="md" className="w-full">
+            Back to sign in
+          </ButtonLink>
         </div>
 
         <p className="mt-6 text-xs text-charcoal-light">
-          Didn&apos;t receive the email? Check your spam folder or try signing up again.
+          Didn&apos;t receive the email? Check spam, or resend to the same address below.
         </p>
+        <ResendVerificationEmail
+          email={email}
+          autoSend={autoResend}
+          showEmailField={!email}
+        />
       </Card>
     </Container>
   );
 }
 
-export default async function CheckEmailPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ email?: string }>;
-}) {
-  const params = await searchParams;
+export default function CheckEmailPage() {
   return (
-    <Suspense>
-      <CheckEmailContent searchParams={params} />
+    <Suspense
+      fallback={
+        <Container size="sm" className="py-16 text-center text-charcoal-light">
+          Loading...
+        </Container>
+      }
+    >
+      <CheckEmailContent />
     </Suspense>
   );
 }

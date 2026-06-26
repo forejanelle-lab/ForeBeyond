@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { ExperienceProfileView } from "@/components/experiences/ExperienceProfileView";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
+import {
+  canViewExperience,
+  fetchApprovedHostIdsForUser,
+} from "@/lib/experience-visibility";
 import type { ExperiencePhoto, PublicExperience, PublicReview, TrustBadge } from "@/types/database";
 
 export async function generateMetadata({
@@ -38,6 +42,20 @@ export default async function ExperienceDetailPage({
   if (!experience) notFound();
 
   const typedExperience = experience as PublicExperience;
+
+  let approvedHostIds: Set<string> | undefined;
+  if (user) {
+    approvedHostIds = await fetchApprovedHostIdsForUser(supabase, user.id);
+  }
+
+  if (
+    !canViewExperience(typedExperience, {
+      userId: user?.id,
+      approvedHostIds,
+    })
+  ) {
+    notFound();
+  }
 
   const [{ data: photos }, { data: badges }, { data: reviews }, savedResult] =
     await Promise.all([

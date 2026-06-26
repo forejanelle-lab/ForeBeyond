@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "pkill -f \"next dev\" 2>/dev/null || true; rm -rf .next && next dev",
+    "prebuild": "pkill -f \"next dev\" 2>/dev/null || true",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -17,7 +19,19 @@
     "db:phase7": "node scripts/run-sql.mjs supabase/setup-phase7.sql",
     "db:phase8": "node scripts/run-sql.mjs supabase/setup-phase8.sql",
     "db:phase9": "node scripts/run-sql.mjs supabase/setup-phase9.sql",
+    "db:migration-023": "node scripts/run-sql.mjs supabase/migrations/023_host_approved_and_experience_other.sql",
+    "db:migration-024": "node scripts/run-sql.mjs supabase/migrations/024_profile_avatars_storage.sql",
+    "db:migration-025": "node scripts/run-sql.mjs supabase/migrations/025_profile_avatars_policies.sql",
+    "db:migration-026": "node scripts/run-sql.mjs supabase/migrations/026_listing_guest_tier_pricing.sql",
+    "db:migration-027": "node scripts/run-sql.mjs supabase/migrations/027_messaging_gates_and_dates.sql",
+    "db:migration-028": "node scripts/run-sql.mjs supabase/migrations/028_listing_max_capacity.sql",
+    "db:migration-029": "node scripts/run-sql.mjs supabase/migrations/029_listing_contact_details.sql",
+    "db:migration-030": "node scripts/run-sql.mjs supabase/migrations/030_experience_visibility.sql",
+    "db:migration-031": "node scripts/run-sql.mjs supabase/migrations/031_ensure_stay_conversation.sql",
+    "supabase:auth-urls": "node scripts/configure-supabase-auth-urls.mjs",
     "db:seed": "node scripts/seed-sample-users.mjs",
+    "db:fix-demo-host": "node scripts/fix-demo-host.mjs",
+    "db:delete-user": "node scripts/delete-user.mjs",
     "db:discover": "node scripts/discover-db-url.mjs"
   },
   "dependencies": {

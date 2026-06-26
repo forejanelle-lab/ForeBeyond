@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Plus, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ExperienceCard } from "@/components/experiences/ExperienceCard";
-import { Button } from "@/components/ui/Button";
+import { HostExperienceBookings } from "@/components/experiences/HostExperienceBookings";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import type { ExperiencePhoto, HostExperience } from "@/types/database";
@@ -51,6 +51,44 @@ export default async function ManageExperiencesPage() {
     }
   }
 
+  const { data: bookings } = await supabase
+    .from("experience_bookings")
+    .select("*")
+    .eq("host_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const typedBookings = (bookings ?? []) as import("@/types/database").ExperienceBooking[];
+  const travelerIds = [...new Set(typedBookings.map((b) => b.traveler_id))];
+  const bookingExperienceIds = [...new Set(typedBookings.map((b) => b.experience_id))];
+
+  const [{ data: travelers }, { data: bookingExperiences }] = await Promise.all([
+    travelerIds.length > 0
+      ? supabase.from("profiles").select("id, full_name").in("id", travelerIds)
+      : Promise.resolve({ data: [] }),
+    bookingExperienceIds.length > 0
+      ? supabase.from("host_experiences").select("id, title").in("id", bookingExperienceIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const travelerMap = Object.fromEntries(
+    ((travelers as { id: string; full_name: string | null }[]) ?? []).map((t) => [
+      t.id,
+      t.full_name?.split(" ")[0] ?? "Traveler",
+    ])
+  );
+  const experienceTitleMap = Object.fromEntries(
+    ((bookingExperiences as { id: string; title: string | null }[]) ?? []).map((e) => [
+      e.id,
+      e.title ?? "Experience",
+    ])
+  );
+
+  const bookingRows = typedBookings.map((b) => ({
+    ...b,
+    traveler_name: travelerMap[b.traveler_id] ?? "Traveler",
+    experience_title: experienceTitleMap[b.experience_id] ?? "Experience",
+  }));
+
   return (
     <Container className="py-16 md:py-24">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
@@ -64,23 +102,19 @@ export default async function ManageExperiencesPage() {
             {typedExperiences.length} experience{typedExperiences.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link href="/host/experiences/new">
-          <Button variant="primary" size="md">
-            <Plus className="h-4 w-4" />
-            New Experience
-          </Button>
-        </Link>
+        <ButtonLink href="/host/experiences/new" variant="primary" size="md">
+          <Plus className="h-4 w-4" />
+          New Experience
+        </ButtonLink>
       </div>
 
       {typedExperiences.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-sage-dark/40 bg-sage/20">
           <p className="text-charcoal-light mb-4">You haven&apos;t created an experience yet.</p>
-          <Link href="/host/experiences/new">
-            <Button variant="primary" size="lg">
-              <Plus className="h-4 w-4" />
-              Create Your First Experience
-            </Button>
-          </Link>
+          <ButtonLink href="/host/experiences/new" variant="primary" size="lg">
+            <Plus className="h-4 w-4" />
+            Create Your First Experience
+          </ButtonLink>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -89,10 +123,13 @@ export default async function ManageExperiencesPage() {
               key={experience.id}
               experience={experience}
               coverPhoto={coverMap[experience.id] ?? null}
+              hostId={user.id}
             />
           ))}
         </div>
       )}
+
+      <HostExperienceBookings bookings={bookingRows} hostId={user.id} />
     </Container>
   );
 }

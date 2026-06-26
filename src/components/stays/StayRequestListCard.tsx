@@ -1,0 +1,114 @@
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { formatCurrency, formatBookingReference, formatDateRange, STAY_REQUEST_STATUS_LABELS } from "@/lib/stay-requests";
+import { Badge } from "@/components/ui/Badge";
+import type { StayRequest } from "@/types/database";
+
+interface StayRequestListCardProps {
+  request: StayRequest;
+  travelerName: string;
+  listingTitle: string;
+  incomeTotal: number | null;
+  href: string;
+}
+
+export function StayRequestTableRow({
+  request,
+  travelerName,
+  listingTitle,
+  incomeTotal,
+  href,
+}: StayRequestListCardProps) {
+  const status = STAY_REQUEST_STATUS_LABELS[request.status] ?? STAY_REQUEST_STATUS_LABELS.pending;
+
+  return (
+    <tr className="group border-b border-sage-dark/20 last:border-b-0 hover:bg-sage/25">
+      <td className="px-4 py-4 align-middle">
+        <Link href={href} className="block min-w-0">
+          <p className="font-semibold text-forest truncate group-hover:text-forest-light transition-colors">
+            {travelerName}
+          </p>
+          <p className="text-xs text-charcoal-light mt-0.5 truncate">{listingTitle}</p>
+          <p className="text-[10px] font-mono text-charcoal-light/80 mt-0.5">
+            Ref {formatBookingReference(request.id)}
+          </p>
+        </Link>
+      </td>
+      <td className="px-4 py-4 align-middle">
+        <Link href={href} className="block min-w-0">
+          <p className="text-sm text-charcoal whitespace-nowrap">
+            {formatDateRange(request.start_date, request.end_date)}
+          </p>
+          <p className="text-xs text-charcoal-light mt-0.5 whitespace-nowrap">
+            {request.guest_count} guest{request.guest_count !== 1 ? "s" : ""}
+          </p>
+        </Link>
+      </td>
+      <td className="px-4 py-4 align-middle text-right">
+        <Link href={href} className="block text-sm font-bold text-forest tabular-nums whitespace-nowrap">
+          {incomeTotal != null && incomeTotal > 0 ? formatCurrency(incomeTotal) : "—"}
+        </Link>
+      </td>
+      <td className="px-4 py-4 align-middle">
+        <Link href={href} className="flex items-center justify-end gap-2">
+          <Badge variant={status.variant} className="whitespace-nowrap">
+            {status.label}
+          </Badge>
+          <ChevronRight className="h-4 w-4 text-charcoal-light group-hover:text-forest shrink-0" />
+        </Link>
+      </td>
+    </tr>
+  );
+}
+
+export function StayRequestListCard({
+  request,
+  travelerName,
+  listingTitle,
+  incomeTotal,
+  href,
+}: StayRequestListCardProps) {
+  const status = STAY_REQUEST_STATUS_LABELS[request.status] ?? STAY_REQUEST_STATUS_LABELS.pending;
+
+  return (
+    <Link href={href} className="block group px-4 py-4 hover:bg-sage/25 transition-colors sm:hidden">
+      <div className="space-y-3">
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-charcoal-light mb-0.5">
+            Guest
+          </p>
+          <p className="font-semibold text-forest truncate group-hover:text-forest-light transition-colors">
+            {travelerName}
+          </p>
+          <p className="text-xs text-charcoal-light mt-0.5 truncate">{listingTitle}</p>
+          <p className="text-[10px] font-mono text-charcoal-light/80 mt-0.5">
+            Ref {formatBookingReference(request.id)}
+          </p>
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-wide font-medium text-charcoal-light mb-0.5">
+            Dates
+          </p>
+          <p className="text-sm text-charcoal">{formatDateRange(request.start_date, request.end_date)}</p>
+          <p className="text-xs text-charcoal-light mt-0.5">
+            {request.guest_count} guest{request.guest_count !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-wide font-medium text-charcoal-light mb-0.5">
+            Value
+          </p>
+          <p className="text-sm font-bold text-forest tabular-nums">
+            {incomeTotal != null && incomeTotal > 0 ? formatCurrency(incomeTotal) : "—"}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-3">
+          <Badge variant={status.variant}>{status.label}</Badge>
+        </div>
+      </div>
+    </Link>
+  );
+}

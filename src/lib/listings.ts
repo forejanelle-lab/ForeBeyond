@@ -49,6 +49,18 @@ export const LISTING_STATUS_LABELS = {
   archived: { label: "Archived", variant: "default" as const },
 };
 
+export function extractHostLastName(fullName?: string | null): string {
+  if (!fullName?.trim()) return "";
+  const parts = fullName.trim().split(/\s+/);
+  return parts[parts.length - 1] ?? "";
+}
+
+export function defaultFamilyListingTitle(hostName?: string | null): string {
+  const lastName = extractHostLastName(hostName);
+  if (!lastName) return "The Family";
+  return `The ${lastName} Family`;
+}
+
 export function generateListingTitle(city: string, country: string, hostName?: string | null) {
   const location = [city, country].filter(Boolean).join(", ");
   if (hostName) return `${hostName}'s Family in ${location}`;

@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Save } from "lucide-react";
+import { Save } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Container } from "@/components/ui/Container";
-import { Badge } from "@/components/ui/Badge";
 import type { PrivacySettings } from "@/types/database";
 
 export default function PrivacySettingsPage() {
@@ -33,11 +32,7 @@ export default function PrivacySettingsPage() {
         return;
       }
 
-      const { data } = await supabase
-        .from("privacy_settings")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      const { data } = await supabase.from("privacy_settings").select("*").eq("user_id", user.id).single();
 
       if (data) setSettings(data as PrivacySettings);
       setIsLoading(false);
@@ -70,26 +65,15 @@ export default function PrivacySettingsPage() {
 
   if (isLoading) {
     return (
-      <Container className="py-16 flex justify-center">
+      <div className="flex justify-center py-20">
         <span className="h-8 w-8 animate-spin rounded-full border-2 border-forest border-t-transparent" />
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container size="sm" className="py-16 md:py-24">
-      <div className="mb-8">
-        <Badge variant="gold" className="mb-4">
-          <Shield className="h-3 w-3" />
-          Privacy Settings
-        </Badge>
-        <h1 className="text-3xl font-bold text-forest">Your privacy, your control</h1>
-        <p className="mt-2 text-charcoal-light">
-          Personal details like email and phone are hidden until a stay request is approved.
-        </p>
-      </div>
-
-      <Card variant="elevated" padding="lg" className="space-y-6">
+    <PageShell title="Privacy Settings" subtitle="Control your data and visibility">
+      <Card variant="elevated" padding="lg" className="max-w-2xl space-y-6">
         <section>
           <h2 className="font-semibold text-forest mb-3">Profile Visibility</h2>
           <div className="space-y-3">
@@ -133,7 +117,11 @@ export default function PrivacySettingsPage() {
         </section>
 
         {message && (
-          <p className={`text-sm rounded-lg px-4 py-3 ${message.includes("saved") ? "bg-sage text-forest" : "bg-red-50 text-red-600"}`}>
+          <p
+            className={`text-sm rounded-xl px-4 py-3 ${
+              message.includes("saved") ? "bg-sage text-forest" : "bg-red-50 text-red-600"
+            }`}
+          >
             {message}
           </p>
         )}
@@ -143,6 +131,6 @@ export default function PrivacySettingsPage() {
           Save Settings
         </Button>
       </Card>
-    </Container>
+    </PageShell>
   );
 }

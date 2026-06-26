@@ -1,8 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Clock, Edit, Eye, MapPin } from "lucide-react";
+import { Clock, Edit, Eye, Lock, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { ExperienceDeleteButton } from "@/components/experiences/ExperienceDeleteButton";
+import { ExperienceCoverFallback } from "@/components/experiences/ExperienceCoverFallback";
+import { EXPERIENCE_VISIBILITY_LABELS } from "@/lib/experience-visibility";
 import {
   EXPERIENCE_STATUS_LABELS,
   formatDuration,
@@ -14,9 +17,10 @@ import type { ExperiencePhoto, HostExperience } from "@/types/database";
 interface ExperienceCardProps {
   experience: HostExperience;
   coverPhoto?: ExperiencePhoto | null;
+  hostId?: string;
 }
 
-export function ExperienceCard({ experience, coverPhoto }: ExperienceCardProps) {
+export function ExperienceCard({ experience, coverPhoto, hostId }: ExperienceCardProps) {
   const status = EXPERIENCE_STATUS_LABELS[experience.status];
 
   return (
@@ -31,9 +35,7 @@ export function ExperienceCard({ experience, coverPhoto }: ExperienceCardProps) 
             sizes="400px"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-charcoal-light text-sm">
-            No photos yet
-          </div>
+          <ExperienceCoverFallback size="sm" />
         )}
         <Badge variant={status.variant} className="absolute top-2 right-2">
           {status.label}
@@ -61,6 +63,13 @@ export function ExperienceCard({ experience, coverPhoto }: ExperienceCardProps) 
         </span>
       </div>
 
+      {experience.visibility === "approved_guests_only" && (
+        <p className="flex items-center gap-1.5 mt-2 text-xs text-charcoal-light">
+          <Lock className="h-3.5 w-3.5 shrink-0" />
+          {EXPERIENCE_VISIBILITY_LABELS.approved_guests_only.label}
+        </p>
+      )}
+
       <div className="flex gap-2 mt-4">
         <Link href={`/host/experiences/${experience.id}/edit`} className="flex-1">
           <span className="flex items-center justify-center gap-1.5 w-full rounded-full border border-sage-dark px-3 py-1.5 text-sm font-medium text-forest hover:bg-sage/50 transition-colors">
@@ -77,6 +86,13 @@ export function ExperienceCard({ experience, coverPhoto }: ExperienceCardProps) 
           </Link>
         )}
       </div>
+      {hostId && (
+        <ExperienceDeleteButton
+          experienceId={experience.id}
+          hostId={hostId}
+          title={experience.title}
+        />
+      )}
     </Card>
   );
 }

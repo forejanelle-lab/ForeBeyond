@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   Shield,
   CheckCircle2,
@@ -10,11 +9,13 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { brand } from "@/lib/brand";
-import { Button } from "@/components/ui/Button";
+import { sampleImages } from "@/lib/sample-images";
+import { PageHero } from "@/components/design/PageHero";
+import { SectionHeader } from "@/components/design/SectionHeader";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
-import { Badge } from "@/components/ui/Badge";
 
 export const metadata = {
   title: "Trust Center",
@@ -71,33 +72,22 @@ const safetyCommitments = [
 export default function TrustCenterPage() {
   return (
     <>
-      <Section background="forest" className="!py-20">
-        <Container>
-          <div className="max-w-3xl">
-            <Badge variant="gold" className="mb-6">
-              <Shield className="h-3 w-3" />
-              Trust Center
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-              Trust is not a feature. It&apos;s our foundation.
-            </h1>
-            <p className="mt-4 text-lg text-white/70 leading-relaxed">
-              {brand.name} was built from the ground up as a trust-first platform.
-              Every layer of our community is designed to protect, verify, and empower
-              meaningful human connection.
-            </p>
-          </div>
-        </Container>
-      </Section>
+      <PageHero
+        image={sampleImages.trustCenter}
+        imageAlt="Trust and safety at Fore Beyond"
+        eyebrow="Trust Center"
+        title="Trust is not a feature. It's our foundation."
+        subtitle={`${brand.name} was built from the ground up as a trust-first platform. Every layer protects, verifies, and empowers meaningful human connection.`}
+        height="lg"
+      />
 
       <Section background="white">
         <Container>
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-forest">How we build trust</h2>
-            <p className="mt-4 text-charcoal-light">
-              Six layers of protection that work together to keep our community safe and authentic.
-            </p>
-          </div>
+          <SectionHeader
+            title="How we build trust"
+            description="Six layers of protection that work together to keep our community safe and authentic."
+            align="center"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {trustLayers.map((layer) => (
@@ -144,21 +134,15 @@ export default function TrustCenterPage() {
               Complete your verification to unlock the full {brand.name} experience.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/trust-center/dashboard">
-                <Button variant="primary" size="lg">
-                  Open Trust Dashboard
-                </Button>
-              </Link>
-              <Link href="/verification-center">
-                <Button variant="gold" size="lg">
-                  Go to Verification Center
-                </Button>
-              </Link>
-              <Link href="/auth/sign-up">
-                <Button variant="outline" size="lg">
-                  Join {brand.name}
-                </Button>
-              </Link>
+              <ButtonLink href="/trust-center/dashboard" variant="primary" size="lg">
+                Open Trust Dashboard
+              </ButtonLink>
+              <ButtonLink href="/verification-center" variant="gold" size="lg">
+                Go to Verification Center
+              </ButtonLink>
+              <ButtonLink href="/auth/sign-up" variant="outline" size="lg">
+                Join {brand.name}
+              </ButtonLink>
             </div>
           </Card>
         </Container>

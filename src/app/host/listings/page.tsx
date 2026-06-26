@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Plus, Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/listings/ListingCard";
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import type { HostListing, ListingPhoto } from "@/types/database";
@@ -64,23 +63,19 @@ export default async function ManageListingsPage() {
             {typedListings.length} listing{typedListings.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link href="/host/listings/new">
-          <Button variant="primary" size="md">
-            <Plus className="h-4 w-4" />
-            New Listing
-          </Button>
-        </Link>
+        <ButtonLink href="/host/listings/new" variant="primary" size="md">
+          <Plus className="h-4 w-4" />
+          New Listing
+        </ButtonLink>
       </div>
 
       {typedListings.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-sage-dark/40 bg-sage/20">
           <p className="text-charcoal-light mb-4">You haven&apos;t created a listing yet.</p>
-          <Link href="/host/listings/new">
-            <Button variant="primary" size="lg">
-              <Plus className="h-4 w-4" />
-              Create Your First Listing
-            </Button>
-          </Link>
+          <ButtonLink href="/host/listings/new" variant="primary" size="lg">
+            <Plus className="h-4 w-4" />
+            Create Your First Listing
+          </ButtonLink>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -89,6 +84,7 @@ export default async function ManageListingsPage() {
               key={listing.id}
               listing={listing}
               coverPhoto={coverMap[listing.id] ?? null}
+              hostId={user.id}
             />
           ))}
         </div>

@@ -55,9 +55,9 @@ export function AdminShell({ title, description, children }: AdminShellProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                      className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors ${
                         active
-                          ? "bg-forest text-white"
+                          ? "bg-forest text-white shadow-sm"
                           : "text-charcoal-light hover:bg-sage/60 hover:text-forest"
                       }`}
                     >

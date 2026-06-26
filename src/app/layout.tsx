@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { SupabaseConfigNotice } from "@/components/layout/SupabaseConfigNotice";
 import { brand } from "@/lib/brand";
+import { isPlatformAdmin } from "@/lib/navigation-menu";
 import type { UserRole } from "@/types/database";
 import "./globals.css";
 
@@ -60,7 +61,9 @@ export default async function RootLayout({
       .single();
 
     const role = profileError ? null : profile?.role ?? null;
-    const isAdmin = profileError ? false : profile?.is_admin ?? false;
+    const isAdmin = profileError
+      ? false
+      : isPlatformAdmin(user.email ?? "", profile?.is_admin ?? false);
 
     navUser = {
       id: user.id,

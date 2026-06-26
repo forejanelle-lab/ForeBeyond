@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  getUnreadNotificationCount,
+  markAllNotificationsRead,
+} from "@/lib/notifications";
 import { Badge } from "@/components/ui/Badge";
 import type { AppNotification } from "@/types/database";
 
@@ -12,6 +17,7 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ userId }: NotificationBellProps) {
+  const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -20,15 +26,17 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     const supabase = createClient();
 
     async function load() {
-      const { data } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(8);
-      const rows = (data as AppNotification[]) ?? [];
-      setNotifications(rows);
-      setUnreadCount(rows.filter((n) => !n.read_at).length);
+      const [{ data }, count] = await Promise.all([
+        supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(8),
+        getUnreadNotificationCount(supabase, userId),
+      ]);
+      setNotifications((data as AppNotification[]) ?? []);
+      setUnreadCount(count);
     }
 
     load();
@@ -38,7 +46,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "notifications",
           filter: `user_id=eq.${userId}`,
@@ -52,24 +60,38 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     };
   }, [userId]);
 
-  async function markRead(id: string) {
+  useEffect(() => {
+    if (pathname !== "/notifications") return;
+
     const supabase = createClient();
-    await supabase
-      .from("notifications")
-      .update({ read_at: new Date().toISOString() })
-      .eq("id", id)
-      .eq("user_id", userId);
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n))
-    );
-    setUnreadCount((c) => Math.max(0, c - 1));
+    markAllNotificationsRead(supabase, userId).then(() => {
+      setUnreadCount(0);
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() }))
+      );
+    });
+  }, [pathname, userId]);
+
+  async function handleOpen() {
+    const nextOpen = !open;
+    setOpen(nextOpen);
+
+    if (nextOpen && unreadCount > 0) {
+      const supabase = createClient();
+      const readAt = new Date().toISOString();
+      await markAllNotificationsRead(supabase, userId);
+      setUnreadCount(0);
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, read_at: n.read_at ?? readAt }))
+      );
+    }
   }
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleOpen}
         className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-sage/50 transition-colors"
         aria-label="Notifications"
       >
@@ -108,10 +130,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                   <Link
                     key={n.id}
                     href={n.link ?? "/notifications"}
-                    onClick={() => {
-                      if (!n.read_at) markRead(n.id);
-                      setOpen(false);
-                    }}
+                    onClick={() => setOpen(false)}
                     className={`block px-4 py-3 border-b border-sage-dark/10 hover:bg-sage/20 ${
                       !n.read_at ? "bg-sage/10" : ""
                     }`}

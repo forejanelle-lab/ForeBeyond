@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { brand, footer } from "@/lib/brand";
+import { footer, brand } from "@/lib/brand";
+import { Logo } from "@/components/design/Logo";
 import { Container } from "@/components/ui/Container";
 
 export function Footer() {
@@ -8,14 +9,7 @@ export function Footer() {
       <Container className="py-16">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 font-bold text-sm">
-                FB
-              </div>
-              <span className="text-lg font-semibold tracking-tight">
-                {brand.name}
-              </span>
-            </div>
+            <Logo variant="light" className="mb-4" />
             <p className="text-sm text-white/70 leading-relaxed">
               {brand.tagline}
             </p>
@@ -75,7 +69,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-white/50">
-            &copy; {new Date().getFullYear()} {brand.name}. All rights reserved.
+            &copy; {new Date().getFullYear()} Fore Beyond. All rights reserved.
           </p>
           <p className="text-xs text-white/40 text-center sm:text-right max-w-md">
             This is not a vacation rental platform. This is a trust-first cultural immersion platform.

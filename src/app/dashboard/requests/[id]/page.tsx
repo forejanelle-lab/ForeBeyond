@@ -2,13 +2,19 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { TravelerConfirmStay } from "@/components/stays/TravelerConfirmStay";
+import { TravelerModifyStayDates } from "@/components/stays/TravelerModifyStayDates";
+import { StayMessagingPanel } from "@/components/stays/StayMessagingPanel";
 import { ApprovedStayLinks } from "@/components/stays/HostRequestActions";
+import { HostContactDetailsCard } from "@/components/listings/HostContactDetailsCard";
 import { StayRequestStatusBadge } from "@/components/stays/StayRequestStatusBadge";
-import { formatDateRange } from "@/lib/stay-requests";
+import { canTravelerModifyStayDates } from "@/lib/stay-request-dates";
+import { getStayMessagingLockReason, ensureStayConversation, isStayMessagingOpen } from "@/lib/messaging";
+import { formatDateRange, LISTING_PRICING_SELECT, pickListingPricing, type ListingPricing } from "@/lib/stay-requests";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
-import type { PublicListing, StayBooking, StayRequest } from "@/types/database";
+import type { ListingContactDetails, PublicListing, StayBooking, StayRequest } from "@/types/database";
 
 export const metadata = { title: "Stay Request" };
 
@@ -33,16 +39,42 @@ export default async function TravelerRequestDetailPage({
 
   const typedRequest = request as StayRequest;
 
-  const [{ data: listing }, { data: host }, { data: booking }] = await Promise.all([
+  const [{ data: listing }, { data: host }, { data: booking }, { data: listingContact }] = await Promise.all([
     typedRequest.listing_id
-      ? supabase.from("public_listings").select("title, city, country").eq("id", typedRequest.listing_id).single()
+      ? supabase.from("public_listings").select(`title, city, country, ${LISTING_PRICING_SELECT}`).eq("id", typedRequest.listing_id).single()
       : Promise.resolve({ data: null }),
     supabase.from("profiles").select("full_name").eq("id", typedRequest.host_id).single(),
     supabase.from("stay_bookings").select("trip_id").eq("stay_request_id", id).maybeSingle(),
+    typedRequest.listing_id
+      ? supabase
+          .from("listing_contact_details")
+          .select("contact_email, contact_address")
+          .eq("listing_id", typedRequest.listing_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   const hostName = (host as { full_name: string | null } | null)?.full_name?.split(" ")[0] ?? "Host";
   const tripId = (booking as Pick<StayBooking, "trip_id"> | null)?.trip_id ?? null;
+  const listingData = listing as (Pick<PublicListing, "title" | "city" | "country"> & ListingPricing) | null;
+  const listingPricing = pickListingPricing(listingData ?? {});
+  const messagingUnlocked = isStayMessagingOpen(typedRequest);
+  const messagingLockReason = getStayMessagingLockReason(typedRequest);
+  let conversationId: string | null = null;
+  if (messagingUnlocked) {
+    conversationId = await ensureStayConversation(supabase, id);
+  }
+  if (!conversationId) {
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("stay_request_id", id)
+      .maybeSingle();
+    conversationId = (conversation as { id: string } | null)?.id ?? null;
+  }
+  const contactData = listingContact as Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
+  const showHostContact =
+    typedRequest.status === "approved" || typedRequest.status === "completed";
 
   return (
     <Container size="md" className="py-10 md:py-16">
@@ -53,13 +85,22 @@ export default async function TravelerRequestDetailPage({
 
       <div className="flex items-center gap-3 mb-6">
         <StayRequestStatusBadge status={typedRequest.status} />
-        <Badge variant="outline">Request #{typedRequest.id.slice(0, 8)}</Badge>
+        <Badge variant="outline">Booking ref: {typedRequest.id.slice(0, 8).toUpperCase()}</Badge>
       </div>
 
       <h1 className="text-3xl font-bold text-forest mb-2">
-        {(listing as Pick<PublicListing, "title"> | null)?.title ?? "Stay request"}
+        {listingData?.title ?? "Stay request"}
       </h1>
-      <p className="text-charcoal-light mb-8">Host: {hostName}</p>
+      <p className="text-charcoal-light mb-2">Host: {hostName}</p>
+      {typedRequest.listing_id && (
+        <Link
+          href={`/families/${typedRequest.listing_id}`}
+          className="text-sm font-medium text-forest hover:underline mb-8 inline-block"
+        >
+          View family listing →
+        </Link>
+      )}
+      {!typedRequest.listing_id && <div className="mb-8" />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -85,16 +126,43 @@ export default async function TravelerRequestDetailPage({
               <p className="text-charcoal-light whitespace-pre-wrap">{typedRequest.host_response}</p>
             </Card>
           )}
+
+          {conversationId && (
+            <StayMessagingPanel
+              conversationId={conversationId}
+              stayRequestId={typedRequest.id}
+              userId={user.id}
+              otherPartyName={hostName}
+              unlocked={messagingUnlocked}
+              lockReason={messagingLockReason}
+            />
+          )}
         </div>
 
         <div className="space-y-4">
+          {canTravelerModifyStayDates(typedRequest.status) && (
+            <TravelerModifyStayDates request={typedRequest} />
+          )}
+          {typedRequest.status === "host_approved" && (
+            <TravelerConfirmStay
+              request={typedRequest}
+              listingPricing={listingPricing}
+              hostName={hostName}
+            />
+          )}
           {typedRequest.status === "approved" && (
-            <ApprovedStayLinks tripId={tripId} />
+            <>
+              {showHostContact && contactData && (
+                <HostContactDetailsCard contact={contactData} />
+              )}
+              <ApprovedStayLinks tripId={tripId} />
+            </>
           )}
           {typedRequest.status === "pending" && (
             <Card variant="outline" padding="md">
               <p className="text-sm text-charcoal-light">
-                Waiting for {hostName} to review your request. You&apos;ll be able to message and pay once approved.
+                Waiting for {hostName} to review your request. Once they approve, you&apos;ll confirm
+                the final stay and service fee.
               </p>
             </Card>
           )}

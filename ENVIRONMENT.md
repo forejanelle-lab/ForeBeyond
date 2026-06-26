@@ -32,6 +32,20 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
 ---
 
+### `NEXT_PUBLIC_APP_URL`
+
+Public URL of your deployed app. **Required in production** so verification emails never point at `localhost`.
+
+```env
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+```
+
+**Used by:** Sign-up and resend-verification email links (`/auth/callback`).
+
+**Vercel:** Add under Project → Settings → Environment Variables for Production (and Preview if you test sign-up there). Must match Supabase **Site URL**.
+
+---
+
 ## Local Development Only
 
 ### `DATABASE_URL`
@@ -138,6 +152,7 @@ When adding variables in Vercel, set scopes appropriately:
 |----------|------------|---------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | ✓ | ✓ | ✓ |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✓ | ✓ | ✓ |
+| `NEXT_PUBLIC_APP_URL` | ✓ | ✓ (preview URL) | optional |
 | `DATABASE_URL` | CI only | CI only | Local only |
 
 Use separate Supabase projects for production vs. staging when possible.

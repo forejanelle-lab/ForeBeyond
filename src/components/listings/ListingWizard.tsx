@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowLeft, Home } from "lucide-react";
+import { ArrowRight, ArrowLeft, Home, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   LISTING_MEALS,
   LISTING_AMENITIES,
   LISTING_ACTIVITIES,
   LISTING_HOUSE_RULES,
-  generateListingTitle,
+  defaultFamilyListingTitle,
 } from "@/lib/listings";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -17,13 +17,14 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PhotoUpload } from "@/components/listings/PhotoUpload";
-import type { HostListing, ListingPhoto, ListingStatus } from "@/types/database";
+import type { HostListing, ListingContactDetails, ListingPhoto, ListingStatus } from "@/types/database";
 
 interface ListingWizardProps {
   userId: string;
   hostName?: string | null;
   listing?: HostListing;
   existingPhotos?: ListingPhoto[];
+  contactDetails?: Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
   mode?: "create" | "edit";
 }
 
@@ -31,15 +32,30 @@ function toggleItem(list: string[], item: string) {
   return list.includes(item) ? list.filter((i) => i !== item) : [...list, item];
 }
 
+function priceFieldValue(value: number | null | undefined) {
+  return value != null ? String(value) : "";
+}
+
+function parsePrice(value: string): number | null {
+  if (!value.trim()) return null;
+  const parsed = parseFloat(value);
+  if (Number.isNaN(parsed) || parsed < 0) return null;
+  return Math.round(parsed * 100) / 100;
+}
+
 export function ListingWizard({
   userId,
   hostName,
   listing,
   existingPhotos = [],
+  contactDetails = null,
 }: ListingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [listingId, setListingId] = useState(listing?.id ?? "");
+  const [title, setTitle] = useState(
+    listing?.title?.trim() || defaultFamilyListingTitle(hostName)
+  );
   const [familyStory, setFamilyStory] = useState(listing?.family_story ?? "");
   const [country, setCountry] = useState(listing?.country ?? "");
   const [city, setCity] = useState(listing?.city ?? "");
@@ -48,9 +64,18 @@ export function ListingWizard({
   const [amenities, setAmenities] = useState<string[]>(listing?.amenities ?? []);
   const [activities, setActivities] = useState<string[]>(listing?.family_activities ?? []);
   const [houseRules, setHouseRules] = useState<string[]>(listing?.house_rules ?? []);
-  const [budgetPerNight, setBudgetPerNight] = useState(
-    listing?.budget_per_night != null ? String(listing.budget_per_night) : ""
+  const [budgetPerNight, setBudgetPerNight] = useState(priceFieldValue(listing?.budget_per_night));
+  const [budget3Guests, setBudget3Guests] = useState(priceFieldValue(listing?.budget_per_night_3_guests));
+  const [budget4Guests, setBudget4Guests] = useState(priceFieldValue(listing?.budget_per_night_4_guests));
+  const [budget5Guests, setBudget5Guests] = useState(priceFieldValue(listing?.budget_per_night_5_guests));
+  const [budget6PlusGuests, setBudget6PlusGuests] = useState(
+    priceFieldValue(listing?.budget_per_night_6_plus_guests)
   );
+  const [maxCapacity, setMaxCapacity] = useState(
+    listing?.max_capacity != null ? String(listing.max_capacity) : ""
+  );
+  const [contactEmail, setContactEmail] = useState(contactDetails?.contact_email ?? "");
+  const [contactAddress, setContactAddress] = useState(contactDetails?.contact_address ?? "");
   const [photos, setPhotos] = useState<ListingPhoto[]>(existingPhotos);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,13 +86,13 @@ export function ListingWizard({
     if (listingId) return listingId;
 
     const supabase = createClient();
-    const title = generateListingTitle(city, country, hostName);
+    const listingTitle = title.trim() || defaultFamilyListingTitle(hostName);
 
     const { data, error: insertError } = await supabase
       .from("host_listings")
       .insert({
         host_id: userId,
-        title,
+        title: listingTitle,
         family_story: familyStory,
         country,
         city,
@@ -86,14 +111,49 @@ export function ListingWizard({
     return data.id;
   }
 
+  async function saveContactDetails(activeListingId: string): Promise<boolean> {
+    const supabase = createClient();
+    const email = contactEmail.trim() || null;
+    const address = contactAddress.trim() || null;
+
+    if (!email && !address) {
+      const { error: deleteError } = await supabase
+        .from("listing_contact_details")
+        .delete()
+        .eq("listing_id", activeListingId);
+
+      if (deleteError) {
+        setError(deleteError.message);
+        return false;
+      }
+      return true;
+    }
+
+    const { error: upsertError } = await supabase.from("listing_contact_details").upsert(
+      {
+        listing_id: activeListingId,
+        contact_email: email,
+        contact_address: address,
+      },
+      { onConflict: "listing_id" }
+    );
+
+    if (upsertError) {
+      setError(upsertError.message);
+      return false;
+    }
+
+    return true;
+  }
+
   async function saveListing(status: ListingStatus = "draft") {
     setError("");
     setIsLoading(true);
 
     const supabase = createClient();
-    const title = generateListingTitle(city, country, hostName);
+    const listingTitle = title.trim() || defaultFamilyListingTitle(hostName);
     const payload = {
-      title,
+      title: listingTitle,
       family_story: familyStory,
       country,
       city,
@@ -102,10 +162,17 @@ export function ListingWizard({
       amenities,
       family_activities: activities,
       house_rules: houseRules,
-      budget_per_night: budgetPerNight ? parseInt(budgetPerNight, 10) : null,
+      budget_per_night: parsePrice(budgetPerNight),
+      budget_per_night_3_guests: parsePrice(budget3Guests),
+      budget_per_night_4_guests: parsePrice(budget4Guests),
+      budget_per_night_5_guests: parsePrice(budget5Guests),
+      budget_per_night_6_plus_guests: parsePrice(budget6PlusGuests),
+      max_capacity: maxCapacity.trim() ? Math.max(1, parseInt(maxCapacity, 10) || 1) : null,
       status,
       published_at: status === "published" ? new Date().toISOString() : null,
     };
+
+    let activeListingId = listingId;
 
     if (listingId) {
       const { error: updateError } = await supabase
@@ -119,6 +186,7 @@ export function ListingWizard({
         setIsLoading(false);
         return false;
       }
+      activeListingId = listingId;
     } else {
       const { data, error: insertError } = await supabase
         .from("host_listings")
@@ -131,7 +199,14 @@ export function ListingWizard({
         setIsLoading(false);
         return false;
       }
+      activeListingId = data.id;
       setListingId(data.id);
+    }
+
+    const contactSaved = await saveContactDetails(activeListingId);
+    if (!contactSaved) {
+      setIsLoading(false);
+      return false;
     }
 
     setIsLoading(false);
@@ -139,6 +214,10 @@ export function ListingWizard({
   }
 
   async function handleNext() {
+    if (step === 0 && !title.trim()) {
+      setError("Please add a listing title");
+      return;
+    }
     if (step === 0 && !familyStory.trim()) {
       setError("Please share your family story");
       return;
@@ -196,6 +275,14 @@ export function ListingWizard({
               <h2 className="text-xl font-semibold text-forest">Tell your family&apos;s story</h2>
               <p className="text-sm text-charcoal-light mt-1">Help travelers understand who you are and what makes your home special.</p>
             </div>
+            <Input
+              label="Listing title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={defaultFamilyListingTitle(hostName)}
+              hint="How your family will appear to travelers in search and on your profile"
+              required
+            />
             <Textarea
               label="Family Story"
               value={familyStory}
@@ -214,15 +301,60 @@ export function ListingWizard({
               placeholder="English, Japanese..."
               hint="Separate with commas"
             />
-            <Input
-              label="Budget per night (USD)"
-              type="number"
-              min="0"
-              value={budgetPerNight}
-              onChange={(e) => setBudgetPerNight(e.target.value)}
-              placeholder="85"
-              hint="Optional — helps travelers filter by budget"
-            />
+            <div className="space-y-4 rounded-xl border border-sage-dark/40 p-4">
+              <div>
+                <p className="text-sm font-medium text-forest">Stay pricing</p>
+                <p className="text-xs text-charcoal-light mt-1">
+                  Set a nightly rate for each guest-count tier. The rate shown to travelers updates based on party size.
+                </p>
+              </div>
+              <Input
+                label="Base nightly rate (USD)"
+                type="number"
+                min="0"
+                step="0.01"
+                value={budgetPerNight}
+                onChange={(e) => setBudgetPerNight(e.target.value)}
+                placeholder="85.00"
+              />
+              <Input
+                label="3 guests: nightly rate (USD)"
+                type="number"
+                min="0"
+                step="0.01"
+                value={budget3Guests}
+                onChange={(e) => setBudget3Guests(e.target.value)}
+                placeholder="120.00"
+              />
+              <Input
+                label="4 guests: nightly rate (USD)"
+                type="number"
+                min="0"
+                step="0.01"
+                value={budget4Guests}
+                onChange={(e) => setBudget4Guests(e.target.value)}
+                placeholder="150.00"
+              />
+              <Input
+                label="5 guests: nightly rate (USD)"
+                type="number"
+                min="0"
+                step="0.01"
+                value={budget5Guests}
+                onChange={(e) => setBudget5Guests(e.target.value)}
+                placeholder="175.00"
+              />
+              <Input
+                label="6+ guests: nightly rate (USD)"
+                type="number"
+                min="0"
+                step="0.01"
+                value={budget6PlusGuests}
+                onChange={(e) => setBudget6PlusGuests(e.target.value)}
+                placeholder="200.00"
+                hint="Applies to groups of 6 or more guests"
+              />
+            </div>
           </div>
         )}
 
@@ -232,6 +364,16 @@ export function ListingWizard({
               <h2 className="text-xl font-semibold text-forest">What you offer</h2>
               <p className="text-sm text-charcoal-light mt-1">Select everything that applies to your home.</p>
             </div>
+            <Input
+              label="Max capacity (guests)"
+              type="number"
+              min="1"
+              max="20"
+              value={maxCapacity}
+              onChange={(e) => setMaxCapacity(e.target.value)}
+              placeholder="6"
+              hint="Maximum number of guests you can host at one time"
+            />
             {[
               { label: "Meals", items: LISTING_MEALS, selected: meals, set: setMeals },
               { label: "Amenities", items: LISTING_AMENITIES, selected: amenities, set: setAmenities },
@@ -258,6 +400,30 @@ export function ListingWizard({
                 </div>
               </div>
             ))}
+            <div className="space-y-4 rounded-xl border border-sage-dark/40 p-4">
+              <div>
+                <p className="text-sm font-medium text-forest">Contact details</p>
+                <p className="flex items-start gap-1.5 text-xs text-charcoal-light mt-1">
+                  <Lock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  This information is kept private and is only shared with travelers once they book your accommodation.
+                </p>
+              </div>
+              <Input
+                label="Contact email"
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="your.family@email.com"
+                autoComplete="email"
+              />
+              <Textarea
+                label="Address"
+                value={contactAddress}
+                onChange={(e) => setContactAddress(e.target.value)}
+                placeholder="Street address, city, postal code, country..."
+                hint="Full address for confirmed guests to coordinate arrival"
+              />
+            </div>
           </div>
         )}
 
@@ -287,9 +453,12 @@ export function ListingWizard({
               <p className="text-sm text-charcoal-light mt-1">Your listing will show your Trust Score and verification badges to travelers.</p>
             </div>
             <div className="rounded-xl bg-sage/40 p-4 space-y-2 text-sm">
-              <p><strong className="text-forest">Title:</strong> {generateListingTitle(city, country, hostName)}</p>
+              <p><strong className="text-forest">Title:</strong> {title.trim() || defaultFamilyListingTitle(hostName)}</p>
               <p><strong className="text-forest">Location:</strong> {[city, country].filter(Boolean).join(", ")}</p>
               <p><strong className="text-forest">Photos:</strong> {photos.length} uploaded</p>
+              <p><strong className="text-forest">Max capacity:</strong> {maxCapacity.trim() ? `${maxCapacity} guests` : "Not set"}</p>
+              <p><strong className="text-forest">Contact email:</strong> {contactEmail.trim() || "Not set"}</p>
+              <p><strong className="text-forest">Contact address:</strong> {contactAddress.trim() ? "Provided" : "Not set"}</p>
               <p><strong className="text-forest">Meals:</strong> {meals.length} selected</p>
             </div>
           </div>

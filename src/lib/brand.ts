@@ -18,11 +18,8 @@ export const colors = {
 export const navigation = {
   main: [
     { label: "How It Works", href: "/#how-it-works" },
-    { label: "Search Families", href: "/search" },
-    { label: "Experiences", href: "/experiences" },
-    { label: "For Travelers", href: "/onboarding/traveler" },
-    { label: "For Hosts", href: "/host/dashboard" },
-    { label: "Trust Center", href: "/trust-center" },
+    { label: "About", href: "/#mission" },
+    { label: "Contact", href: "mailto:hello@forebeyond.com" },
   ],
   auth: [
     { label: "Sign In", href: "/auth/sign-in" },

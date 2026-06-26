@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatAuthError } from "@/lib/auth-errors";
+import { fetchEmailVerificationRedirectUrl } from "@/lib/auth-email-redirect";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { brand } from "@/lib/brand";
 import { Button } from "@/components/ui/Button";
@@ -27,6 +28,7 @@ export default function SignUpPage() {
 
     try {
       const supabase = createClient();
+      const emailRedirectTo = await fetchEmailVerificationRedirectUrl();
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -36,7 +38,7 @@ export default function SignUpPage() {
             last_name: lastName.trim(),
             full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
           },
-          emailRedirectTo: `${window.location.origin}/auth/verify-email`,
+          emailRedirectTo,
         },
       });
 
@@ -47,8 +49,9 @@ export default function SignUpPage() {
       }
 
       if (data.user && data.user.identities?.length === 0) {
-        setError("An account with this email already exists. Try signing in instead.");
-        setIsLoading(false);
+        router.push(
+          `/auth/check-email?email=${encodeURIComponent(email.trim())}&existing=1&resend=1`
+        );
         return;
       }
 

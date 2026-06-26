@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Home, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { AuthBrandHeader } from "@/components/auth/AuthBrandHeader";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -85,6 +86,7 @@ export default function HostOnboardingPage() {
 
   return (
     <Container size="md" className="py-16 md:py-24">
+      <AuthBrandHeader />
       <div className="text-center mb-10">
         <Badge variant="gold" className="mb-4">
           <Home className="h-3 w-3" />

@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Inbox, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { StayRequestCard } from "@/components/stays/StayRequestCard";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import type { PublicListing, StayRequest } from "@/types/database";
 
-export const metadata = { title: "My Stay Requests" };
+export const metadata = { title: "Pending Requests" };
 
 export default async function TravelerRequestsPage() {
   const supabase = await createClient();
@@ -52,30 +51,26 @@ export default async function TravelerRequestsPage() {
         <div>
           <Badge variant="gold" className="mb-4">
             <Inbox className="h-3 w-3" />
-            Stay Requests
+            Pending Requests
           </Badge>
           <h1 className="text-3xl font-bold text-forest">My requests</h1>
           <p className="mt-2 text-charcoal-light">
             {typedRequests.length} total · {pendingCount} pending
           </p>
         </div>
-        <Link href="/search">
-          <Button variant="secondary" size="md">
-            <Search className="h-4 w-4" />
-            Browse families
-          </Button>
-        </Link>
+        <ButtonLink href="/search" variant="secondary" size="md">
+          <Search className="h-4 w-4" />
+          Browse families
+        </ButtonLink>
       </div>
 
       {typedRequests.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-sage-dark/40 bg-sage/20">
-          <p className="text-charcoal-light mb-4">You haven&apos;t sent any stay requests yet.</p>
-          <Link href="/search">
-            <Button variant="primary" size="lg">
-              <Search className="h-4 w-4" />
-              Find a host family
-            </Button>
-          </Link>
+          <p className="text-charcoal-light mb-4">You haven&apos;t sent any requests yet.</p>
+          <ButtonLink href="/search" variant="primary" size="lg">
+            <Search className="h-4 w-4" />
+            Find a host family
+          </ButtonLink>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -20,8 +20,10 @@ import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
+import { PageShell } from "@/components/layout/PageShell";
+import { TrustScorePanel } from "@/components/design/TrustScorePanel";
+import { VerificationSubmitModal } from "@/components/verification/VerificationSubmitModal";
 import type { DocumentType, VerificationStatus } from "@/types/database";
 
 interface VerificationStep {
@@ -84,9 +86,12 @@ const verificationSteps: VerificationStep[] = [
   },
 ];
 
-const statusConfig: Record<VerificationStatus, { label: string; variant: "default" | "success" | "warning" | "gold" | "outline"; icon: typeof CheckCircle2 }> = {
+const statusConfig: Record<
+  VerificationStatus,
+  { label: string; variant: "default" | "success" | "warning" | "gold" | "outline"; icon: typeof CheckCircle2 }
+> = {
   unverified: { label: "Not Started", variant: "outline", icon: AlertCircle },
-  pending: { label: "Pending", variant: "warning", icon: Clock },
+  pending: { label: "Submitted", variant: "warning", icon: Clock },
   in_review: { label: "In Review", variant: "gold", icon: Clock },
   verified: { label: "Verified", variant: "success", icon: CheckCircle2 },
   rejected: { label: "Rejected", variant: "outline", icon: AlertCircle },
@@ -98,88 +103,87 @@ export default function VerificationCenterPage() {
   const [overallStatus, setOverallStatus] = useState<VerificationStatus>("unverified");
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [trustScore, setTrustScore] = useState(0);
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState<VerificationStep | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    async function loadStatus() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/auth/sign-in");
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("verification_status, phone, phone_verified_at")
-        .eq("id", user.id)
-        .single();
-
-      if (profile) {
-        setOverallStatus(profile.verification_status);
-        setPhone(profile.phone ?? "");
-        if (profile.phone_verified_at) {
-          setDocuments((prev) => ({ ...prev, phone_verification: "verified" }));
-        }
-      }
-
-      const { data: docs } = await supabase
-        .from("verification_documents")
-        .select("document_type, status")
-        .eq("user_id", user.id);
-
-      if (docs) {
-        const docMap: Record<string, VerificationStatus> = {};
-        docs.forEach((doc) => {
-          docMap[doc.document_type] = doc.status;
-        });
-        setDocuments((prev) => ({ ...prev, ...docMap }));
-      }
-
-      setIsLoading(false);
-    }
-
-    loadStatus();
-  }, [router]);
-
-  async function handleSubmitDocument(type: DocumentType) {
-    setSubmitting(type);
+  async function loadStatus() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
 
-    const { error } = await supabase.from("verification_documents").upsert(
-      { user_id: user.id, document_type: type, status: "pending" },
-      { onConflict: "user_id,document_type" }
-    );
-
-    if (!error) {
-      setDocuments((prev) => ({ ...prev, [type]: "pending" }));
+    if (!user) {
+      router.push("/auth/sign-in");
+      return;
     }
 
-    setSubmitting(null);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("verification_status, phone, phone_verified_at, trust_score, role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile) {
+      setOverallStatus(profile.verification_status);
+      setPhone(profile.phone ?? "");
+      setTrustScore(profile.trust_score ?? 0);
+      if (profile.phone_verified_at) {
+        setDocuments((prev) => ({ ...prev, phone_verification: "verified" }));
+      }
+    }
+
+    const { data: docs } = await supabase
+      .from("verification_documents")
+      .select("document_type, status")
+      .eq("user_id", user.id);
+
+    if (docs) {
+      const docMap: Record<string, VerificationStatus> = {};
+      docs.forEach((doc) => {
+        docMap[doc.document_type] = doc.status;
+      });
+      setDocuments((prev) => ({ ...prev, ...docMap }));
+    }
+
+    setIsLoading(false);
   }
+
+  useEffect(() => {
+    loadStatus();
+  }, [router]);
 
   async function handlePhoneVerify() {
     if (!phone.trim()) return;
     setSubmitting("phone_verification");
+    setErrorMessage("");
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase.from("profiles").update({
-      phone: phone.trim(),
-      phone_verified_at: new Date().toISOString(),
-    }).eq("id", user.id);
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        phone: phone.trim(),
+        phone_verified_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
 
-    await supabase.from("verification_documents").upsert(
+    const { error: docError } = await supabase.from("verification_documents").upsert(
       { user_id: user.id, document_type: "phone_verification", status: "verified" },
       { onConflict: "user_id,document_type" }
     );
 
+    if (profileError || docError) {
+      setErrorMessage(profileError?.message ?? docError?.message ?? "Phone verification failed.");
+      setSubmitting(null);
+      return;
+    }
+
     setDocuments((prev) => ({ ...prev, phone_verification: "verified" }));
+    setSuccessMessage("Phone number verified.");
     setSubmitting(null);
+    await loadStatus();
   }
 
   async function handleCompleteOnboarding() {
@@ -198,8 +202,15 @@ export default function VerificationCenterPage() {
       .eq("id", user.id);
 
     trackEvent(AnalyticsEvents.VERIFICATION_COMPLETION);
-
     router.push("/trust-center/dashboard");
+  }
+
+  function handleDocumentSubmitted(type: DocumentType) {
+    setDocuments((prev) => ({ ...prev, [type]: "pending" }));
+    const step = verificationSteps.find((s) => s.type === type);
+    setSuccessMessage(`${step?.title ?? "Document"} submitted for review.`);
+    setErrorMessage("");
+    loadStatus();
   }
 
   const requiredComplete = verificationSteps
@@ -208,96 +219,97 @@ export default function VerificationCenterPage() {
 
   if (isLoading) {
     return (
-      <Container className="py-16 md:py-24">
-        <div className="flex justify-center">
-          <span className="h-8 w-8 animate-spin rounded-full border-2 border-forest border-t-transparent" />
-        </div>
-      </Container>
+      <div className="flex justify-center py-20">
+        <span className="h-8 w-8 animate-spin rounded-full border-2 border-forest border-t-transparent" />
+      </div>
     );
   }
 
   const overall = statusConfig[overallStatus];
 
   return (
-    <Container size="md" className="py-16 md:py-24">
-      <div className="text-center mb-10">
-        <Badge variant="gold" className="mb-4">
-          <Shield className="h-3 w-3" />
-          Verification Center
-        </Badge>
-        <h1 className="text-3xl font-bold text-forest">Verification Workflows</h1>
-        <p className="mt-2 text-charcoal-light max-w-lg mx-auto">
-          Each step increases your Trust Score. Complete verifications to unlock the full platform.
-        </p>
-        <div className="mt-4 flex justify-center gap-2 flex-wrap">
-          <Badge variant={overall.variant}>
-            <overall.icon className="h-3 w-3" />
-            Overall: {overall.label}
-          </Badge>
-          <Link href="/trust-center/dashboard">
-            <Badge variant="outline">View Trust Dashboard →</Badge>
-          </Link>
+    <PageShell
+      title="Verification Checklist"
+      subtitle={`Overall status: ${overall.label}`}
+    >
+      {successMessage && (
+        <div className="mb-6 rounded-xl bg-forest/10 border border-forest/20 px-4 py-3 text-sm text-forest">
+          {successMessage}
         </div>
-      </div>
+      )}
+      {errorMessage && (
+        <div className="mb-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
+          {errorMessage}
+        </div>
+      )}
 
-      <div className="space-y-4">
-        {verificationSteps.map((step) => {
-          const status = documents[step.type] || "unverified";
-          const config = statusConfig[status];
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          {verificationSteps.map((step) => {
+            const status = documents[step.type] || "unverified";
+            const config = statusConfig[status];
+            const canSubmit = status === "unverified" || status === "rejected";
 
-          return (
-            <Card key={step.type} variant="outline" padding="md">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sage/60 text-forest">
-                  <step.icon className="h-6 w-6" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-forest">{step.title}</h3>
-                    {step.required && <Badge variant="outline">Required</Badge>}
-                    {step.points > 0 && <Badge variant="gold">+{step.points} pts</Badge>}
-                    <Badge variant={config.variant}>
-                      <config.icon className="h-3 w-3" />
-                      {config.label}
-                    </Badge>
+            return (
+              <Card key={step.type} variant="outline" padding="md">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sage/60 text-forest">
+                    <step.icon className="h-6 w-6" />
                   </div>
-                  <p className="mt-1 text-sm text-charcoal-light">{step.description}</p>
-
-                  {step.type === "phone_verification" && status === "unverified" && (
-                    <div className="mt-3 flex gap-2">
-                      <Input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+1 (555) 000-0000"
-                        className="flex-1"
-                      />
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={handlePhoneVerify}
-                        isLoading={submitting === "phone_verification"}
-                      >
-                        Verify
-                      </Button>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-forest">{step.title}</h3>
+                      {step.required && <Badge variant="outline">Required</Badge>}
+                      {step.points > 0 && <Badge variant="gold">+{step.points} pts</Badge>}
+                      <Badge variant={config.variant}>
+                        <config.icon className="h-3 w-3" />
+                        {config.label}
+                      </Badge>
                     </div>
+                    <p className="mt-1 text-sm text-charcoal-light">{step.description}</p>
+
+                    {step.type === "phone_verification" && status === "unverified" && (
+                      <div className="mt-3 flex gap-2">
+                        <Input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+1 (555) 000-0000"
+                          className="flex-1"
+                        />
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handlePhoneVerify}
+                          isLoading={submitting === "phone_verification"}
+                        >
+                          Verify
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {canSubmit && step.type !== "phone_verification" && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setActiveStep(step)}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Submit
+                    </Button>
                   )}
                 </div>
-                {status === "unverified" && step.type !== "phone_verification" && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleSubmitDocument(step.type)}
-                    isLoading={submitting === step.type}
-                  >
-                    <Upload className="h-4 w-4" />
-                    Submit
-                  </Button>
-                )}
-              </div>
-            </Card>
-          );
-        })}
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="space-y-4">
+          <TrustScorePanel score={trustScore} compact showBreakdownLink />
+          <Link href="/trust-center/dashboard" className="block text-center text-sm text-forest hover:underline">
+            View Trust Dashboard →
+          </Link>
+        </div>
       </div>
 
       {requiredComplete && (
@@ -310,6 +322,17 @@ export default function VerificationCenterPage() {
           </p>
         </div>
       )}
-    </Container>
+
+      <VerificationSubmitModal
+        open={!!activeStep}
+        documentType={activeStep?.type ?? null}
+        title={activeStep?.title ?? ""}
+        description={activeStep?.description ?? ""}
+        onClose={() => setActiveStep(null)}
+        onSubmitted={() => {
+          if (activeStep) handleDocumentSubmitted(activeStep.type);
+        }}
+      />
+    </PageShell>
   );
 }

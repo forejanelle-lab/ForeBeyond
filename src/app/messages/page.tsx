@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { ConversationListItem } from "@/components/messaging/ConversationListItem";
+import {
+  MessagesInboxList,
+  type InboxConversationRow,
+} from "@/components/messaging/MessagesInboxList";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import type { AppNotification, Conversation, PublicListing } from "@/types/database";
@@ -24,10 +26,7 @@ export default async function MessagesInboxPage() {
   const otherIds = typedConversations.map((c) =>
     c.traveler_id === user.id ? c.host_id : c.traveler_id
   );
-  const listingIds = [...new Set(
-    typedConversations
-      .map((c) => c.stay_request_id)
-  )];
+  const listingIds = [...new Set(typedConversations.map((c) => c.stay_request_id))];
 
   const [{ data: profiles }, { data: stayRequests }, { data: notifs }] = await Promise.all([
     otherIds.length > 0
@@ -52,12 +51,13 @@ export default async function MessagesInboxPage() {
   );
 
   const requestListingMap = Object.fromEntries(
-    ((stayRequests as { id: string; listing_id: string | null }[]) ?? []).map((r) => [r.id, r.listing_id])
+    ((stayRequests as { id: string; listing_id: string | null }[]) ?? []).map((r) => [
+      r.id,
+      r.listing_id,
+    ])
   );
 
-  const listingIdList = [...new Set(
-    Object.values(requestListingMap).filter(Boolean) as string[]
-  )];
+  const listingIdList = [...new Set(Object.values(requestListingMap).filter(Boolean) as string[])];
 
   let listingMap: Record<string, string> = {};
   if (listingIdList.length > 0) {
@@ -66,7 +66,10 @@ export default async function MessagesInboxPage() {
       .select("id, title")
       .in("id", listingIdList);
     listingMap = Object.fromEntries(
-      ((listings as Pick<PublicListing, "id" | "title">[]) ?? []).map((l) => [l.id, l.title ?? "Stay"])
+      ((listings as Pick<PublicListing, "id" | "title">[]) ?? []).map((l) => [
+        l.id,
+        l.title ?? "Stay",
+      ])
     );
   }
 
@@ -76,49 +79,42 @@ export default async function MessagesInboxPage() {
     if (convId) unreadByConversation[convId] = (unreadByConversation[convId] ?? 0) + 1;
   });
 
+  const inboxRows: InboxConversationRow[] = typedConversations.map((conversation) => {
+    const otherId =
+      conversation.traveler_id === user.id ? conversation.host_id : conversation.traveler_id;
+    const listingId = requestListingMap[conversation.stay_request_id];
+    return {
+      conversation,
+      otherPartyName: profileMap[otherId] ?? "Guest",
+      listingTitle: listingId ? listingMap[listingId] : null,
+      unreadCount: unreadByConversation[conversation.id] ?? 0,
+    };
+  });
+
+  const unreadTotal = inboxRows.reduce((sum, row) => sum + row.unreadCount, 0);
+
   return (
-    <Container className="py-6 md:py-10 max-w-2xl">
-      <div className="mb-6">
-        <Badge variant="gold" className="mb-3">
-          <MessageCircle className="h-3 w-3" />
-          Messages
-        </Badge>
-        <h1 className="text-2xl md:text-3xl font-bold text-forest">Conversations</h1>
-        <p className="mt-1 text-sm text-charcoal-light">
-          Chat unlocks after a stay request is approved
-        </p>
+    <>
+      <div className="border-b border-sage-dark/20 bg-white">
+        <Container className="py-8 md:py-10">
+          <Badge variant="gold" className="mb-3">
+            <MessageCircle className="h-3 w-3" />
+            Messages
+          </Badge>
+          <h1 className="text-2xl md:text-3xl font-bold text-forest">Your conversations</h1>
+          <p className="mt-2 text-sm text-charcoal-light max-w-2xl">
+            Chat unlocks after a stay request is approved — connect safely with your host or traveler.
+          </p>
+          <p className="mt-1 text-sm text-charcoal-light">
+            {typedConversations.length} conversation{typedConversations.length !== 1 ? "s" : ""}
+            {unreadTotal > 0 && ` · ${unreadTotal} unread`}
+          </p>
+        </Container>
       </div>
 
-      {typedConversations.length === 0 ? (
-        <div className="text-center py-16 rounded-2xl border border-sage-dark/40 bg-sage/20">
-          <MessageCircle className="h-10 w-10 text-forest mx-auto mb-4" />
-          <p className="text-charcoal-light mb-4">No conversations yet.</p>
-          <p className="text-sm text-charcoal-light mb-4">
-            Once a stay is approved, you can message your host or traveler here.
-          </p>
-          <Link href="/search" className="text-sm font-medium text-forest hover:underline">
-            Browse families
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {typedConversations.map((conversation) => {
-            const otherId = conversation.traveler_id === user.id
-              ? conversation.host_id
-              : conversation.traveler_id;
-            const listingId = requestListingMap[conversation.stay_request_id];
-            return (
-              <ConversationListItem
-                key={conversation.id}
-                conversation={conversation}
-                otherPartyName={profileMap[otherId] ?? "Guest"}
-                listingTitle={listingId ? listingMap[listingId] : null}
-                unreadCount={unreadByConversation[conversation.id] ?? 0}
-              />
-            );
-          })}
-        </div>
-      )}
-    </Container>
+      <Container className="py-8 md:py-10">
+        <MessagesInboxList conversations={inboxRows} />
+      </Container>
+    </>
   );
 }

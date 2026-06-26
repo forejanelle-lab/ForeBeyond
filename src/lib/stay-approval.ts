@@ -1,17 +1,22 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { calculateStayTotal } from "@/lib/stay-requests";
+import { ensureStayConversation } from "@/lib/messaging";
+import {
+  calculateEffectiveNightlyTotal,
+  calculateStayTotal,
+  type ListingPricing,
+} from "@/lib/stay-requests";
 import type { StayRequest } from "@/types/database";
 
+/** Host approves — traveler must confirm before trip/booking is created */
 export async function approveStayRequest(
   supabase: SupabaseClient,
   request: StayRequest,
-  nightlyRate: number | null,
   hostResponse?: string | null
 ) {
   const { error: updateError } = await supabase
     .from("stay_requests")
     .update({
-      status: "approved",
+      status: "host_approved",
       host_response: hostResponse?.trim() || request.host_response,
     })
     .eq("id", request.id)
@@ -19,10 +24,32 @@ export async function approveStayRequest(
 
   if (updateError) return { error: updateError.message, tripId: null };
 
+  await ensureStayConversation(supabase, request.id);
+
+  return { error: null, tripId: null };
+}
+
+/** Traveler confirms after host approval — creates trip and booking */
+export async function confirmStayByTraveler(
+  supabase: SupabaseClient,
+  request: StayRequest,
+  pricing: ListingPricing
+) {
+  const { error: updateError } = await supabase
+    .from("stay_requests")
+    .update({ status: "approved" })
+    .eq("id", request.id)
+    .eq("traveler_id", request.traveler_id)
+    .eq("status", "host_approved");
+
+  if (updateError) return { error: updateError.message, tripId: null };
+
   const totalAmount =
-    nightlyRate != null && request.start_date && request.end_date
-      ? calculateStayTotal(nightlyRate, request.start_date, request.end_date)
+    request.start_date && request.end_date
+      ? calculateStayTotal(pricing, request.start_date, request.end_date, request.guest_count)
       : null;
+
+  const nightlyRate = calculateEffectiveNightlyTotal(pricing, request.guest_count);
 
   const { data: trip, error: tripError } = await supabase
     .from("trips")
@@ -73,6 +100,24 @@ export async function declineStayRequest(
     })
     .eq("id", requestId)
     .eq("host_id", hostId);
+
+  return { error: error?.message ?? null };
+}
+
+export async function revertStayRequest(
+  supabase: SupabaseClient,
+  requestId: string,
+  hostId: string
+) {
+  const { error } = await supabase
+    .from("stay_requests")
+    .update({
+      status: "pending",
+      host_response: null,
+    })
+    .eq("id", requestId)
+    .eq("host_id", hostId)
+    .eq("status", "rejected");
 
   return { error: error?.message ?? null };
 }

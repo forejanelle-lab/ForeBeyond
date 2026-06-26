@@ -3,9 +3,11 @@ import Link from "next/link";
 import { ArrowLeft, CreditCard } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { StayMessagingPanel } from "@/components/stays/StayMessagingPanel";
+import { HostContactDetailsCard } from "@/components/listings/HostContactDetailsCard";
 import { TripCompleteButton } from "@/components/reviews/TripCompleteButton";
 import { TripReviewSection } from "@/components/reviews/TripReviewSection";
 import { isTripPastEndDate } from "@/lib/reviews";
+import { getStayMessagingLockReason, isStayMessagingOpen } from "@/lib/messaging";
 import {
   PAYMENT_STATUS_LABELS,
   TRIP_STATUS_LABELS,
@@ -13,10 +15,10 @@ import {
   formatDateRange,
 } from "@/lib/stay-requests";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
-import type { Profile, PublicListing, Review, StayBooking, StayRequest, Trip } from "@/types/database";
+import type { ListingContactDetails, Profile, PublicListing, Review, StayBooking, StayRequest, Trip } from "@/types/database";
 
 export const metadata = { title: "Trip Details" };
 
@@ -43,30 +45,50 @@ export default async function TripDetailPage({
   const isTraveler = typedTrip.traveler_id === user.id;
   const otherUserId = isTraveler ? typedTrip.host_id : typedTrip.traveler_id;
 
-  const [{ data: listing }, { data: otherProfile }, { data: booking }, { data: stayRequest }, { data: conversation }, { data: tripReviews }, { data: userReview }] =
+  const [{ data: listing }, { data: otherProfile }, { data: booking }, { data: stayRequest }, { data: conversation }, { data: tripReviews }, { data: userReview }, { data: listingContact }] =
     await Promise.all([
       typedTrip.listing_id
         ? supabase.from("public_listings").select("title, city, country").eq("id", typedTrip.listing_id).single()
         : Promise.resolve({ data: null }),
-      supabase.from("profiles").select("full_name").eq("id", otherUserId).single(),
+      supabase.from("profiles").select("full_name, email").eq("id", otherUserId).single(),
       supabase.from("stay_bookings").select("*").eq("trip_id", id).maybeSingle(),
       typedTrip.stay_request_id
-        ? supabase.from("stay_requests").select("id, status").eq("id", typedTrip.stay_request_id).single()
+        ? supabase.from("stay_requests").select("id, status, end_date").eq("id", typedTrip.stay_request_id).single()
         : Promise.resolve({ data: null }),
       typedTrip.stay_request_id
         ? supabase.from("conversations").select("id").eq("stay_request_id", typedTrip.stay_request_id).maybeSingle()
         : Promise.resolve({ data: null }),
       supabase.from("reviews").select("*").eq("trip_id", id).order("created_at", { ascending: false }),
       supabase.from("reviews").select("*").eq("trip_id", id).eq("reviewer_id", user.id).maybeSingle(),
+      typedTrip.listing_id
+        ? supabase
+            .from("listing_contact_details")
+            .select("contact_email, contact_address")
+            .eq("listing_id", typedTrip.listing_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
 
   const otherName =
     (otherProfile as Pick<Profile, "full_name"> | null)?.full_name?.split(" ")[0] ?? "Guest";
+  const hostEmail =
+    (otherProfile as Pick<Profile, "email"> | null)?.email ?? null;
+  const contactData = listingContact as Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
   const listingData = listing as Pick<PublicListing, "title" | "city" | "country"> | null;
   const bookingData = booking as StayBooking | null;
-  const requestData = stayRequest as Pick<StayRequest, "id" | "status"> | null;
+  const requestData = stayRequest as Pick<StayRequest, "id" | "status" | "end_date"> | null;
+  const messagingUnlocked = isStayMessagingOpen(requestData);
+  const messagingLockReason = getStayMessagingLockReason(requestData);
   const tripStatus = TRIP_STATUS_LABELS[typedTrip.status] ?? TRIP_STATUS_LABELS.upcoming;
-  const messagingUnlocked = requestData?.status === "approved" || requestData?.status === "completed";
+  const showHostContact =
+    isTraveler &&
+    (requestData?.status === "approved" || requestData?.status === "completed");
+  const hostContactForTraveler =
+    showHostContact && (contactData?.contact_email || contactData?.contact_address)
+      ? contactData
+      : showHostContact && hostEmail
+        ? { contact_email: hostEmail, contact_address: null }
+        : null;
   const canCompleteTrip =
     typedTrip.status !== "completed" &&
     bookingData?.payment_status === "paid" &&
@@ -119,6 +141,7 @@ export default async function TripDetailPage({
                 userId={user.id}
                 otherPartyName={otherName}
                 unlocked={messagingUnlocked}
+                lockReason={messagingLockReason}
               />
               <Link
                 href={`/messages/${(conversation as { id: string }).id}`}
@@ -154,19 +177,23 @@ export default async function TripDetailPage({
               <p className="text-sm text-charcoal-light">
                 Secure your stay with a payment to confirm your trip.
               </p>
-              <Link href={`/trips/${id}/payment`}>
-                <Button variant="primary" size="md" className="w-full">
-                  <CreditCard className="h-4 w-4" />
-                  Go to payment
-                </Button>
-              </Link>
+              <ButtonLink href={`/trips/${id}/payment`} variant="primary" size="md" className="w-full">
+                <CreditCard className="h-4 w-4" />
+                Go to payment
+              </ButtonLink>
             </Card>
           )}
 
           <Card variant="outline" padding="md">
             <h3 className="font-semibold text-forest mb-2">Booking reference</h3>
-            <p className="text-xs font-mono text-charcoal-light break-all">{bookingData?.id ?? typedTrip.id}</p>
+            <p className="text-xs font-mono text-charcoal-light break-all">
+              {(typedTrip.stay_request_id ?? bookingData?.id ?? typedTrip.id).slice(0, 8).toUpperCase()}
+            </p>
           </Card>
+
+          {hostContactForTraveler && (
+            <HostContactDetailsCard contact={hostContactForTraveler} />
+          )}
         </div>
       </div>
     </Container>

@@ -2,6 +2,7 @@ import {
   LISTING_ACTIVITIES,
   LISTING_MEALS,
 } from "@/lib/listings";
+import { formatCurrency } from "@/lib/stay-requests";
 import type { PublicListing } from "@/types/database";
 
 export const BUDGET_RANGES = [
@@ -97,9 +98,9 @@ export function getBudgetRange(value: string) {
   return BUDGET_RANGES.find((range) => range.value === value);
 }
 
-export function formatBudget(perNight: number | null | undefined) {
-  if (perNight == null) return "Budget on request";
-  return `$${perNight}/night`;
+export function formatBudget(nightlyRate: number | null | undefined) {
+  if (nightlyRate == null) return "Budget on request";
+  return `${formatCurrency(nightlyRate)}/night`;
 }
 
 export function filterListingsClientSide(

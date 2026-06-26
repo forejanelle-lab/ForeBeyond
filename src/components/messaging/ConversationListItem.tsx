@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatConversationTime } from "@/lib/messaging";
+import { formatMessageListDate } from "@/lib/messaging";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import type { Conversation } from "@/types/database";
@@ -17,6 +17,8 @@ export function ConversationListItem({
   listingTitle,
   unreadCount = 0,
 }: ConversationListItemProps) {
+  const activityAt = conversation.last_message_at ?? conversation.created_at;
+
   return (
     <Link href={`/messages/${conversation.id}`} className="block group">
       <Card variant="outline" padding="md" className="hover:shadow-md transition-shadow">
@@ -37,11 +39,11 @@ export function ConversationListItem({
               {conversation.last_message_preview ?? "No messages yet"}
             </p>
           </div>
-          {conversation.last_message_at && (
-            <span className="text-xs text-charcoal-light shrink-0">
-              {formatConversationTime(conversation.last_message_at)}
+          <div className="text-right shrink-0">
+            <span className="text-xs text-charcoal-light block whitespace-nowrap">
+              {formatMessageListDate(activityAt)}
             </span>
-          )}
+          </div>
         </div>
       </Card>
     </Link>

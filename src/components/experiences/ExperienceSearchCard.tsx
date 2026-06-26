@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatDuration, formatPrice, getCategoryLabel } from "@/lib/experiences";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { ExperienceCoverFallback } from "@/components/experiences/ExperienceCoverFallback";
 import type { PublicExperience } from "@/types/database";
 
 interface ExperienceSearchCardProps {
@@ -72,9 +73,7 @@ export function ExperienceSearchCard({
               sizes="(max-width: 768px) 100vw, 400px"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-charcoal-light">
-              No photo yet
-            </div>
+            <ExperienceCoverFallback size="sm" />
           )}
 
           <button

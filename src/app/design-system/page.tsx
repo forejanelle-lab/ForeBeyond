@@ -1,4 +1,5 @@
 import { brand, colors } from "@/lib/brand";
+import { Logo } from "@/components/design/Logo";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -25,10 +26,35 @@ export default function DesignSystemPage() {
     <>
       <Section background="forest" className="!py-16">
         <Container>
-          <h1 className="text-4xl font-bold text-white">{brand.name} Design System</h1>
+          <Logo variant="light" className="mb-6" />
+          <h1 className="text-4xl font-bold text-white">Design System</h1>
           <p className="mt-2 text-white/70">
             Apple clarity + Airbnb warmth + Notion simplicity
           </p>
+        </Container>
+      </Section>
+
+      <Section background="white">
+        <Container>
+          <h2 className="text-2xl font-bold text-forest mb-8">Logo</h2>
+          <div className="flex flex-wrap items-center gap-10">
+            <div>
+              <p className="text-xs text-charcoal-light mb-3">Default</p>
+              <Logo />
+            </div>
+            <div className="rounded-2xl bg-forest px-6 py-4">
+              <p className="text-xs text-white/70 mb-3">Light (on dark)</p>
+              <Logo variant="light" />
+            </div>
+            <div>
+              <p className="text-xs text-charcoal-light mb-3">Small</p>
+              <Logo size="sm" />
+            </div>
+            <div>
+              <p className="text-xs text-charcoal-light mb-3">Mark only</p>
+              <Logo showText={false} />
+            </div>
+          </div>
         </Container>
       </Section>
 

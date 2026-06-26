@@ -1,11 +1,12 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import { getSupabaseEnv } from "@/lib/env";
+import { getSupabaseEnv, SUPABASE_CONFIG_MESSAGE } from "@/lib/env";
 
-export async function createClient() {
+export async function createClient(): Promise<SupabaseClient> {
   const env = getSupabaseEnv();
   if (!env) {
-    throw new Error("Supabase environment variables are not configured.");
+    throw new Error(SUPABASE_CONFIG_MESSAGE);
   }
 
   const cookieStore = await cookies();

@@ -39,17 +39,21 @@ export function VerificationProgress({
   phoneVerified,
   documentStatuses,
 }: VerificationProgressProps) {
-  const completed = VERIFICATION_WORKFLOWS.filter((w) =>
+  const verified = VERIFICATION_WORKFLOWS.filter((w) =>
     isVerified(w.id, emailVerified, phoneVerified, documentStatuses)
   ).length;
+  const submitted = VERIFICATION_WORKFLOWS.filter((w) => {
+    if (isVerified(w.id, emailVerified, phoneVerified, documentStatuses)) return true;
+    return isPending(w.id, documentStatuses);
+  }).length;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-charcoal-light">
-          {completed} of {VERIFICATION_WORKFLOWS.length} verifications complete
+          {verified} of {VERIFICATION_WORKFLOWS.length} verified · {submitted} submitted
         </p>
-        <Badge variant="gold">{Math.round((completed / VERIFICATION_WORKFLOWS.length) * 100)}%</Badge>
+        <Badge variant="gold">{Math.round((submitted / VERIFICATION_WORKFLOWS.length) * 100)}%</Badge>
       </div>
 
       <div className="space-y-3">
@@ -71,7 +75,7 @@ export function VerificationProgress({
                     {workflow.points > 0 && (
                       <Badge variant="outline">+{workflow.points} pts</Badge>
                     )}
-                    {pending && <Badge variant="warning">In progress</Badge>}
+                    {pending && <Badge variant="warning">Submitted</Badge>}
                     {done && <Badge variant="success">Verified</Badge>}
                   </div>
                   <p className="text-xs text-charcoal-light mt-0.5">{workflow.description}</p>

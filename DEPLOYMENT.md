@@ -26,18 +26,25 @@ npm run db:seed
 
 ### Auth URL Configuration
 
-In Supabase Dashboard → Authentication → URL Configuration:
+In Supabase Dashboard → **Authentication** → **URL Configuration**:
 
-| Setting | Production Value |
+| Setting | Production value |
 |---------|------------------|
-| Site URL | `https://your-domain.vercel.app` |
-| Redirect URLs | `https://your-domain.vercel.app/auth/verify-email` |
-
-Add preview deployment URLs if using Vercel preview branches:
+| **Site URL** | `https://your-app.vercel.app` (your real domain — **not** `http://localhost:3000`) |
+| **Redirect URLs** | Add all of the following (one per line): |
 
 ```
+https://your-app.vercel.app/auth/callback
+https://your-app.vercel.app/auth/callback/**
+https://your-app.vercel.app/auth/verify-email
+https://*.vercel.app/auth/callback
+https://*.vercel.app/auth/callback/**
 https://*.vercel.app/auth/verify-email
 ```
+
+If Site URL is still `localhost`, verification emails will redirect to `localhost` and **Safari on your phone cannot open them**.
+
+In Vercel, set `NEXT_PUBLIC_APP_URL` to the same production URL (see [ENVIRONMENT.md](./ENVIRONMENT.md)).
 
 ## 2. Deploy to Vercel
 

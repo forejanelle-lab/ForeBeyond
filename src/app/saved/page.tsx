@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Heart, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { SearchResultsGrid } from "@/components/search/SearchResultsGrid";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import type { ListingPhoto, PublicListing } from "@/types/database";
 
@@ -72,24 +71,20 @@ export default async function SavedFamiliesPage() {
             {listings.length} saved {listings.length === 1 ? "family" : "families"}
           </p>
         </div>
-        <Link href="/search">
-          <Button variant="secondary" size="md">
-            <Search className="h-4 w-4" />
-            Search more families
-          </Button>
-        </Link>
+        <ButtonLink href="/search" variant="secondary" size="md">
+          <Search className="h-4 w-4" />
+          Search more families
+        </ButtonLink>
       </div>
 
       {listings.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-sage-dark/40 bg-sage/20">
           <Heart className="h-10 w-10 text-forest mx-auto mb-4" />
           <p className="text-charcoal-light mb-4">You haven&apos;t saved any families yet.</p>
-          <Link href="/search">
-            <Button variant="primary" size="lg">
-              <Search className="h-4 w-4" />
-              Explore families
-            </Button>
-          </Link>
+          <ButtonLink href="/search" variant="primary" size="lg">
+            <Search className="h-4 w-4" />
+            Explore families
+          </ButtonLink>
         </div>
       ) : (
         <SearchResultsGrid

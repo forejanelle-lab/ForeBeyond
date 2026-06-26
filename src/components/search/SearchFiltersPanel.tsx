@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import {
   BUDGET_RANGES,
   COMMON_LANGUAGES,
@@ -163,57 +163,44 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
   const hasActiveFilters =
     JSON.stringify(filters) !== JSON.stringify(DEFAULT_SEARCH_FILTERS);
 
-  const panelHeader = (
-    <div className="flex items-center justify-between gap-3 mb-4">
-      <div>
-        <h2 className="font-semibold text-forest flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4" />
-          Filters
-        </h2>
-        <p className="text-xs text-charcoal-light mt-1">
-          {resultCount} {resultCount === 1 ? "family" : "families"} found
-        </p>
-      </div>
-      {hasActiveFilters && (
-        <button
-          type="button"
-          onClick={clearFilters}
-          className="text-xs font-medium text-forest hover:underline inline-flex items-center gap-1"
-        >
-          <X className="h-3 w-3" />
-          Clear
-        </button>
-      )}
-    </div>
-  );
-
   return (
-    <>
-      <Card variant="outline" padding="md" className="hidden lg:block sticky top-24">
-        {panelHeader}
+    <details className="group mb-6">
+      <summary className="list-none cursor-pointer">
+        <Card variant="outline" padding="md" className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-forest font-medium">
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters &amp; search
+            {hasActiveFilters && (
+              <span className="text-xs font-normal text-gold">(active)</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-charcoal-light">
+            <span>{resultCount} {resultCount === 1 ? "family" : "families"}</span>
+            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+          </div>
+        </Card>
+      </summary>
+      <Card variant="outline" padding="md" className="mt-3">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <p className="text-sm text-charcoal-light">
+            Refine by budget, language, meals, and verification
+          </p>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-xs font-medium text-forest hover:underline inline-flex items-center gap-1 shrink-0"
+            >
+              <X className="h-3 w-3" />
+              Clear
+            </button>
+          )}
+        </div>
         <FilterFields filters={filters} countries={countries} onChange={updateFilter} />
         {isPending && (
           <p className="text-xs text-charcoal-light mt-4">Updating results...</p>
         )}
       </Card>
-
-      <details className="lg:hidden group">
-        <summary className="list-none cursor-pointer">
-          <Card variant="outline" padding="md" className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-forest font-medium">
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters &amp; search
-            </div>
-            <span className="text-xs text-charcoal-light">
-              {resultCount} results
-            </span>
-          </Card>
-        </summary>
-        <Card variant="outline" padding="md" className="mt-3">
-          {panelHeader}
-          <FilterFields filters={filters} countries={countries} onChange={updateFilter} />
-        </Card>
-      </details>
-    </>
+    </details>
   );
 }

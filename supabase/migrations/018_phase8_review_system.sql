@@ -128,7 +128,7 @@ AS $$
   );
 $$;
 
--- Auto-approve high ratings; flag low ratings for moderation
+-- Auto-approve all reviews (no moderation queue)
 CREATE OR REPLACE FUNCTION public.auto_moderate_review()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -136,12 +136,8 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF NEW.rating >= 4 THEN
-    NEW.moderation_status := 'approved';
-    NEW.moderated_at := NOW();
-  ELSE
-    NEW.moderation_status := 'pending';
-  END IF;
+  NEW.moderation_status := 'approved';
+  NEW.moderated_at := NOW();
   RETURN NEW;
 END;
 $$;

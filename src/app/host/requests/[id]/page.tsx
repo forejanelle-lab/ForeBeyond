@@ -3,14 +3,27 @@ import Link from "next/link";
 import { ArrowLeft, Calendar, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { HostRequestActions } from "@/components/stays/HostRequestActions";
+import { HostIncomeBreakdown } from "@/components/stays/HostIncomeBreakdown";
+import { HostStayMessageButton } from "@/components/stays/HostStayMessageButton";
+import {
+  ensureStayConversation,
+  isStayMessagingOpen,
+} from "@/lib/messaging";
 import { StayRequestStatusBadge } from "@/components/stays/StayRequestStatusBadge";
-import { formatDateRange } from "@/lib/stay-requests";
+import { ReviewList } from "@/components/reviews/ReviewList";
+import {
+  formatBookingReference,
+  formatDateRange,
+  LISTING_PRICING_SELECT,
+  pickListingPricing,
+  type ListingPricing,
+} from "@/lib/stay-requests";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
-import type { Profile, PublicListing, StayRequest } from "@/types/database";
+import type { Profile, HostListing, PublicReview, StayRequest } from "@/types/database";
 
-export const metadata = { title: "Review Stay Request" };
+export const metadata = { title: "Review Request" };
 
 export default async function HostRequestDetailPage({
   params,
@@ -43,37 +56,69 @@ export default async function HostRequestDetailPage({
 
   const typedRequest = request as StayRequest;
 
-  const [{ data: listing }, { data: traveler }] = await Promise.all([
-    typedRequest.listing_id
-      ? supabase
-          .from("public_listings")
-          .select("title, budget_per_night")
-          .eq("id", typedRequest.listing_id)
-          .single()
-      : Promise.resolve({ data: null }),
-    supabase.from("profiles").select("full_name, bio, location").eq("id", typedRequest.traveler_id).single(),
-  ]);
+  const [{ data: listing }, { data: traveler }, { data: travelerReviews }] =
+    await Promise.all([
+      typedRequest.listing_id
+        ? supabase
+            .from("host_listings")
+            .select(`title, ${LISTING_PRICING_SELECT}`)
+            .eq("id", typedRequest.listing_id)
+            .single()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("profiles")
+        .select("full_name, bio, location")
+        .eq("id", typedRequest.traveler_id)
+        .single(),
+      supabase
+        .from("public_reviews")
+        .select("*")
+        .eq("reviewee_id", typedRequest.traveler_id)
+        .eq("reviewer_role", "host")
+        .order("created_at", { ascending: false }),
+    ]);
 
-  const travelerProfile = traveler as { full_name: string | null; bio: string | null; location: string | null } | null;
-  const listingData = listing as Pick<PublicListing, "title" | "budget_per_night"> | null;
+  let conversationId: string | null = null;
+  if (isStayMessagingOpen(typedRequest)) {
+    conversationId = await ensureStayConversation(supabase, id);
+  }
+  if (!conversationId) {
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("stay_request_id", id)
+      .maybeSingle();
+    conversationId = (conversation as { id: string } | null)?.id ?? null;
+  }
+
+  const travelerProfile = traveler as {
+    full_name: string | null;
+    bio: string | null;
+    location: string | null;
+  } | null;
+  const travelerFullName = travelerProfile?.full_name?.trim() || "Traveler";
+  const listingData = listing as (Pick<HostListing, "title"> & ListingPricing) | null;
+  const listingPricing = pickListingPricing(listingData ?? {});
+  const reviews = (travelerReviews as PublicReview[]) ?? [];
 
   return (
     <Container size="md" className="py-10 md:py-16">
       <Link href="/host/requests" className="inline-flex items-center gap-2 text-sm text-forest hover:underline mb-6">
         <ArrowLeft className="h-4 w-4" />
-        All requests
+        Pending requests
       </Link>
 
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
         <StayRequestStatusBadge status={typedRequest.status} />
-        <Badge variant="outline">From {travelerProfile?.full_name?.split(" ")[0] ?? "Traveler"}</Badge>
+        <Badge variant="outline">Booking ref: {formatBookingReference(typedRequest.id)}</Badge>
       </div>
 
-      <h1 className="text-3xl font-bold text-forest mb-8">
+      <h1 className="text-3xl font-bold text-forest">{travelerFullName}</h1>
+      <p className="text-charcoal-light mt-2">
         {listingData?.title ?? "Stay request"}
-      </h1>
+      </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         <div className="lg:col-span-2 space-y-6">
           <Card variant="outline" padding="md">
             <h2 className="font-semibold text-forest mb-3">Traveler introduction</h2>
@@ -99,13 +144,25 @@ export default async function HostRequestDetailPage({
               <Users className="h-4 w-4 text-forest" />
               {typedRequest.guest_count} guest{typedRequest.guest_count !== 1 ? "s" : ""}
             </p>
+            <HostIncomeBreakdown request={typedRequest} pricing={listingPricing} />
           </Card>
+
+          <ReviewList
+            title="Reviews from other hosts"
+            reviews={reviews}
+            showReviewerName
+            emptyMessage="This guest has no reviews from other host families yet."
+          />
         </div>
 
-        <HostRequestActions
-          request={typedRequest}
-          nightlyRate={listingData?.budget_per_night ?? null}
-        />
+        <div className="space-y-4">
+          <HostRequestActions request={typedRequest} listingPricing={listingPricing} />
+          <HostStayMessageButton
+            request={typedRequest}
+            conversationId={conversationId}
+            guestName={travelerFullName}
+          />
+        </div>
       </div>
     </Container>
   );

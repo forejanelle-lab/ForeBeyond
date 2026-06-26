@@ -1,13 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Globe, Utensils, Home, Sparkles, Shield, DollarSign } from "lucide-react";
-import { ListingTrustPanel } from "@/components/listings/ListingTrustPanel";
+import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, MessageCircleReply } from "lucide-react";
+import { FamilyProfileContent } from "@/components/search/FamilyProfileContent";
 import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
+import { TrustScorePanel } from "@/components/design/TrustScorePanel";
+import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
 import { formatBudget } from "@/lib/search";
-import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
+import { formatAverageRating } from "@/lib/reviews";
+import { formatResponseRate } from "@/lib/host-stats";
 import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
+import { Card } from "@/components/ui/Card";
 import type { HostListing, ListingPhoto, PublicListing, PublicReview, TrustBadge } from "@/types/database";
 
 interface FamilyProfileViewProps {
@@ -20,7 +22,11 @@ interface FamilyProfileViewProps {
   reviews: PublicReview[];
   isSaved?: boolean;
   showSaveButton?: boolean;
+  showBookingActions?: boolean;
   userId?: string | null;
+  bookingCount?: number;
+  responseRate?: number | null;
+  totalStayRequests?: number;
 }
 
 export function FamilyProfileView({
@@ -29,152 +35,142 @@ export function FamilyProfileView({
   hostFirstName,
   trustScore,
   verificationStatus,
-  badges,
   reviews,
   isSaved = false,
   showSaveButton = true,
+  showBookingActions = true,
   userId = null,
+  bookingCount = 0,
+  responseRate = null,
+  totalStayRequests = 0,
 }: FamilyProfileViewProps) {
   const coverPhoto = photos.find((p) => p.is_cover) ?? photos[0];
   const budget = "budget_per_night" in listing ? listing.budget_per_night : null;
-
-  const tagSections = [
-    { icon: Utensils, label: "Meals", items: listing.meals },
-    { icon: Home, label: "Amenities", items: listing.amenities },
-    { icon: Sparkles, label: "Family Activities", items: listing.family_activities },
-    { icon: Shield, label: "House Rules", items: listing.house_rules },
-  ];
+  const isVerified = verificationStatus === "verified";
+  const avgRating = formatAverageRating(reviews);
 
   return (
     <>
-      <Section background="cream" className="!py-0">
-        <div className="relative h-64 md:h-[28rem] bg-sage">
-          {coverPhoto && (
-            <Image
-              src={coverPhoto.file_url}
-              alt={listing.title ?? "Family listing"}
-              fill
-              className="object-cover"
-              priority
-              sizes="100vw"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-          <Container className="absolute bottom-0 left-0 right-0 pb-6 md:pb-8">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">
-                  {listing.title ?? "Family Home"}
-                </h1>
-                {(listing.city || listing.country) && (
-                  <p className="flex items-center gap-1.5 text-white/85 mt-2">
-                    <MapPin className="h-4 w-4" />
-                    {[listing.city, listing.country].filter(Boolean).join(", ")}
-                  </p>
-                )}
-                <p className="flex items-center gap-1.5 text-white/85 mt-2 text-sm md:text-base">
-                  <DollarSign className="h-4 w-4" />
-                  {formatBudget(budget)}
+      <section className="relative h-64 md:h-[28rem] bg-sage">
+        {coverPhoto && (
+          <Image
+            src={coverPhoto.file_url}
+            alt={listing.title ?? "Family listing"}
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <Container className="absolute bottom-0 left-0 right-0 pb-6 md:pb-10">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-gold mb-2 uppercase tracking-wide">
+                Fore Beyond Family
+              </p>
+              <h1 className="text-3xl md:text-5xl font-bold text-white">
+                {listing.title ?? "Family Home"}
+              </h1>
+              {(listing.city || listing.country) && (
+                <p className="flex items-center gap-1.5 text-white/85 mt-2">
+                  <MapPin className="h-4 w-4" />
+                  {[listing.city, listing.country].filter(Boolean).join(", ")}
                 </p>
-              </div>
-              {showSaveButton && (
-                <div className="md:min-w-[220px]">
-                  <SaveFamilyButton listingId={listing.id} initialSaved={isSaved} />
-                </div>
               )}
+              <p className="flex items-center gap-1.5 text-white/85 mt-2 text-sm md:text-base">
+                <DollarSign className="h-4 w-4" />
+                {formatBudget(budget)}
+              </p>
             </div>
-          </Container>
-        </div>
-      </Section>
-
-      <Container className="py-10 md:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
-          <div className="lg:col-span-2 space-y-8">
-            {listing.family_story && (
-              <section>
-                <h2 className="text-xl font-semibold text-forest mb-3">Our Family Story</h2>
-                <p className="text-charcoal-light leading-relaxed whitespace-pre-wrap">
-                  {listing.family_story}
-                </p>
-              </section>
-            )}
-
-            {listing.languages && listing.languages.length > 0 && (
-              <section>
-                <h2 className="text-xl font-semibold text-forest mb-3 flex items-center gap-2">
-                  <Globe className="h-5 w-5" /> Languages
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {listing.languages.map((lang) => (
-                    <Badge key={lang} variant="default">{lang}</Badge>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {tagSections.map(
-              (section) =>
-                section.items &&
-                section.items.length > 0 && (
-                  <section key={section.label}>
-                    <h2 className="text-xl font-semibold text-forest mb-3 flex items-center gap-2">
-                      <section.icon className="h-5 w-5" /> {section.label}
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                      {section.items.map((item) => (
-                        <Badge key={item} variant="outline">{item}</Badge>
-                      ))}
-                    </div>
-                  </section>
-                )
-            )}
-
-            {photos.length > 1 && (
-              <section>
-                <h2 className="text-xl font-semibold text-forest mb-4">Photos</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {photos.map((photo) => (
-                    <div key={photo.id} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-sage">
-                      <Image
-                        src={photo.file_url}
-                        alt={photo.caption ?? "Family photo"}
-                        fill
-                        className="object-cover"
-                        sizes="300px"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
+            {showSaveButton && (
+              <div className="md:min-w-[220px]">
+                <SaveFamilyButton listingId={listing.id} initialSaved={isSaved} />
+              </div>
             )}
           </div>
+        </Container>
+      </section>
 
-          <div>
-            <ListingTrustPanel
-              hostFirstName={hostFirstName}
-              trustScore={trustScore}
-              verificationStatus={verificationStatus}
-              badges={badges}
-              reviews={reviews}
+      <Container className="py-10 md:py-14">
+        <div className="mb-8">
+          <VerificationBadgeRow verified={isVerified} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+          <div className="lg:col-span-2">
+            <FamilyProfileContent listing={listing} photos={photos} reviews={reviews} />
+          </div>
+
+          <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
+            <TrustScorePanel
+              score={trustScore}
+              reviewCount={reviews.length}
+              avgRating={avgRating}
+              showBreakdownLink
             />
-            <Card variant="outline" padding="md" className="mt-6 text-center">
-              <p className="text-sm text-charcoal-light mb-3">
-                Interested in staying with this family?
-              </p>
-              {userId ? (
-                <Link
-                  href={`/families/${listing.id}/request`}
-                  className="inline-flex items-center justify-center rounded-full bg-forest px-5 py-2.5 text-sm font-medium text-white hover:bg-forest-light transition-colors w-full"
-                >
-                  Request Stay
-                </Link>
+
+            <Card variant="outline" padding="md" className="space-y-3">
+              <h3 className="text-sm font-semibold text-forest">Host reliability</h3>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl bg-sage/40 px-3 py-2.5">
+                  <p className="flex items-center gap-1.5 text-xs text-charcoal-light mb-0.5">
+                    <MessageCircleReply className="h-3.5 w-3.5" />
+                    Response rate
+                  </p>
+                  <p className="font-semibold text-forest">
+                    {formatResponseRate(responseRate, totalStayRequests)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-sage/40 px-3 py-2.5">
+                  <p className="flex items-center gap-1.5 text-xs text-charcoal-light mb-0.5">
+                    <CalendarCheck className="h-3.5 w-3.5" />
+                    Bookings
+                  </p>
+                  <p className="font-semibold text-forest">{bookingCount}</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card variant="outline" padding="md" className="space-y-4">
+              {showBookingActions ? (
+                <>
+                  <p className="text-sm text-charcoal-light text-center">
+                    Interested in staying with {hostFirstName ?? "this family"}?
+                  </p>
+                  {userId ? (
+                    <>
+                      <Link
+                        href={`/families/${listing.id}/request`}
+                        className="inline-flex items-center justify-center rounded-full bg-forest px-5 py-3 text-sm font-medium text-white hover:bg-forest-light transition-colors w-full"
+                      >
+                        Request to Stay
+                      </Link>
+                      <Link
+                        href="/messages"
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-forest/30 bg-white px-5 py-3 text-sm font-medium text-forest hover:bg-sage/40 transition-colors w-full"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Message Family
+                      </Link>
+                    </>
+                  ) : (
+                    <Link
+                      href={`/auth/sign-in?redirect=/families/${listing.id}/request`}
+                      className="inline-flex items-center justify-center rounded-full bg-forest px-5 py-3 text-sm font-medium text-white hover:bg-forest-light transition-colors w-full"
+                    >
+                      Sign in to request stay
+                    </Link>
+                  )}
+                  <p className="flex items-center justify-center gap-1.5 text-xs text-charcoal-light">
+                    <Lock className="h-3.5 w-3.5" />
+                    Host contact details are shared once your stay is confirmed
+                  </p>
+                </>
               ) : (
-                <Link
-                  href={`/auth/sign-in?redirect=/families/${listing.id}/request`}
-                  className="inline-flex items-center justify-center rounded-full bg-forest px-5 py-2.5 text-sm font-medium text-white hover:bg-forest-light transition-colors w-full"
-                >
-                  Sign in to request stay
-                </Link>
+                <p className="text-sm text-charcoal-light text-center">
+                  This is your listing preview. Travelers will see request and message options here.
+                </p>
               )}
             </Card>
           </div>

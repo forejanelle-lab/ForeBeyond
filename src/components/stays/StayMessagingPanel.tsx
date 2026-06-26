@@ -8,6 +8,7 @@ interface StayMessagingPanelProps {
   userId: string;
   otherPartyName: string;
   unlocked: boolean;
+  lockReason?: string;
 }
 
 export function StayMessagingPanel(props: StayMessagingPanelProps) {

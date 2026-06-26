@@ -35,6 +35,11 @@ export const EXPERIENCE_CATEGORIES: {
     label: "Hiking Experiences",
     description: "Walk scenic trails with a local who knows the land and its stories.",
   },
+  {
+    value: "other",
+    label: "Other",
+    description: "A unique experience that doesn't fit the categories above — describe your own.",
+  },
 ];
 
 export const EXPERIENCE_INCLUDES = [

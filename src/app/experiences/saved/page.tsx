@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Heart, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ExperienceResultsGrid } from "@/components/experiences/ExperienceResultsGrid";
+import {
+  filterExperiencesByVisibility,
+  fetchApprovedHostIdsForUser,
+} from "@/lib/experience-visibility";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import type { ExperiencePhoto, PublicExperience } from "@/types/database";
 
@@ -51,7 +54,12 @@ export default async function SavedExperiencesPage() {
       .from("public_experiences")
       .select("*")
       .in("id", experienceIds);
-    experiences = (data as PublicExperience[]) ?? [];
+    const fetched = (data as PublicExperience[]) ?? [];
+    const approvedHostIds = await fetchApprovedHostIdsForUser(supabase, user.id);
+    experiences = filterExperiencesByVisibility(fetched, {
+      userId: user.id,
+      approvedHostIds,
+    });
     experiences.sort(
       (a, b) => experienceIds.indexOf(a.id) - experienceIds.indexOf(b.id)
     );
@@ -72,24 +80,20 @@ export default async function SavedExperiencesPage() {
             {experiences.length} saved {experiences.length === 1 ? "experience" : "experiences"}
           </p>
         </div>
-        <Link href="/experiences">
-          <Button variant="secondary" size="md">
-            <Sparkles className="h-4 w-4" />
-            Browse experiences
-          </Button>
-        </Link>
+        <ButtonLink href="/experiences" variant="secondary" size="md">
+          <Sparkles className="h-4 w-4" />
+          Browse experiences
+        </ButtonLink>
       </div>
 
       {experiences.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-sage-dark/40 bg-sage/20">
           <Heart className="h-10 w-10 text-forest mx-auto mb-4" />
           <p className="text-charcoal-light mb-4">You haven&apos;t saved any experiences yet.</p>
-          <Link href="/experiences">
-            <Button variant="primary" size="lg">
-              <Sparkles className="h-4 w-4" />
-              Explore experiences
-            </Button>
-          </Link>
+          <ButtonLink href="/experiences" variant="primary" size="lg">
+            <Sparkles className="h-4 w-4" />
+            Explore experiences
+          </ButtonLink>
         </div>
       ) : (
         <ExperienceResultsGrid

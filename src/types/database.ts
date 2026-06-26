@@ -15,6 +15,7 @@ export type OnboardingStep =
 
 export type StayRequestStatus =
   | "pending"
+  | "host_approved"
   | "approved"
   | "rejected"
   | "cancelled"
@@ -32,13 +33,16 @@ export type ListingStatus = "draft" | "published" | "archived";
 
 export type ExperienceStatus = "draft" | "published" | "archived";
 
+export type ExperienceVisibility = "all_members" | "approved_guests_only";
+
 export type ExperienceCategory =
   | "family_dinner"
   | "cooking_class"
   | "market_tour"
   | "tea_ceremony"
   | "cultural_workshop"
-  | "hiking";
+  | "hiking"
+  | "other";
 
 export type ReportStatus = "pending" | "reviewing" | "resolved" | "dismissed";
 
@@ -345,6 +349,11 @@ export interface HostListing {
   family_activities: string[] | null;
   house_rules: string[] | null;
   budget_per_night: number | null;
+  budget_per_night_3_guests: number | null;
+  budget_per_night_4_guests: number | null;
+  budget_per_night_5_guests: number | null;
+  budget_per_night_6_plus_guests: number | null;
+  max_capacity: number | null;
   status: ListingStatus;
   published_at: string | null;
   created_at: string;
@@ -361,6 +370,14 @@ export interface ListingPhoto {
   created_at: string;
 }
 
+export interface ListingContactDetails {
+  listing_id: string;
+  contact_email: string | null;
+  contact_address: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PublicListing {
   id: string;
   host_id: string;
@@ -374,6 +391,11 @@ export interface PublicListing {
   family_activities: string[] | null;
   house_rules: string[] | null;
   budget_per_night: number | null;
+  budget_per_night_3_guests: number | null;
+  budget_per_night_4_guests: number | null;
+  budget_per_night_5_guests: number | null;
+  budget_per_night_6_plus_guests: number | null;
+  max_capacity: number | null;
   published_at: string | null;
   created_at: string;
   trust_score: number;
@@ -404,6 +426,7 @@ export interface HostExperience {
   price_per_person: number | null;
   includes: string[] | null;
   requirements: string[] | null;
+  visibility: ExperienceVisibility;
   status: ExperienceStatus;
   published_at: string | null;
   created_at: string;
@@ -435,6 +458,7 @@ export interface PublicExperience {
   price_per_person: number | null;
   includes: string[] | null;
   requirements: string[] | null;
+  visibility: ExperienceVisibility;
   published_at: string | null;
   created_at: string;
   trust_score: number;

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { markAllNotificationsRead } from "@/lib/notifications";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
@@ -13,6 +14,8 @@ export default async function NotificationsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/sign-in?redirect=/notifications");
+
+  await markAllNotificationsRead(supabase, user.id);
 
   const { data: notifications } = await supabase
     .from("notifications")

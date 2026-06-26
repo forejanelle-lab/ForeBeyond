@@ -1,6 +1,9 @@
+import { Logo } from "@/components/design/Logo";
+
 export function SupabaseConfigNotice() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-cream p-6">
+      <Logo className="mb-8" />
       <div className="max-w-lg rounded-2xl border border-sage-dark/40 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-forest mb-3">Configuration required</h1>
         <p className="text-sm text-charcoal-light leading-relaxed mb-4">

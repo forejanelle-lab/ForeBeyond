@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, CreditCard, Lock, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/stay-requests";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
@@ -56,9 +57,9 @@ export function PaymentPageClient({ tripId, booking, listingTitle }: PaymentPage
           <p className="text-charcoal-light mt-2">
             Your booking for {listingTitle ?? "this stay"} is confirmed.
           </p>
-          <Link href={`/trips/${tripId}`} className="inline-block mt-6">
-            <Button variant="primary" size="md">Back to trip</Button>
-          </Link>
+          <ButtonLink href={`/trips/${tripId}`} variant="primary" size="md" className="mt-6">
+            Back to trip
+          </ButtonLink>
         </Card>
       </Container>
     );
