@@ -90,14 +90,14 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
             [bounds.minLat, bounds.minLng],
             [bounds.maxLat, bounds.maxLng],
           ],
-          { padding: [28, 28] }
+          { padding: [24, 24] }
         );
       }
 
-      const invalidate = () => map.invalidateSize();
+      const invalidate = () => map.invalidateSize({ animate: false });
       requestAnimationFrame(invalidate);
-      window.setTimeout(invalidate, 100);
-      window.setTimeout(invalidate, 350);
+      window.setTimeout(invalidate, 50);
+      window.setTimeout(invalidate, 250);
     });
 
     return () => {
@@ -106,13 +106,13 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
   }, [mapPoints]);
 
   useEffect(() => {
-    const target = mapShellRef.current ?? mapContainerRef.current;
-    if (!target || !mapRef.current) return;
+    const shell = mapShellRef.current;
+    if (!shell || !mapRef.current) return;
 
     const observer = new ResizeObserver(() => {
-      mapRef.current?.invalidateSize();
+      mapRef.current?.invalidateSize({ animate: false });
     });
-    observer.observe(target);
+    observer.observe(shell);
     return () => observer.disconnect();
   }, [mapPoints.length]);
 
@@ -130,25 +130,23 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
   return (
     <div
       ref={mapShellRef}
-      className="search-family-map relative flex h-full min-h-[420px] w-full flex-col overflow-hidden rounded-2xl border border-sage-dark/30 shadow-md"
+      className="search-family-map relative h-full w-full overflow-hidden rounded-2xl border border-sage-dark/30 shadow-md"
     >
       {mapPoints.length > 0 ? (
         <>
-          <div className="relative min-h-0 flex-1">
-            <div ref={mapContainerRef} className="absolute inset-0 z-0" aria-hidden="true" />
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] bg-gradient-to-b from-white/95 via-white/75 to-transparent p-3 pb-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-charcoal-light">
-                {mapPoints.length} families on map
-              </p>
-            </div>
+          <div ref={mapContainerRef} className="absolute inset-0 z-0" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] bg-gradient-to-b from-white/95 via-white/70 to-transparent px-3 py-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-charcoal-light">
+              {mapPoints.length} families on map
+            </p>
           </div>
-          <div className="z-[500] max-h-36 shrink-0 overflow-y-auto border-t border-sage-dark/20 bg-white/95 p-3">
-            <ul className="space-y-1.5">
+          <div className="absolute inset-x-0 bottom-0 z-[500] max-h-[32%] overflow-y-auto border-t border-sage-dark/20 bg-white/95 p-2.5">
+            <ul className="space-y-1">
               {mapPoints.slice(0, 8).map((point) => (
                 <li key={point.id}>
                   <Link
                     href={point.href}
-                    className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-forest hover:bg-sage/50 transition-colors"
+                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-forest hover:bg-sage/50 transition-colors"
                   >
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{point.label}</span>
@@ -159,7 +157,7 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
           </div>
         </>
       ) : (
-        <div className="flex min-h-[420px] flex-1 flex-col items-center justify-center gap-2 bg-sage/30 p-6 text-center">
+        <div className="flex h-full flex-col items-center justify-center gap-2 bg-sage/30 p-6 text-center">
           <MapPin className="h-8 w-8 text-forest/40" />
           <p className="text-sm font-medium text-forest">Map view</p>
           <p className="text-xs text-charcoal-light max-w-[14rem]">

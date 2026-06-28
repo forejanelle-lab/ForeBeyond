@@ -107,11 +107,15 @@
   text-decoration: underline;
 }
 
-.search-family-map .leaflet-container {
-  position: absolute !important;
-  inset: 0 !important;
+.search-family-map .leaflet-container,
+.search-family-map .leaflet-pane,
+.search-family-map .leaflet-map-pane,
+.search-family-map .leaflet-tile-pane {
   width: 100% !important;
   height: 100% !important;
+}
+
+.search-family-map .leaflet-container {
   background: var(--color-sage);
 }
 

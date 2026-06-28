@@ -86,7 +86,7 @@ async function SearchResults({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_minmax(280px,340px)] gap-6 lg:gap-8 lg:items-stretch">
+    <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_minmax(280px,340px)] gap-6 lg:gap-8 lg:items-start">
       <SearchFiltersPanel countries={countries} resultCount={filtered.length} />
       <div className="min-w-0 space-y-6">
         <SearchResultsGrid
@@ -97,8 +97,10 @@ async function SearchResults({
           layout="list"
         />
       </div>
-      <div className="hidden lg:flex min-w-0 self-stretch">
-        <SearchFamilyMap mapPoints={mapPoints} />
+      <div className="hidden lg:block min-w-0">
+        <div className="sticky top-24 h-[calc(100vh-7rem)]">
+          <SearchFamilyMap mapPoints={mapPoints} />
+        </div>
       </div>
     </div>
   );

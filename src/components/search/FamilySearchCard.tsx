@@ -67,10 +67,10 @@ export function FamilySearchCard({
 
   const imageBlock = (
     <div
-      className={`relative overflow-hidden bg-sage ${
+      className={`relative shrink-0 overflow-hidden bg-sage ${
         layout === "list"
-          ? "w-full h-44 sm:w-48 md:w-56 shrink-0 sm:min-h-[140px] rounded-xl"
-          : "aspect-[16/10] rounded-xl mb-4"
+          ? "h-36 w-full rounded-xl sm:h-40 sm:w-44 md:h-44 md:w-52"
+          : "mb-4 aspect-[16/10] w-full rounded-xl"
       }`}
     >
       <ListingImage
@@ -79,8 +79,10 @@ export function FamilySearchCard({
         city={listing.city}
         alt={listing.title ?? "Family listing"}
         fill
-        className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
-        sizes={layout === "list" ? "224px" : "(max-width: 768px) 100vw, 400px"}
+        className={`object-cover transition-transform duration-300 group-hover:scale-[1.02] ${
+          layout === "list" ? "object-left" : "object-center"
+        }`}
+        sizes={layout === "list" ? "208px" : "(max-width: 768px) 100vw, 400px"}
       />
       {showSaveButton && layout === "grid" && (
         <button
@@ -179,7 +181,10 @@ export function FamilySearchCard({
         }`}
       >
         {layout === "list" ? (
-          <div className="flex flex-col sm:flex-row gap-4">{imageBlock}{contentBlock}</div>
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            {imageBlock}
+            {contentBlock}
+          </div>
         ) : (
           <>
             {imageBlock}
