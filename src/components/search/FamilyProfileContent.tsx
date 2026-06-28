@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Globe, Utensils, Home, Sparkles, Shield } from "lucide-react";
+import { ListingImage } from "@/components/listings/ListingImage";
 import { ProfileTabs } from "@/components/design/ProfileTabs";
 import { ListingReviewAction } from "@/components/reviews/ListingReviewAction";
 import { ReviewList } from "@/components/reviews/ReviewList";
@@ -94,11 +94,12 @@ export function FamilyProfileContent({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {photos.map((photo) => (
                 <div key={photo.id} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-sage">
-                  <Image
+                  <ListingImage
                     src={photo.file_url}
+                    country={listing.country}
+                    city={listing.city}
                     alt={photo.caption ?? "Family photo"}
                     fill
-                    unoptimized={photo.file_url.startsWith("http")}
                     className="object-cover"
                     sizes="300px"
                   />

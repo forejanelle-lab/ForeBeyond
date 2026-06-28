@@ -8,9 +8,9 @@ export const sampleImages = {
     "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=1200&q=80",
   japanStreet:
     "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1920&q=85&auto=format&fit=crop",
-  /** Search families page hero — full-width, high resolution */
+  /** Search families page hero — welcoming travelers, not food imagery */
   searchFamilies:
-    "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=1920&q=85&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1920&q=85&auto=format&fit=crop",
   italyVillage:
     "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&q=80",
   morocco:

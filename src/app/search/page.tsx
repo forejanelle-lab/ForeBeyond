@@ -97,7 +97,7 @@ async function SearchResults({
           layout="list"
         />
       </div>
-      <div className="hidden lg:flex min-w-0">
+      <div className="hidden lg:flex min-w-0 self-stretch">
         <SearchFamilyMap mapPoints={mapPoints} />
       </div>
     </div>
@@ -115,7 +115,7 @@ export default async function SearchFamiliesPage({
     <>
       <PageHero
         image={sampleImages.searchFamilies}
-        imageAlt="Host family welcoming a guest in a warm home kitchen"
+        imageAlt="Friends and travelers sharing time together outdoors"
         eyebrow="Search Families"
         title="Find your host family"
         subtitle="Discover verified families offering authentic cultural immersion around the world."

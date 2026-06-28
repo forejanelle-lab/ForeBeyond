@@ -1,5 +1,8 @@
 import { resolveCatalogListingPhoto } from "@/lib/listing-photo-catalog";
 
+/** Fore Beyond logo shown when a listing photo fails to load */
+export const LISTING_IMAGE_FALLBACK = "/fore-beyond-logo.svg";
+
 const FALLBACK_INDEX_BY_CITY = new Map<string, number>();
 
 function fallbackIndex(city?: string | null, country?: string | null): number {

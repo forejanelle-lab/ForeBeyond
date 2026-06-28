@@ -1,8 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { MapPin, Calendar } from "lucide-react";
 import { formatCurrency, formatDateRange, TRIP_STATUS_LABELS } from "@/lib/stay-requests";
-import { resolveListingImage } from "@/lib/listing-images";
+import { ListingImage } from "@/components/listings/ListingImage";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import type { PublicListing, StayBooking, Trip } from "@/types/database";
@@ -23,7 +22,6 @@ export function TripListCard({
   coverPhotoUrl,
 }: TripListCardProps) {
   const status = TRIP_STATUS_LABELS[trip.status] ?? TRIP_STATUS_LABELS.upcoming;
-  const image = resolveListingImage(coverPhotoUrl, listing?.country, listing?.city);
   const tripHref = `/trips/${trip.id}`;
   const familyHref = listingId ? `/families/${listingId}` : null;
 
@@ -32,11 +30,12 @@ export function TripListCard({
       <Link href={tripHref} className="block group">
         <div className="flex flex-col sm:flex-row sm:items-stretch">
           <div className="relative w-full h-44 sm:w-48 md:w-56 shrink-0 self-stretch min-h-[140px] overflow-hidden bg-sage">
-            <Image
-              src={image}
+            <ListingImage
+              src={coverPhotoUrl}
+              country={listing?.country}
+              city={listing?.city}
               alt={listing?.title ?? "Trip"}
               fill
-              unoptimized={image.startsWith("http")}
               className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
               sizes="(max-width: 640px) 100vw, 224px"
             />

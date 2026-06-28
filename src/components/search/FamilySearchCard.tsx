@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Heart, MapPin, Shield, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatBudget } from "@/lib/search";
-import { resolveListingImage } from "@/lib/listing-images";
+import { ListingImage } from "@/components/listings/ListingImage";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import type { PublicListing } from "@/types/database";
@@ -66,8 +65,6 @@ export function FamilySearchCard({
     router.refresh();
   }
 
-  const imageSrc = resolveListingImage(coverPhotoUrl, listing.country, listing.city);
-
   const imageBlock = (
     <div
       className={`relative overflow-hidden bg-sage ${
@@ -76,11 +73,12 @@ export function FamilySearchCard({
           : "aspect-[16/10] rounded-xl mb-4"
       }`}
     >
-      <Image
-        src={imageSrc}
+      <ListingImage
+        src={coverPhotoUrl}
+        country={listing.country}
+        city={listing.city}
         alt={listing.title ?? "Family listing"}
         fill
-        unoptimized={imageSrc.startsWith("http")}
         className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
         sizes={layout === "list" ? "224px" : "(max-width: 768px) 100vw, 400px"}
       />

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, Clock } from "lucide-react";
 import { FamilyProfileContent } from "@/components/search/FamilyProfileContent";
@@ -6,7 +5,7 @@ import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
 import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
-import { resolveListingImage } from "@/lib/listing-images";
+import { ListingImage } from "@/components/listings/ListingImage";
 import { formatBudget } from "@/lib/search";
 import { formatAverageRating } from "@/lib/reviews";
 import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
@@ -68,11 +67,6 @@ export function FamilyProfileView({
   messageLockReason = "Messaging opens when the host messages you first or approves your stay request.",
 }: FamilyProfileViewProps) {
   const coverPhoto = photos.find((p) => p.is_cover) ?? photos[0];
-  const heroImageSrc = resolveListingImage(
-    coverPhoto?.file_url,
-    listing.country,
-    listing.city
-  );
   const budget = "budget_per_night" in listing ? listing.budget_per_night : null;
   const isVerified = verificationStatus === "verified";
   const avgRating = formatAverageRating(reviews);
@@ -80,14 +74,15 @@ export function FamilyProfileView({
   return (
     <>
       <section className="relative h-64 md:h-[28rem] bg-sage">
-        <Image
-          src={heroImageSrc}
+        <ListingImage
+          src={coverPhoto?.file_url}
+          country={listing.country}
+          city={listing.city}
           alt={listing.title ?? "Family listing"}
           fill
           className="object-cover"
           priority
           sizes="100vw"
-          unoptimized={heroImageSrc.startsWith("http")}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <Container className="absolute bottom-0 left-0 right-0 pb-6 md:pb-10">
