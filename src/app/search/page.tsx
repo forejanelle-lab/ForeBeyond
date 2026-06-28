@@ -86,7 +86,7 @@ async function SearchResults({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_minmax(240px,320px)] gap-6 lg:gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_minmax(280px,340px)] gap-6 lg:gap-8 lg:items-stretch">
       <SearchFiltersPanel countries={countries} resultCount={filtered.length} />
       <div className="min-w-0 space-y-6">
         <SearchResultsGrid
@@ -97,7 +97,7 @@ async function SearchResults({
           layout="list"
         />
       </div>
-      <div className="hidden lg:block min-w-0">
+      <div className="hidden lg:flex min-w-0">
         <SearchFamilyMap mapPoints={mapPoints} />
       </div>
     </div>
@@ -114,8 +114,8 @@ export default async function SearchFamiliesPage({
   return (
     <>
       <PageHero
-        image={sampleImages.japanStreet}
-        imageAlt="Families offering cultural stays"
+        image={sampleImages.searchFamilies}
+        imageAlt="Host family welcoming a guest in a warm home kitchen"
         eyebrow="Search Families"
         title="Find your host family"
         subtitle="Discover verified families offering authentic cultural immersion around the world."

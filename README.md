@@ -17,7 +17,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Production: [https://fore-beyond-fore-stay.vercel.app](https://fore-beyond-fore-stay.vercel.app)
+Production: [https://fore-beyond.vercel.app](https://fore-beyond.vercel.app)
 
 ## Documentation
 

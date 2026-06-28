@@ -48,9 +48,13 @@
     "db:migration-049": "node scripts/run-sql.mjs supabase/migrations/049_stay_participant_listing_access.sql",
     "db:migration-050": "node scripts/run-sql.mjs supabase/migrations/050_listing_blocked_dates.sql",
     "db:migration-051": "node scripts/run-sql.mjs supabase/migrations/051_fix_withdraw_stay_trips_updated_at.sql",
+    "db:migration-052": "node scripts/run-sql.mjs supabase/migrations/052_fix_trust_score_badge_cast.sql",
     "supabase:auth-urls": "node scripts/configure-supabase-auth-urls.mjs",
     "db:seed": "node scripts/reset-and-seed.mjs",
     "db:reset-seed": "node scripts/reset-and-seed.mjs",
+    "db:wipe": "node scripts/wipe-except-admin.mjs",
+    "db:seed-marketplace": "node scripts/seed-marketplace-hosts.mjs",
+    "db:fix-listing-photos": "node scripts/fix-listing-photos.mjs",
     "db:fix-demo-host": "node scripts/fix-demo-host.mjs",
     "db:delete-user": "node scripts/delete-user.mjs",
     "db:discover": "node scripts/discover-db-url.mjs"

@@ -89,19 +89,29 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
             [bounds.minLat, bounds.minLng],
             [bounds.maxLat, bounds.maxLng],
           ],
-          { padding: [36, 36] }
+          { padding: [28, 28] }
         );
       }
 
-      requestAnimationFrame(() => {
-        map.invalidateSize();
-      });
+      const invalidate = () => map.invalidateSize();
+      requestAnimationFrame(invalidate);
+      window.setTimeout(invalidate, 100);
     });
 
     return () => {
       cancelled = true;
     };
   }, [mapPoints]);
+
+  useEffect(() => {
+    if (!mapContainerRef.current || !mapRef.current) return;
+
+    const observer = new ResizeObserver(() => {
+      mapRef.current?.invalidateSize();
+    });
+    observer.observe(mapContainerRef.current);
+    return () => observer.disconnect();
+  }, [mapPoints.length]);
 
   useEffect(() => {
     return () => {
@@ -115,20 +125,22 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
   }, []);
 
   return (
-    <div className="relative sticky top-24 h-[min(70vh,640px)] min-h-[320px] w-full overflow-hidden rounded-2xl border border-sage-dark/30 bg-sage shadow-md">
+    <div className="search-family-map relative sticky top-24 flex min-h-[calc(100vh-7rem)] w-full flex-1 overflow-hidden rounded-2xl border border-sage-dark/30 shadow-md">
       {mapPoints.length > 0 ? (
         <>
-          <div ref={mapContainerRef} className="absolute inset-0 z-0 h-full w-full" />
-          <div className="absolute inset-x-0 bottom-0 z-[500] max-h-[45%] overflow-y-auto bg-gradient-to-t from-white via-white/95 to-transparent p-3 pt-8 pointer-events-none">
-            <p className="text-xs font-semibold uppercase tracking-wide text-charcoal-light mb-2">
-              {mapPoints.length} on map
+          <div ref={mapContainerRef} className="absolute inset-0 z-0" aria-hidden="true" />
+          <div className="absolute inset-x-0 top-0 z-[500] bg-gradient-to-b from-white/95 via-white/80 to-transparent p-3 pb-6 pointer-events-none">
+            <p className="text-xs font-semibold uppercase tracking-wide text-charcoal-light">
+              {mapPoints.length} families on map
             </p>
-            <ul className="space-y-1.5 pointer-events-auto">
-              {mapPoints.slice(0, 8).map((point) => (
+          </div>
+          <div className="absolute inset-x-0 bottom-0 z-[500] max-h-[38%] overflow-y-auto border-t border-sage-dark/20 bg-white/95 p-3 pointer-events-auto">
+            <ul className="space-y-1.5">
+              {mapPoints.slice(0, 10).map((point) => (
                 <li key={point.id}>
                   <Link
                     href={point.href}
-                    className="flex items-center gap-2 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-forest shadow-sm hover:bg-sage/40 transition-colors"
+                    className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-forest hover:bg-sage/50 transition-colors"
                   >
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{point.label}</span>
@@ -139,7 +151,7 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
           </div>
         </>
       ) : (
-        <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
+        <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-2 bg-sage/30 p-6 text-center">
           <MapPin className="h-8 w-8 text-forest/40" />
           <p className="text-sm font-medium text-forest">Map view</p>
           <p className="text-xs text-charcoal-light max-w-[14rem]">

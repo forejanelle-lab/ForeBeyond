@@ -106,3 +106,13 @@
   font-weight: 600;
   text-decoration: underline;
 }
+
+.search-family-map .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  background: var(--color-sage);
+}
+
+.search-family-map .leaflet-tile-pane {
+  filter: saturate(1.02);
+}
