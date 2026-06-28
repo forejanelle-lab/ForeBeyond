@@ -68,14 +68,14 @@ export default async function SavedExperiencesPage() {
   const coverPhotos = await getCoverPhotos(experienceIds);
 
   return (
-    <Container className="py-10 md:py-16 lg:py-20">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 md:mb-10">
+    <Container className="py-16 md:py-24">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <div>
           <Badge variant="gold" className="mb-4">
             <Heart className="h-3 w-3" />
             Saved Experiences
           </Badge>
-          <h1 className="text-3xl md:text-4xl font-bold text-forest">Your favorites</h1>
+          <h1 className="text-3xl font-bold text-forest">Saved experiences</h1>
           <p className="mt-2 text-charcoal-light">
             {experiences.length} saved {experiences.length === 1 ? "experience" : "experiences"}
           </p>

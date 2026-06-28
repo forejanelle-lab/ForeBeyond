@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getStayMessagingLockReason, isStayMessagingOpen } from "@/lib/messaging";
+import { getStayMessagingLockReason, isStayMessagingOpen, hostHasMessagedStayRequest, formatMessagingDisplayName } from "@/lib/messaging";
 import { ChatThread } from "@/components/messaging/ChatThread";
 import { Container } from "@/components/ui/Container";
 import type { Conversation, StayRequest } from "@/types/database";
@@ -34,8 +34,9 @@ export default async function ConversationPage({
       ? typedConversation.host_id
       : typedConversation.traveler_id;
 
-  const [{ data: otherProfile }, { data: stayRequest }] = await Promise.all([
+  const [{ data: otherProfile }, { data: currentProfile }, { data: stayRequest }] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", otherId).single(),
+    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
     supabase
       .from("stay_requests")
       .select("status, end_date")
@@ -43,14 +44,32 @@ export default async function ConversationPage({
       .single(),
   ]);
 
-  const otherName =
-    (otherProfile as { full_name: string | null } | null)?.full_name?.split(" ")[0] ?? "Guest";
   const stayRequestData = stayRequest as Pick<StayRequest, "status" | "end_date"> | null;
-  const unlocked = isStayMessagingOpen(stayRequestData);
-  const lockReason = getStayMessagingLockReason(stayRequestData);
+  const viewerIsHost = typedConversation.host_id === user.id;
+  const hostHasMessaged =
+    !viewerIsHost && stayRequestData?.status === "pending"
+      ? await hostHasMessagedStayRequest(
+          supabase,
+          typedConversation.stay_request_id,
+          typedConversation.host_id
+        )
+      : false;
+  const unlocked = isStayMessagingOpen(stayRequestData, { viewerIsHost, hostHasMessaged });
+
+  const otherName = formatMessagingDisplayName(
+    (otherProfile as { full_name: string | null } | null)?.full_name,
+    viewerIsHost ? "Guest" : "Host",
+    { stayStatus: stayRequestData?.status ?? null }
+  );
+  const currentUserName = formatMessagingDisplayName(
+    (currentProfile as { full_name: string | null } | null)?.full_name,
+    "You",
+    { revealFullName: true }
+  );
+  const lockReason = getStayMessagingLockReason(stayRequestData, { viewerIsHost, hostHasMessaged });
 
   return (
-    <Container className="py-4 md:py-6 max-w-2xl">
+    <Container size="lg" className="py-4 md:py-6">
       <Link
         href="/messages"
         className="inline-flex items-center gap-2 text-sm text-forest hover:underline mb-4"
@@ -64,6 +83,7 @@ export default async function ConversationPage({
         stayRequestId={typedConversation.stay_request_id}
         userId={user.id}
         otherPartyName={otherName}
+        currentUserName={currentUserName}
         unlocked={unlocked}
         lockReason={lockReason}
       />

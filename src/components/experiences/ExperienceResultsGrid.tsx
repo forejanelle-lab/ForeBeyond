@@ -1,5 +1,4 @@
 import { ExperienceSearchCard } from "@/components/experiences/ExperienceSearchCard";
-import { Card } from "@/components/ui/Card";
 import type { PublicExperience } from "@/types/database";
 
 interface ExperienceResultsGridProps {
@@ -15,17 +14,17 @@ export function ExperienceResultsGrid({
 }: ExperienceResultsGridProps) {
   if (experiences.length === 0) {
     return (
-      <Card variant="outline" padding="lg" className="text-center py-16">
-        <p className="text-lg font-medium text-forest mb-2">No experiences match your search</p>
+      <div className="text-center py-16 rounded-2xl border border-sage-dark/40 bg-sage/20">
+        <p className="text-charcoal-light mb-2">No experiences match your search.</p>
         <p className="text-sm text-charcoal-light max-w-md mx-auto">
           Try a different category or location to discover cultural experiences with local families.
         </p>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {experiences.map((experience) => (
         <ExperienceSearchCard
           key={experience.id}

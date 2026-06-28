@@ -64,7 +64,7 @@ export default async function TrustDashboardPage() {
 
           <Card variant="outline" padding="lg" className="lg:col-span-2">
             <h2 className="text-lg font-semibold text-forest mb-4">Score Breakdown</h2>
-            <TrustScoreBreakdown breakdown={breakdown} />
+            <TrustScoreBreakdown breakdown={breakdown} role={typedProfile?.role} />
           </Card>
         </div>
 

@@ -59,7 +59,7 @@ function FilterFields({
   onChange: (key: keyof ExperienceSearchFilters, value: string | boolean) => void;
 }) {
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <Input
         label="Search"
         value={filters.q}
@@ -105,7 +105,7 @@ function FilterFields({
           label: option.label,
         }))}
       />
-      <label className="flex items-center gap-3 rounded-xl border border-sage-dark px-3 py-2.5 cursor-pointer">
+      <label className="flex items-center gap-3 rounded-xl border border-sage-dark px-3 py-2.5 cursor-pointer sm:col-span-2 lg:col-span-3">
         <input
           type="checkbox"
           checked={filters.verified}
@@ -143,53 +143,39 @@ export function ExperienceFiltersPanel({ countries, resultCount }: ExperienceFil
   const hasActiveFilters =
     JSON.stringify(filters) !== JSON.stringify(DEFAULT_EXPERIENCE_FILTERS);
 
-  const panelHeader = (
-    <div className="flex items-center justify-between gap-3 mb-4">
-      <div>
-        <h2 className="font-semibold text-forest flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4" />
-          Filters
-        </h2>
-        <p className="text-xs text-charcoal-light mt-1">
-          {resultCount} {resultCount === 1 ? "experience" : "experiences"} found
-        </p>
-      </div>
-      {hasActiveFilters && (
-        <button
-          type="button"
-          onClick={clearFilters}
-          className="text-xs font-medium text-forest hover:underline inline-flex items-center gap-1"
-        >
-          <X className="h-3 w-3" />
-          Clear
-        </button>
-      )}
-    </div>
-  );
-
   return (
-    <>
-      <Card variant="outline" padding="md" className="hidden lg:block sticky top-24">
-        {panelHeader}
+    <details className="group">
+      <summary className="list-none cursor-pointer">
+        <Card variant="outline" padding="md" className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-forest font-medium">
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters &amp; search
+          </div>
+          <span className="text-xs text-charcoal-light">
+            {resultCount} {resultCount === 1 ? "experience" : "experiences"}
+            {hasActiveFilters ? " · filtered" : ""}
+          </span>
+        </Card>
+      </summary>
+      <Card variant="outline" padding="md" className="mt-3">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <p className="text-sm text-charcoal-light">
+            Refine results by category, location, price, and host verification.
+          </p>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-xs font-medium text-forest hover:underline inline-flex items-center gap-1 shrink-0"
+            >
+              <X className="h-3 w-3" />
+              Clear
+            </button>
+          )}
+        </div>
         <FilterFields filters={filters} countries={countries} onChange={updateFilter} />
         {isPending && <p className="text-xs text-charcoal-light mt-4">Updating results...</p>}
       </Card>
-
-      <details className="lg:hidden group">
-        <summary className="list-none cursor-pointer">
-          <Card variant="outline" padding="md" className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-forest font-medium">
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters &amp; search
-            </div>
-            <span className="text-xs text-charcoal-light">{resultCount} results</span>
-          </Card>
-        </summary>
-        <Card variant="outline" padding="md" className="mt-3">
-          {panelHeader}
-          <FilterFields filters={filters} countries={countries} onChange={updateFilter} />
-        </Card>
-      </details>
-    </>
+    </details>
   );
 }

@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { calculateHostEarnings, LISTING_PRICING_SELECT, pickListingPricing, type ListingPricing } from "@/lib/stay-requests";
+import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { PageShell } from "@/components/layout/PageShell";
 import { HostRequestsList, type HostRequestRow } from "@/components/stays/HostRequestsList";
 import type { Profile, HostListing, StayRequest } from "@/types/database";
 
-export const metadata = { title: "Pending Requests" };
+export const metadata = { title: "Requests" };
 
 export default async function HostRequestsPage() {
   const supabase = await createClient();
@@ -50,7 +51,7 @@ export default async function HostRequestsPage() {
   const travelerMap = Object.fromEntries(
     ((travelers as { id: string; full_name: string | null }[]) ?? []).map((t) => [
       t.id,
-      t.full_name?.trim() || "Traveler",
+      t.full_name,
     ])
   );
 
@@ -69,7 +70,11 @@ export default async function HostRequestsPage() {
 
     return {
       request,
-      travelerName: travelerMap[request.traveler_id] ?? "Traveler",
+      travelerId: request.traveler_id,
+      travelerName: formatMemberDisplayName(travelerMap[request.traveler_id], {
+        fallback: "Traveler",
+        stayStatus: request.status,
+      }),
       listingTitle: listing?.title?.trim() || "Untitled listing",
       listingPricing,
       incomeTotal,
@@ -77,11 +82,14 @@ export default async function HostRequestsPage() {
   });
 
   const pending = rows.filter((r) => r.request.status === "pending").length;
+  const active = rows.filter(
+    (r) => r.request.status === "approved" || r.request.status === "host_approved"
+  ).length;
 
   return (
     <PageShell
-      title="Pending requests"
-      subtitle={`${pending} pending · ${rows.length} total`}
+      title="Requests"
+      subtitle={`${active} in progress · ${pending} pending · ${rows.length} total`}
     >
       <HostRequestsList requests={rows} />
     </PageShell>

@@ -3,6 +3,30 @@ import { footer, brand } from "@/lib/brand";
 import { Logo } from "@/components/design/Logo";
 import { Container } from "@/components/ui/Container";
 
+function FooterLink({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  const className = "text-sm text-white/70 hover:text-white transition-colors";
+
+  if (href.startsWith("mailto:")) {
+    return (
+      <a href={href} className={className}>
+        {label}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {label}
+    </Link>
+  );
+}
+
 export function Footer() {
   return (
     <footer className="border-t border-sage-dark/30 bg-forest text-white">
@@ -23,12 +47,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               {footer.product.map((item) => (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-white/70 hover:text-white transition-colors"
-                  >
-                    {item.label}
-                  </Link>
+                  <FooterLink href={item.href} label={item.label} />
                 </li>
               ))}
             </ul>
@@ -39,12 +58,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               {footer.company.map((item) => (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-white/70 hover:text-white transition-colors"
-                  >
-                    {item.label}
-                  </Link>
+                  <FooterLink href={item.href} label={item.label} />
                 </li>
               ))}
             </ul>
@@ -55,12 +69,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               {footer.legal.map((item) => (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-white/70 hover:text-white transition-colors"
-                  >
-                    {item.label}
-                  </Link>
+                  <FooterLink href={item.href} label={item.label} />
                 </li>
               ))}
             </ul>

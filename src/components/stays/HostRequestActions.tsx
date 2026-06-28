@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, RotateCcw, X } from "lucide-react";
+import { Check, RotateCcw, X, Ban } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   approveStayRequest,
@@ -10,6 +10,7 @@ import {
   revertStayRequest,
 } from "@/lib/stay-approval";
 import { HostIncomeBreakdown } from "@/components/stays/HostIncomeBreakdown";
+import { HostWithdrawStayModal } from "@/components/stays/HostWithdrawStayModal";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Textarea } from "@/components/ui/Textarea";
@@ -20,13 +21,19 @@ import type { StayRequest } from "@/types/database";
 interface HostRequestActionsProps {
   request: StayRequest;
   listingPricing: ListingPricing;
+  guestName?: string;
 }
 
-export function HostRequestActions({ request, listingPricing }: HostRequestActionsProps) {
+export function HostRequestActions({
+  request,
+  listingPricing,
+  guestName = "Guest",
+}: HostRequestActionsProps) {
   const router = useRouter();
   const [response, setResponse] = useState(request.host_response ?? "");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   if (request.status === "rejected") {
     return (
@@ -80,12 +87,51 @@ export function HostRequestActions({ request, listingPricing }: HostRequestActio
     );
   }
 
+  if (request.status === "approved") {
+    return (
+      <>
+        <Card variant="outline" padding="md" className="space-y-4">
+          <div>
+            <p className="font-medium text-forest">Stay confirmed</p>
+            <p className="text-sm text-charcoal-light mt-1">
+              This guest has confirmed their stay. Withdraw only if you can no longer host these
+              dates.
+            </p>
+          </div>
+          <HostIncomeBreakdown request={request} pricing={listingPricing} />
+          <Button
+            variant="outline"
+            size="md"
+            className="w-full justify-center border-red-200 text-red-700 hover:bg-red-50"
+            onClick={() => setShowWithdrawModal(true)}
+          >
+            <Ban className="h-4 w-4" />
+            Withdraw stay
+          </Button>
+        </Card>
+        <HostWithdrawStayModal
+          open={showWithdrawModal}
+          request={request}
+          guestName={guestName}
+          onClose={() => setShowWithdrawModal(false)}
+          onWithdrawn={() => router.refresh()}
+        />
+      </>
+    );
+  }
+
   if (request.status !== "pending") {
     return (
       <Card variant="outline" padding="md">
         <p className="text-sm text-charcoal-light">
-          This request has been {request.status === "approved" ? "confirmed" : request.status}.
+          This request has been {request.status === "cancelled" ? "withdrawn" : request.status}.
         </p>
+        {request.status === "cancelled" && request.withdrawal_reason && (
+          <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm">
+            <p className="font-medium text-forest mb-1">Withdrawal reason</p>
+            <p className="text-charcoal-light whitespace-pre-wrap">{request.withdrawal_reason}</p>
+          </div>
+        )}
         {request.host_response && (
           <div className="mt-3 rounded-xl bg-sage/40 p-3 text-sm">
             <p className="font-medium text-forest mb-1">Your response</p>
@@ -131,7 +177,7 @@ export function HostRequestActions({ request, listingPricing }: HostRequestActio
         <h3 className="font-semibold text-forest">Review request</h3>
         <p className="text-sm text-charcoal-light mt-1">
           Approve to send the request back to the traveler for final confirmation. Your payout
-          reflects the 12% Fore Beyond commission shown below.
+          reflects the 12% service charge shown below.
         </p>
       </div>
 
@@ -185,17 +231,12 @@ export function ApprovedStayLinks({ tripId }: ApprovedStayLinksProps) {
     <Card variant="outline" padding="md" className="space-y-3">
       <p className="font-medium text-forest">Your stay is confirmed!</p>
       <p className="text-xs text-charcoal-light">
-        Pay your deposit to the host within one week of travel. Fore Beyond coordinates messaging;
-        payment to the host is arranged directly between you and your host family.
+        Your service fee has been charged. Coordinate the remaining stay payment directly with
+        your host family.
       </p>
-      <div className="flex flex-col gap-2">
-        <ButtonLink href={`/trips/${tripId}`} variant="primary" size="md" className="w-full justify-center">
-          View trip & messaging
-        </ButtonLink>
-        <ButtonLink href={`/trips/${tripId}/payment`} variant="secondary" size="md" className="w-full justify-center">
-          Service fee payment
-        </ButtonLink>
-      </div>
+      <ButtonLink href={`/trips/${tripId}`} variant="primary" size="md" className="w-full justify-center">
+        View trip
+      </ButtonLink>
     </Card>
   );
 }

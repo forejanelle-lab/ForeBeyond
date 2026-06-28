@@ -5,7 +5,10 @@ import { FamilyProfileView } from "@/components/search/FamilyProfileView";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
 import { getHostListingStats } from "@/lib/host-stats";
-import type { HostListing, ListingPhoto, Profile, PublicListing, PublicReview, TrustBadge } from "@/types/database";
+import { getHostReviewEligibility } from "@/lib/listing-review-eligibility";
+import { formatMemberDisplayName } from "@/lib/member-display-name";
+import { hostHasMessagedStayRequest, isStayMessagingOpen } from "@/lib/messaging";
+import type { HostListing, ListingPhoto, Profile, PublicListing, PublicReview, StayRequest, TrustBadge } from "@/types/database";
 
 export async function generateMetadata({
   params,
@@ -52,6 +55,7 @@ export default async function FamilyProfilePage({
   const typedListing = listing as PublicListing | null;
   let hostListing: HostListing;
   let hostFirstName: string | null = null;
+  let hostMemberSince: string | null = null;
   let trustScore = 0;
   let verificationStatus = "unverified";
   let isOwnListing = false;
@@ -74,12 +78,19 @@ export default async function FamilyProfilePage({
 
     const { data: hostProfile } = await supabase
       .from("profiles")
-      .select("full_name, trust_score, verification_status")
+      .select("full_name, trust_score, verification_status, created_at")
       .eq("id", user.id)
       .single();
 
-    const profile = hostProfile as Pick<Profile, "full_name" | "trust_score" | "verification_status"> | null;
-    hostFirstName = profile?.full_name?.split(" ")[0] ?? null;
+    const profile = hostProfile as Pick<
+      Profile,
+      "full_name" | "trust_score" | "verification_status" | "created_at"
+    > | null;
+    hostFirstName = formatMemberDisplayName(profile?.full_name, {
+      fallback: "Host",
+      revealFullName: true,
+    });
+    hostMemberSince = profile?.created_at ?? null;
     trustScore = profile?.trust_score ?? 0;
     verificationStatus = profile?.verification_status ?? "unverified";
   } else {
@@ -88,6 +99,7 @@ export default async function FamilyProfilePage({
       host_id: typedListing.host_id,
       title: typedListing.title,
       family_story: typedListing.family_story,
+      stay_details: typedListing.stay_details,
       languages: typedListing.languages,
       country: typedListing.country,
       city: typedListing.city,
@@ -106,7 +118,19 @@ export default async function FamilyProfilePage({
       created_at: typedListing.created_at,
       updated_at: typedListing.created_at,
     };
-    hostFirstName = typedListing.host_first_name;
+    const { data: hostProfile } = await supabase
+      .from("profiles")
+      .select("full_name, created_at")
+      .eq("id", typedListing.host_id)
+      .single();
+
+    hostFirstName = formatMemberDisplayName(
+      (hostProfile as Pick<Profile, "full_name" | "created_at"> | null)?.full_name ??
+        typedListing.host_first_name,
+      { fallback: "Host" }
+    );
+    hostMemberSince =
+      (hostProfile as Pick<Profile, "full_name" | "created_at"> | null)?.created_at ?? null;
     trustScore = typedListing.trust_score;
     verificationStatus = typedListing.verification_status;
     isOwnListing = user?.id === typedListing.host_id;
@@ -129,6 +153,8 @@ export default async function FamilyProfilePage({
         .from("public_reviews")
         .select("*")
         .eq("reviewee_id", hostId)
+        .eq("reviewer_role", "traveler")
+        .eq("listing_id", id)
         .order("created_at", { ascending: false }),
       user && !isOwnListing
         ? supabase
@@ -141,6 +167,54 @@ export default async function FamilyProfilePage({
     ]);
 
   const hostStats = await getHostListingStats(supabase, hostId, id);
+  const reviewEligibility = await getHostReviewEligibility(
+    supabase,
+    user?.id,
+    hostId,
+    id
+  );
+
+  let canMessageHost = false;
+  let messageConversationId: string | null = null;
+  let messageLockReason =
+    "Send a stay request first. Messaging opens when the host contacts you or approves your stay.";
+
+  if (user && !isOwnListing && user.id !== hostId) {
+    const { data: stayRequest } = await supabase
+      .from("stay_requests")
+      .select("id, status, end_date")
+      .eq("traveler_id", user.id)
+      .eq("listing_id", id)
+      .in("status", ["pending", "host_approved", "approved"])
+      .order("created_at", { ascending: false })
+      .maybeSingle();
+
+    if (stayRequest) {
+      const typedRequest = stayRequest as Pick<StayRequest, "id" | "status" | "end_date">;
+      const { data: conversation } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("stay_request_id", typedRequest.id)
+        .maybeSingle();
+
+      messageConversationId = (conversation as { id: string } | null)?.id ?? null;
+
+      const hostHasMessaged =
+        typedRequest.status === "pending"
+          ? await hostHasMessagedStayRequest(supabase, typedRequest.id, hostId)
+          : false;
+
+      canMessageHost = isStayMessagingOpen(typedRequest, {
+        viewerIsHost: false,
+        hostHasMessaged,
+      });
+
+      if (!canMessageHost) {
+        messageLockReason =
+          "Messaging opens when the host messages you first or approves your stay request.";
+      }
+    }
+  }
 
   return (
     <>
@@ -173,8 +247,18 @@ export default async function FamilyProfilePage({
         showSaveButton={!isOwnListing}
         showBookingActions={!isOwnListing}
         bookingCount={hostStats.bookingCount}
-        responseRate={hostStats.responseRate}
+        memberSince={hostMemberSince}
+        avgResponseTimeMinutes={hostStats.avgResponseTimeMinutes}
         totalStayRequests={hostStats.totalRequests}
+        respondedStayRequests={hostStats.respondedRequests}
+        canLeaveReview={reviewEligibility.canReview}
+        canEditReview={reviewEligibility.canEdit}
+        reviewExisting={reviewEligibility.existingReview}
+        reviewTarget={reviewEligibility.target}
+        hostId={hostListing.host_id}
+        canMessageHost={canMessageHost}
+        messageConversationId={messageConversationId}
+        messageLockReason={messageLockReason}
       />
     </>
   );

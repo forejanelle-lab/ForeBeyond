@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "@/lib/env";
+import { getPostLoginPath } from "@/lib/post-login";
 
 export async function updateSession(request: NextRequest) {
   const env = getSupabaseEnv();
@@ -54,12 +55,25 @@ export async function updateSession(request: NextRequest) {
   if (user && isAuthRoute && pathname !== "/auth/verify-email") {
     const url = request.nextUrl.clone();
     const redirect = request.nextUrl.searchParams.get("redirect");
-    url.pathname =
-      redirect && redirect.startsWith("/") && !redirect.startsWith("/auth")
-        ? redirect
-        : "/dashboard";
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin, role")
+      .eq("id", user.id)
+      .single();
+
+    url.pathname = getPostLoginPath(user.email ?? "", profile, redirect);
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  const skipActivity =
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/_next");
+
+  if (user && !skipActivity) {
+    void supabase.rpc("touch_user_activity", { p_user_id: user.id });
   }
 
   return supabaseResponse;

@@ -222,7 +222,7 @@ export function ProfileSettingsForm({
         )}
 
         <Button type="submit" variant="primary" size="md" isLoading={isLoading}>
-          Save profile
+          {redirectAfterSave || initial.onboarding_complete ? "Save profile" : "Next"}
         </Button>
       </form>
     </Card>

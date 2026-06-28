@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { updateStayRequestDatesByTraveler } from "@/lib/stay-request-dates";
+import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
 import { todayIso } from "@/lib/messaging";
+import { BlockedDatesNotice } from "@/components/stays/BlockedDatesNotice";
+import {
+  findStayDateConflict,
+  getStayDateConflictMessage,
+  type BlockedDateRange,
+} from "@/lib/stay-availability";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -13,9 +20,13 @@ import type { StayRequest } from "@/types/database";
 
 interface TravelerModifyStayDatesProps {
   request: Pick<StayRequest, "id" | "traveler_id" | "status" | "start_date" | "end_date">;
+  blockedDateRanges?: BlockedDateRange[];
 }
 
-export function TravelerModifyStayDates({ request }: TravelerModifyStayDatesProps) {
+export function TravelerModifyStayDates({
+  request,
+  blockedDateRanges = [],
+}: TravelerModifyStayDatesProps) {
   const router = useRouter();
   const minDate = todayIso();
   const [startDate, setStartDate] = useState(request.start_date ?? "");
@@ -23,6 +34,18 @@ export function TravelerModifyStayDates({ request }: TravelerModifyStayDatesProp
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  function applyDateSelection(nextStart: string, nextEnd: string) {
+    setStartDate(nextStart);
+    setEndDate(nextEnd);
+    setSuccess("");
+    if (nextStart && nextEnd && nextEnd > nextStart) {
+      const conflict = findStayDateConflict(nextStart, nextEnd, blockedDateRanges);
+      setError(conflict ? getStayDateConflictMessage(conflict) : "");
+    } else {
+      setError("");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +58,8 @@ export function TravelerModifyStayDates({ request }: TravelerModifyStayDatesProp
       supabase,
       request as StayRequest,
       startDate,
-      endDate
+      endDate,
+      blockedDateRanges
     );
 
     if (updateError) {
@@ -45,6 +69,7 @@ export function TravelerModifyStayDates({ request }: TravelerModifyStayDatesProp
     }
 
     setSuccess("Dates updated. Your host will review the new dates.");
+    dispatchHostAlert({ event: "stay_dates_changed", stayRequestId: request.id });
     setIsLoading(false);
     router.refresh();
   }
@@ -62,14 +87,16 @@ export function TravelerModifyStayDates({ request }: TravelerModifyStayDatesProp
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <BlockedDatesNotice blockedRanges={blockedDateRanges} />
         <Input
           label="Check-in"
           type="date"
           min={minDate}
           value={startDate}
           onChange={(e) => {
-            setStartDate(e.target.value);
-            if (endDate && e.target.value >= endDate) setEndDate("");
+            const nextStart = e.target.value;
+            const nextEnd = endDate && nextStart >= endDate ? "" : endDate;
+            applyDateSelection(nextStart, nextEnd);
           }}
           required
         />
@@ -78,7 +105,7 @@ export function TravelerModifyStayDates({ request }: TravelerModifyStayDatesProp
           type="date"
           min={startDate || minDate}
           value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
+          onChange={(e) => applyDateSelection(startDate, e.target.value)}
           required
         />
 

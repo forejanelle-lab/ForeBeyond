@@ -5,9 +5,10 @@ import {
   MessagesInboxList,
   type InboxConversationRow,
 } from "@/components/messaging/MessagesInboxList";
+import { getMessagesInboxSubtitle, formatMessagingDisplayName } from "@/lib/messaging";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
-import type { AppNotification, Conversation, PublicListing } from "@/types/database";
+import type { AppNotification, Conversation, Profile, PublicListing, StayRequestStatus } from "@/types/database";
 
 export const metadata = { title: "Messages" };
 
@@ -22,6 +23,14 @@ export default async function MessagesInboxPage() {
     .or(`traveler_id.eq.${user.id},host_id.eq.${user.id}`)
     .order("last_message_at", { ascending: false, nullsFirst: false });
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const viewerRole = (profile as Pick<Profile, "role"> | null)?.role ?? null;
+
   const typedConversations = (conversations as Conversation[]) ?? [];
   const otherIds = typedConversations.map((c) =>
     c.traveler_id === user.id ? c.host_id : c.traveler_id
@@ -33,7 +42,7 @@ export default async function MessagesInboxPage() {
       ? supabase.from("profiles").select("id, full_name").in("id", otherIds)
       : Promise.resolve({ data: [] }),
     listingIds.length > 0
-      ? supabase.from("stay_requests").select("id, listing_id").in("id", listingIds)
+      ? supabase.from("stay_requests").select("id, listing_id, status").in("id", listingIds)
       : Promise.resolve({ data: [] }),
     supabase
       .from("notifications")
@@ -43,11 +52,14 @@ export default async function MessagesInboxPage() {
       .is("read_at", null),
   ]);
 
+  const requestStatusMap = Object.fromEntries(
+    ((stayRequests as { id: string; status: StayRequestStatus }[]) ?? []).map(
+      (r) => [r.id, r.status]
+    )
+  );
+
   const profileMap = Object.fromEntries(
-    ((profiles as { id: string; full_name: string | null }[]) ?? []).map((p) => [
-      p.id,
-      p.full_name?.split(" ")[0] ?? "Guest",
-    ])
+    ((profiles as { id: string; full_name: string | null }[]) ?? []).map((p) => [p.id, p.full_name])
   );
 
   const requestListingMap = Object.fromEntries(
@@ -83,9 +95,10 @@ export default async function MessagesInboxPage() {
     const otherId =
       conversation.traveler_id === user.id ? conversation.host_id : conversation.traveler_id;
     const listingId = requestListingMap[conversation.stay_request_id];
+    const stayStatus = requestStatusMap[conversation.stay_request_id] ?? null;
     return {
       conversation,
-      otherPartyName: profileMap[otherId] ?? "Guest",
+      otherPartyName: formatMessagingDisplayName(profileMap[otherId], "Guest", { stayStatus }),
       listingTitle: listingId ? listingMap[listingId] : null,
       unreadCount: unreadByConversation[conversation.id] ?? 0,
     };
@@ -103,7 +116,7 @@ export default async function MessagesInboxPage() {
           </Badge>
           <h1 className="text-2xl md:text-3xl font-bold text-forest">Your conversations</h1>
           <p className="mt-2 text-sm text-charcoal-light max-w-2xl">
-            Chat unlocks after a stay request is approved — connect safely with your host or traveler.
+            {getMessagesInboxSubtitle(viewerRole)}
           </p>
           <p className="mt-1 text-sm text-charcoal-light">
             {typedConversations.length} conversation{typedConversations.length !== 1 ? "s" : ""}
@@ -112,8 +125,8 @@ export default async function MessagesInboxPage() {
         </Container>
       </div>
 
-      <Container className="py-8 md:py-10">
-        <MessagesInboxList conversations={inboxRows} />
+      <Container size="xl" className="py-8 md:py-10">
+        <MessagesInboxList conversations={inboxRows} viewerRole={viewerRole} />
       </Container>
     </>
   );

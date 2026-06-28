@@ -1,3 +1,5 @@
+import type { UserRole } from "@/types/database";
+
 export const TRUST_SCORE_MAX = 100;
 
 export const TRUST_SCORE_WEIGHTS = {
@@ -69,6 +71,21 @@ export const TRUST_SCORE_FACTORS: {
   },
 ];
 
+export function getTrustScoreFactorDescription(
+  key: TrustScoreFactor,
+  role?: UserRole | null
+): string {
+  const factor = TRUST_SCORE_FACTORS.find((item) => item.key === key);
+  if (!factor) return "";
+
+  if (key === "positive_reviews") {
+    if (role === "host") return "Earn reviews from travelers";
+    if (role === "traveler") return "Earn reviews from hosts";
+  }
+
+  return factor.description;
+}
+
 export type TrustScoreBreakdown = Partial<Record<TrustScoreFactor, number>>;
 
 export function getTrustLevel(score: number): {
@@ -84,7 +101,6 @@ export function getTrustLevel(score: number): {
 
 export const BADGE_LABELS: Record<string, string> = {
   identity_verified: "Identity Verified",
-  background_checked: "Background Checked",
   community_vouched: "Community Vouched",
   experienced_host: "Experienced Host",
   experienced_traveler: "Experienced Traveler",

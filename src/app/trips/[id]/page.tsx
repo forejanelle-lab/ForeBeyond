@@ -1,16 +1,16 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CreditCard } from "lucide-react";
+import { ArrowLeft, MessageSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { StayMessagingPanel } from "@/components/stays/StayMessagingPanel";
 import { HostContactDetailsCard } from "@/components/listings/HostContactDetailsCard";
 import { TripCompleteButton } from "@/components/reviews/TripCompleteButton";
 import { TripReviewSection } from "@/components/reviews/TripReviewSection";
 import { isTripPastEndDate } from "@/lib/reviews";
-import { getStayMessagingLockReason, isStayMessagingOpen } from "@/lib/messaging";
+import { formatMessagingDisplayName } from "@/lib/messaging";
 import {
   PAYMENT_STATUS_LABELS,
   TRIP_STATUS_LABELS,
+  calculateServiceFee,
   formatCurrency,
   formatDateRange,
 } from "@/lib/stay-requests";
@@ -69,17 +69,22 @@ export default async function TripDetailPage({
         : Promise.resolve({ data: null }),
     ]);
 
-  const otherName =
-    (otherProfile as Pick<Profile, "full_name"> | null)?.full_name?.split(" ")[0] ?? "Guest";
-  const hostEmail =
-    (otherProfile as Pick<Profile, "email"> | null)?.email ?? null;
-  const contactData = listingContact as Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
   const listingData = listing as Pick<PublicListing, "title" | "city" | "country"> | null;
   const bookingData = booking as StayBooking | null;
   const requestData = stayRequest as Pick<StayRequest, "id" | "status" | "end_date"> | null;
-  const messagingUnlocked = isStayMessagingOpen(requestData);
-  const messagingLockReason = getStayMessagingLockReason(requestData);
+
+  const otherFullName = formatMessagingDisplayName(
+    (otherProfile as Pick<Profile, "full_name"> | null)?.full_name,
+    isTraveler ? "Host" : "Guest",
+    { stayStatus: requestData?.status ?? "approved" }
+  );
+  const otherName = otherFullName;
+  const hostEmail =
+    (otherProfile as Pick<Profile, "email"> | null)?.email ?? null;
+  const contactData = listingContact as Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
+  const conversationId = (conversation as { id: string } | null)?.id ?? null;
   const tripStatus = TRIP_STATUS_LABELS[typedTrip.status] ?? TRIP_STATUS_LABELS.upcoming;
+  const serviceFee = bookingData ? calculateServiceFee(bookingData.total_amount) : null;
   const showHostContact =
     isTraveler &&
     (requestData?.status === "approved" || requestData?.status === "completed");
@@ -90,9 +95,7 @@ export default async function TripDetailPage({
         ? { contact_email: hostEmail, contact_address: null }
         : null;
   const canCompleteTrip =
-    typedTrip.status !== "completed" &&
-    bookingData?.payment_status === "paid" &&
-    isTripPastEndDate(typedTrip.end_date);
+    typedTrip.status !== "completed" && isTripPastEndDate(typedTrip.end_date);
 
   return (
     <Container className="py-10 md:py-16">
@@ -103,9 +106,9 @@ export default async function TripDetailPage({
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <Badge variant={tripStatus.variant}>{tripStatus.label}</Badge>
-        {bookingData && (
-          <Badge variant={PAYMENT_STATUS_LABELS[bookingData.payment_status].variant}>
-            {PAYMENT_STATUS_LABELS[bookingData.payment_status].label}
+        {bookingData?.payment_status === "paid" && (
+          <Badge variant={PAYMENT_STATUS_LABELS.paid.variant}>
+            {PAYMENT_STATUS_LABELS.paid.label}
           </Badge>
         )}
       </div>
@@ -122,35 +125,35 @@ export default async function TripDetailPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card variant="outline" padding="md">
-            <h2 className="font-semibold text-forest mb-3">Trip details</h2>
+          <Card variant="outline" padding="md" className="space-y-3">
+            <h2 className="font-semibold text-forest">Trip details</h2>
             <p className="text-sm text-charcoal-light">{formatDateRange(typedTrip.start_date, typedTrip.end_date)}</p>
             {bookingData && (
-              <p className="text-sm font-medium text-forest mt-2">
-                Total: {formatCurrency(bookingData.total_amount)}
-                {bookingData.nightly_rate != null && ` (${formatCurrency(bookingData.nightly_rate)}/night)`}
-              </p>
+              <div className="rounded-xl bg-sage/40 p-4 text-sm space-y-2">
+                <div className="flex justify-between text-charcoal-light">
+                  <span>Stay total (pay host directly)</span>
+                  <span className="font-medium text-forest">
+                    {formatCurrency(bookingData.total_amount)}
+                  </span>
+                </div>
+                {bookingData.nightly_rate != null && (
+                  <p className="text-xs text-charcoal-light">
+                    {formatCurrency(bookingData.nightly_rate)} per night
+                  </p>
+                )}
+                {serviceFee != null && (
+                  <div className="flex justify-between text-charcoal-light border-t border-sage-dark/30 pt-2">
+                    <span>Service fee (charged at confirmation)</span>
+                    <span className="font-medium text-forest">{formatCurrency(serviceFee)}</span>
+                  </div>
+                )}
+                <p className="text-xs text-charcoal-light pt-1">
+                  Remaining stay payment is coordinated directly with your host — not through Fore
+                  Beyond.
+                </p>
+              </div>
             )}
           </Card>
-
-          {requestData && conversation && (
-            <div className="space-y-3">
-              <StayMessagingPanel
-                conversationId={(conversation as { id: string }).id}
-                stayRequestId={requestData.id}
-                userId={user.id}
-                otherPartyName={otherName}
-                unlocked={messagingUnlocked}
-                lockReason={messagingLockReason}
-              />
-              <Link
-                href={`/messages/${(conversation as { id: string }).id}`}
-                className="text-sm font-medium text-forest hover:underline"
-              >
-                Open full conversation
-              </Link>
-            </div>
-          )}
 
           <TripCompleteButton
             tripId={id}
@@ -164,24 +167,18 @@ export default async function TripDetailPage({
             travelerId={typedTrip.traveler_id}
             hostId={typedTrip.host_id}
             tripStatus={typedTrip.status}
-            otherName={otherName}
+            otherName={otherFullName}
             tripReviews={(tripReviews as Review[]) ?? []}
             userReview={(userReview as Review | null) ?? null}
           />
         </div>
 
         <div className="space-y-4">
-          {isTraveler && bookingData?.payment_status === "pending" && (
-            <Card variant="outline" padding="md" className="space-y-3">
-              <h3 className="font-semibold text-forest">Complete your booking</h3>
-              <p className="text-sm text-charcoal-light">
-                Secure your stay with a payment to confirm your trip.
-              </p>
-              <ButtonLink href={`/trips/${id}/payment`} variant="primary" size="md" className="w-full">
-                <CreditCard className="h-4 w-4" />
-                Go to payment
-              </ButtonLink>
-            </Card>
+          {conversationId && (
+            <ButtonLink href={`/messages/${conversationId}`} variant="secondary" size="md" className="w-full">
+              <MessageSquare className="h-4 w-4" />
+              Message {otherName}
+            </ButtonLink>
           )}
 
           <Card variant="outline" padding="md">

@@ -17,7 +17,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-**Demo login:** `demo@forebeyond.demo` / `ForeBeyond123!` (admin + host)
+Production: [https://fore-beyond-fore-stay.vercel.app](https://fore-beyond-fore-stay.vercel.app)
 
 ## Documentation
 

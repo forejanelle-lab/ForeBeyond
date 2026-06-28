@@ -61,14 +61,17 @@ export default function TravelerOnboardingPage() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("traveler_profiles").upsert({
-      user_id: user.id,
-      interests,
-      travel_style: travelStyle,
-      preferred_destinations: destinations.split(",").map((d) => d.trim()).filter(Boolean),
-      dietary_preferences: dietary.split(",").map((d) => d.trim()).filter(Boolean),
-      accessibility_needs: accessibility || null,
-    });
+    const { error: insertError } = await supabase.from("traveler_profiles").upsert(
+      {
+        user_id: user.id,
+        interests,
+        travel_style: travelStyle,
+        preferred_destinations: destinations.split(",").map((d) => d.trim()).filter(Boolean),
+        dietary_preferences: dietary.split(",").map((d) => d.trim()).filter(Boolean),
+        accessibility_needs: accessibility || null,
+      },
+      { onConflict: "user_id" }
+    );
 
     if (insertError) {
       setError(insertError.message);

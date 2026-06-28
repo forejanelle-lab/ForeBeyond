@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StayRequest } from "@/types/database";
 import { todayIso } from "@/lib/messaging";
+import {
+  findStayDateConflict,
+  getStayDateConflictMessage,
+  type BlockedDateRange,
+} from "@/lib/stay-availability";
 
 export function canTravelerModifyStayDates(status: StayRequest["status"]) {
   return status === "pending" || status === "host_approved";
@@ -20,7 +25,8 @@ export async function updateStayRequestDatesByTraveler(
   supabase: SupabaseClient,
   request: StayRequest,
   startDate: string,
-  endDate: string
+  endDate: string,
+  blockedRanges: BlockedDateRange[] = []
 ) {
   if (!canTravelerModifyStayDates(request.status)) {
     return { error: "These dates can no longer be changed." };
@@ -28,6 +34,9 @@ export async function updateStayRequestDatesByTraveler(
 
   const dateError = validateStayDateRange(startDate, endDate);
   if (dateError) return { error: dateError };
+
+  const conflict = findStayDateConflict(startDate, endDate, blockedRanges);
+  if (conflict) return { error: getStayDateConflictMessage(conflict) };
 
   const unchanged =
     request.start_date === startDate && request.end_date === endDate;

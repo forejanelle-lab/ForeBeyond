@@ -1,41 +1,104 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { MessageRead, StayMessage, StayRequest, StayRequestStatus } from "@/types/database";
+import { formatMemberDisplayName } from "@/lib/member-display-name";
+import type { MessageRead, StayMessage, StayRequest, StayRequestStatus, UserRole } from "@/types/database";
 
-const MESSAGING_STATUSES: StayRequestStatus[] = ["host_approved", "approved"];
+const HOST_MESSAGING_STATUSES: StayRequestStatus[] = ["pending", "host_approved", "approved"];
+const TRAVELER_MESSAGING_STATUSES: StayRequestStatus[] = ["host_approved", "approved"];
+
+export interface StayMessagingOptions {
+  viewerIsHost?: boolean;
+  hostHasMessaged?: boolean;
+}
+
+export function isStayMessagingOpen(
+  request: Pick<StayRequest, "status" | "end_date"> | null | undefined,
+  options?: StayMessagingOptions
+): boolean {
+  if (!request?.end_date) return false;
+  if (request.end_date < todayIso()) return false;
+  if (
+    request.status === "rejected" ||
+    request.status === "cancelled" ||
+    request.status === "completed"
+  ) {
+    return false;
+  }
+
+  if (options?.viewerIsHost) {
+    return HOST_MESSAGING_STATUSES.includes(request.status);
+  }
+
+  if (TRAVELER_MESSAGING_STATUSES.includes(request.status)) return true;
+  if (request.status === "pending" && options?.hostHasMessaged) return true;
+  return false;
+}
 
 export function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function isStayMessagingOpen(
-  request: Pick<StayRequest, "status" | "end_date"> | null | undefined
-): boolean {
-  if (!request?.end_date) return false;
-  if (!MESSAGING_STATUSES.includes(request.status)) return false;
-  return request.end_date >= todayIso();
+export function formatMessagingDisplayName(
+  fullName: string | null | undefined,
+  fallback = "Guest",
+  options?: { stayStatus?: StayRequestStatus | null; revealFullName?: boolean }
+): string {
+  return formatMemberDisplayName(fullName, { fallback, ...options });
+}
+
+export function getMessagesInboxSubtitle(role: UserRole | null | undefined): string {
+  if (role === "host") {
+    return "Message guests about pending requests or confirmed stays.";
+  }
+  return "Chat with host families once they message you or approve your stay request.";
+}
+
+export function getMessagesEmptyStateDescription(role: UserRole | null | undefined): string {
+  if (role === "host") {
+    return "Open a pending request to ask questions before you approve, or message guests on confirmed stays.";
+  }
+  return "When a host messages you about a request, or approves your stay, the conversation will appear here.";
 }
 
 export function getStayMessagingLockReason(
-  request: Pick<StayRequest, "status" | "end_date"> | null | undefined
+  request: Pick<StayRequest, "status" | "end_date"> | null | undefined,
+  options?: StayMessagingOptions
 ): string {
-  if (isStayMessagingOpen(request)) {
+  if (isStayMessagingOpen(request, options)) {
     return "";
   }
 
   if (
     !request ||
-    request.status === "pending" ||
     request.status === "rejected" ||
-    request.status === "cancelled"
+    request.status === "cancelled" ||
+    request.status === "completed"
   ) {
-    return "Messaging unlocks after the host approves your stay request.";
+    return "Messaging is not available for this stay request.";
   }
 
   if (request.end_date && request.end_date < todayIso()) {
     return "Messaging closed after your stay dates passed.";
   }
 
+  if (!options?.viewerIsHost && request.status === "pending") {
+    return "Messaging opens when the host messages you first or approves your stay request.";
+  }
+
   return "Messaging is not available for this stay request.";
+}
+
+export async function hostHasMessagedStayRequest(
+  supabase: SupabaseClient,
+  stayRequestId: string,
+  hostId: string
+): Promise<boolean> {
+  const { count } = await supabase
+    .from("stay_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("stay_request_id", stayRequestId)
+    .eq("sender_id", hostId);
+
+  return (count ?? 0) > 0;
 }
 
 export function formatMessageTime(iso: string) {
@@ -104,7 +167,7 @@ export function getOtherPartyId(
   return conversation.traveler_id === userId ? conversation.host_id : conversation.traveler_id;
 }
 
-/** Creates (or returns) the conversation once a host has approved the stay request */
+/** Creates (or returns) the conversation for an active stay request */
 export async function ensureStayConversation(
   supabase: SupabaseClient,
   stayRequestId: string

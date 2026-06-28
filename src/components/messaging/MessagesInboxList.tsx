@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { MessageCircle, Search } from "lucide-react";
 import { ConversationListItem } from "@/components/messaging/ConversationListItem";
+import { getMessagesEmptyStateDescription } from "@/lib/messaging";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import type { Conversation } from "@/types/database";
+import type { Conversation, UserRole } from "@/types/database";
 
 export interface InboxConversationRow {
   conversation: Conversation;
@@ -17,6 +18,7 @@ export interface InboxConversationRow {
 
 interface MessagesInboxListProps {
   conversations: InboxConversationRow[];
+  viewerRole?: UserRole | null;
 }
 
 type SortOption = "newest" | "oldest";
@@ -26,7 +28,7 @@ function conversationTimestamp(conversation: Conversation) {
   return new Date(conversation.last_message_at ?? conversation.created_at).getTime();
 }
 
-export function MessagesInboxList({ conversations }: MessagesInboxListProps) {
+export function MessagesInboxList({ conversations, viewerRole = null }: MessagesInboxListProps) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
   const [filter, setFilter] = useState<FilterOption>("all");
@@ -57,43 +59,48 @@ export function MessagesInboxList({ conversations }: MessagesInboxListProps) {
         <MessageCircle className="h-10 w-10 text-forest mx-auto mb-4" />
         <p className="text-charcoal-light mb-2">No conversations yet.</p>
         <p className="text-sm text-charcoal-light mb-6 max-w-md mx-auto">
-          Once a stay is approved, you can message your host or traveler here.
+          {getMessagesEmptyStateDescription(viewerRole)}
         </p>
-        <Link href="/search" className="text-sm font-medium text-forest hover:underline">
-          Browse families
+        <Link
+          href={viewerRole === "host" ? "/host/requests" : "/search"}
+          className="text-sm font-medium text-forest hover:underline"
+        >
+          {viewerRole === "host" ? "View stay requests" : "Browse families"}
         </Link>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="relative sm:col-span-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-charcoal-light" />
+    <div className="space-y-6 w-full">
+      <div className="flex flex-col lg:flex-row gap-3">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-charcoal-light" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name or listing..."
-            className="pl-9"
+            placeholder="Search by name, listing, or message preview..."
+            className="pl-12 py-3 text-base"
           />
         </div>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as FilterOption)}
-          className="rounded-xl border border-sage-dark bg-white px-3 py-2.5 text-sm"
-        >
-          <option value="all">All messages</option>
-          <option value="unread">Unread only</option>
-        </select>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortOption)}
-          className="rounded-xl border border-sage-dark bg-white px-3 py-2.5 text-sm"
-        >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-        </select>
+        <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as FilterOption)}
+            className="rounded-xl border border-sage-dark bg-white px-4 py-3 text-sm min-w-[10rem]"
+          >
+            <option value="all">All messages</option>
+            <option value="unread">Unread only</option>
+          </select>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortOption)}
+            className="rounded-xl border border-sage-dark bg-white px-4 py-3 text-sm min-w-[10rem]"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
       </div>
 
       {filtered.length === 0 ? (

@@ -2,8 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface HostListingStats {
   bookingCount: number;
-  responseRate: number | null;
+  avgResponseTimeMinutes: number | null;
   totalRequests: number;
+  respondedRequests: number;
 }
 
 const RESPONDED_STATUSES = new Set([
@@ -13,6 +14,40 @@ const RESPONDED_STATUSES = new Set([
   "completed",
   "cancelled",
 ]);
+
+type StayRequestStatsRow = {
+  id: string;
+  status: string;
+  host_response: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function hostHasResponded(request: StayRequestStatsRow): boolean {
+  return (
+    RESPONDED_STATUSES.has(request.status) || Boolean(request.host_response?.trim())
+  );
+}
+
+function getRequestResponseMs(
+  request: StayRequestStatsRow,
+  firstHostMessageAt: string | null
+): number | null {
+  const createdAt = new Date(request.created_at).getTime();
+  const candidates: number[] = [];
+
+  if (firstHostMessageAt) {
+    candidates.push(new Date(firstHostMessageAt).getTime() - createdAt);
+  }
+
+  if (hostHasResponded(request)) {
+    candidates.push(new Date(request.updated_at).getTime() - createdAt);
+  }
+
+  const valid = candidates.filter((ms) => ms >= 0);
+  if (valid.length === 0) return null;
+  return Math.min(...valid);
+}
 
 export async function getHostListingStats(
   supabase: SupabaseClient,
@@ -26,32 +61,86 @@ export async function getHostListingStats(
       .eq("listing_id", listingId),
     supabase
       .from("stay_requests")
-      .select("status, host_response")
+      .select("id, status, host_response, created_at, updated_at")
       .eq("host_id", hostId)
       .eq("listing_id", listingId),
   ]);
 
-  const typedRequests = requests ?? [];
+  const typedRequests = (requests as StayRequestStatsRow[] | null) ?? [];
   const totalRequests = typedRequests.length;
+  const requestIds = typedRequests.map((request) => request.id);
 
-  const respondedCount = typedRequests.filter(
-    (r) =>
-      RESPONDED_STATUSES.has(r.status as string) ||
-      Boolean(r.host_response?.trim())
-  ).length;
+  const firstHostMessageByRequest = new Map<string, string>();
 
-  const responseRate =
-    totalRequests > 0 ? Math.round((respondedCount / totalRequests) * 100) : null;
+  if (requestIds.length > 0) {
+    const { data: messages } = await supabase
+      .from("stay_messages")
+      .select("stay_request_id, created_at")
+      .in("stay_request_id", requestIds)
+      .eq("sender_id", hostId)
+      .order("created_at", { ascending: true });
+
+    for (const message of messages ?? []) {
+      const row = message as { stay_request_id: string; created_at: string };
+      if (!firstHostMessageByRequest.has(row.stay_request_id)) {
+        firstHostMessageByRequest.set(row.stay_request_id, row.created_at);
+      }
+    }
+  }
+
+  const responseTimesMs = typedRequests
+    .map((request) =>
+      getRequestResponseMs(
+        request,
+        firstHostMessageByRequest.get(request.id) ?? null
+      )
+    )
+    .filter((ms): ms is number => ms != null);
+
+  const respondedRequests = responseTimesMs.length;
+  const avgResponseTimeMinutes =
+    respondedRequests > 0
+      ? Math.round(
+          responseTimesMs.reduce((sum, ms) => sum + ms, 0) /
+            respondedRequests /
+            60_000
+        )
+      : null;
 
   return {
     bookingCount: bookingCount ?? 0,
-    responseRate,
+    avgResponseTimeMinutes,
     totalRequests,
+    respondedRequests,
   };
 }
 
-export function formatResponseRate(rate: number | null, totalRequests: number) {
+export function formatMemberSince(value: string | null) {
+  if (!value) return null;
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export function formatAverageResponseTime(
+  avgMinutes: number | null,
+  totalRequests: number,
+  respondedRequests: number
+) {
   if (totalRequests === 0) return "New host";
-  if (rate == null) return "—";
-  return `${rate}%`;
+  if (respondedRequests === 0 || avgMinutes == null) return "—";
+
+  if (avgMinutes < 1) return "< 1 min";
+  if (avgMinutes < 60) {
+    return avgMinutes === 1 ? "1 min" : `${avgMinutes} min`;
+  }
+
+  const hours = Math.round(avgMinutes / 60);
+  if (avgMinutes < 24 * 60) {
+    return hours === 1 ? "1 hour" : `${hours} hours`;
+  }
+
+  const days = Math.round(avgMinutes / (24 * 60));
+  return days === 1 ? "1 day" : `${days} days`;
 }

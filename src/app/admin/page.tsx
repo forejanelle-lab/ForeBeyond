@@ -14,6 +14,7 @@ export default async function AdminOverviewPage() {
     { count: pendingVerifications },
     { count: pendingReviews },
     { count: openReports },
+    { count: openSupport },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "host"),
@@ -30,6 +31,10 @@ export default async function AdminOverviewPage() {
       .from("content_reports")
       .select("*", { count: "exact", head: true })
       .in("status", ["pending", "reviewing"]),
+    supabase
+      .from("support_requests")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "open"),
   ]);
 
   return (
@@ -38,12 +43,23 @@ export default async function AdminOverviewPage() {
       description="Platform health and moderation queue summary."
     >
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <AdminStatCard label="Total users" value={userCount ?? 0} />
-        <AdminStatCard label="Hosts" value={hostCount ?? 0} />
-        <AdminStatCard label="Listings" value={listingCount ?? 0} />
-        <AdminStatCard label="Pending verifications" value={pendingVerifications ?? 0} />
-        <AdminStatCard label="Reviews to moderate" value={pendingReviews ?? 0} />
-        <AdminStatCard label="Open reports" value={openReports ?? 0} />
+        <AdminStatCard accent="platform" label="Total users" value={userCount ?? 0} href="/admin/users" />
+        <AdminStatCard accent="platform" label="Hosts" value={hostCount ?? 0} href="/admin/users?role=host" />
+        <AdminStatCard accent="platform" label="Listings" value={listingCount ?? 0} href="/admin/listings" />
+        <AdminStatCard
+          accent="moderation"
+          label="Pending verifications"
+          value={pendingVerifications ?? 0}
+          href="/admin/verifications"
+        />
+        <AdminStatCard
+          accent="moderation"
+          label="Guest reviews to moderate"
+          value={pendingReviews ?? 0}
+          href="/admin/reviews"
+        />
+        <AdminStatCard accent="moderation" label="Open reports" value={openReports ?? 0} href="/admin/reports" />
+        <AdminStatCard accent="moderation" label="Open support" value={openSupport ?? 0} href="/admin/support" />
       </div>
     </AdminShell>
   );

@@ -3,13 +3,31 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { StayRequestListCard, StayRequestTableRow } from "@/components/stays/StayRequestListCard";
+import { guestProfilePath } from "@/lib/host-guest-access";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import type { ListingPricing } from "@/lib/stay-requests";
-import type { StayRequest } from "@/types/database";
+import type { StayRequest, StayRequestStatus } from "@/types/database";
+
+const HOST_REQUEST_STATUS_PRIORITY: Record<StayRequestStatus, number> = {
+  approved: 0,
+  host_approved: 1,
+  pending: 2,
+  completed: 3,
+  rejected: 4,
+  cancelled: 5,
+};
+
+function compareHostRequestStatus(a: StayRequest, b: StayRequest) {
+  return (
+    (HOST_REQUEST_STATUS_PRIORITY[a.status] ?? 99) -
+    (HOST_REQUEST_STATUS_PRIORITY[b.status] ?? 99)
+  );
+}
 
 export interface HostRequestRow {
   request: StayRequest;
+  travelerId: string;
   travelerName: string;
   listingTitle: string;
   listingPricing: ListingPricing;
@@ -34,6 +52,9 @@ export function HostRequestsList({ requests }: HostRequestsListProps) {
     });
 
     rows = [...rows].sort((a, b) => {
+      const statusDiff = compareHostRequestStatus(a.request, b.request);
+      if (statusDiff !== 0) return statusDiff;
+
       if (sort === "income") {
         return (b.incomeTotal ?? 0) - (a.incomeTotal ?? 0);
       }
@@ -48,7 +69,7 @@ export function HostRequestsList({ requests }: HostRequestsListProps) {
   if (requests.length === 0) {
     return (
       <Card variant="outline" padding="lg" className="text-center py-12">
-        <p className="text-charcoal-light">No pending requests yet.</p>
+        <p className="text-charcoal-light">No requests yet.</p>
       </Card>
     );
   }
@@ -108,6 +129,7 @@ export function HostRequestsList({ requests }: HostRequestsListProps) {
                       key={row.request.id}
                       request={row.request}
                       travelerName={row.travelerName}
+                      guestProfileHref={guestProfilePath(row.travelerId, row.request.id)}
                       listingTitle={row.listingTitle}
                       incomeTotal={row.incomeTotal}
                       href={`/host/requests/${row.request.id}`}
@@ -123,6 +145,7 @@ export function HostRequestsList({ requests }: HostRequestsListProps) {
                   key={row.request.id}
                   request={row.request}
                   travelerName={row.travelerName}
+                  guestProfileHref={guestProfilePath(row.travelerId, row.request.id)}
                   listingTitle={row.listingTitle}
                   incomeTotal={row.incomeTotal}
                   href={`/host/requests/${row.request.id}`}

@@ -103,7 +103,7 @@ export function ExperienceWizard({
     return data.id;
   }
 
-  async function saveExperience(status: ExperienceStatus = "draft") {
+  async function saveExperience(publishStatus?: ExperienceStatus) {
     setError("");
     setIsLoading(true);
 
@@ -123,8 +123,10 @@ export function ExperienceWizard({
       includes,
       requirements,
       visibility,
-      status,
-      published_at: status === "published" ? new Date().toISOString() : null,
+      ...(publishStatus !== undefined && {
+        status: publishStatus,
+        published_at: publishStatus === "published" ? new Date().toISOString() : null,
+      }),
     };
 
     if (experienceId) {
@@ -142,7 +144,12 @@ export function ExperienceWizard({
     } else {
       const { data, error: insertError } = await supabase
         .from("host_experiences")
-        .insert({ host_id: userId, ...payload })
+        .insert({
+          host_id: userId,
+          ...payload,
+          status: publishStatus ?? "draft",
+          published_at: publishStatus === "published" ? new Date().toISOString() : null,
+        })
         .select("id")
         .single();
 
@@ -170,7 +177,7 @@ export function ExperienceWizard({
     setError("");
 
     if (step === 0) {
-      const ok = await saveExperience("draft");
+      const ok = await saveExperience();
       if (!ok) return;
     }
     if (step === 2) {
@@ -183,11 +190,6 @@ export function ExperienceWizard({
 
   async function handlePublish() {
     const ok = await saveExperience("published");
-    if (ok) router.push("/host/experiences");
-  }
-
-  async function handleSaveDraft() {
-    const ok = await saveExperience("draft");
     if (ok) router.push("/host/experiences");
   }
 
@@ -387,7 +389,7 @@ export function ExperienceWizard({
                 onPhotosChange={setPhotos}
               />
             ) : (
-              <p className="text-sm text-charcoal-light">Saving draft to enable uploads...</p>
+              <p className="text-sm text-charcoal-light">Preparing photo uploads...</p>
             )}
           </div>
         )}
@@ -427,14 +429,9 @@ export function ExperienceWizard({
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
-            <>
-              <Button variant="secondary" size="lg" onClick={handleSaveDraft} isLoading={isLoading} className="flex-1">
-                Save Draft
-              </Button>
-              <Button variant="primary" size="lg" onClick={handlePublish} isLoading={isLoading} className="flex-1">
-                Publish Experience
-              </Button>
-            </>
+            <Button variant="primary" size="lg" onClick={handlePublish} isLoading={isLoading} className="flex-1">
+              Publish Experience
+            </Button>
           )}
         </div>
       </Card>

@@ -57,7 +57,7 @@ export default async function ExperienceDetailPage({
     notFound();
   }
 
-  const [{ data: photos }, { data: badges }, { data: reviews }, savedResult] =
+  const [{ data: photos }, { data: badges }, { data: reviews }, savedResult, profileResult] =
     await Promise.all([
       supabase
         .from("experience_photos")
@@ -81,6 +81,9 @@ export default async function ExperienceDetailPage({
             .eq("experience_id", id)
             .maybeSingle()
         : Promise.resolve({ data: null }),
+      user
+        ? supabase.from("profiles").select("bio").eq("id", user.id).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
 
   return (
@@ -99,6 +102,7 @@ export default async function ExperienceDetailPage({
       badges={(badges as TrustBadge[]) ?? []}
       reviews={(reviews as PublicReview[]) ?? []}
       isSaved={Boolean(savedResult.data)}
+      profileBio={(profileResult.data as { bio: string | null } | null)?.bio ?? null}
     />
     </>
   );

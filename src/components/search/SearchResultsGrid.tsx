@@ -5,6 +5,7 @@ import type { PublicListing } from "@/types/database";
 interface SearchResultsGridProps {
   listings: PublicListing[];
   coverPhotos: Record<string, string>;
+  hostDisplayNames?: Record<string, string>;
   savedListingIds?: string[];
   showSaveButton?: boolean;
   layout?: "grid" | "list";
@@ -13,6 +14,7 @@ interface SearchResultsGridProps {
 export function SearchResultsGrid({
   listings,
   coverPhotos,
+  hostDisplayNames = {},
   savedListingIds = [],
   showSaveButton = true,
   layout = "list",
@@ -35,6 +37,7 @@ export function SearchResultsGrid({
           key={listing.id}
           listing={listing}
           coverPhotoUrl={coverPhotos[listing.id] ?? null}
+          hostDisplayName={hostDisplayNames[listing.host_id] ?? listing.host_first_name}
           isSaved={savedListingIds.includes(listing.id)}
           showSaveButton={showSaveButton}
           layout={layout}

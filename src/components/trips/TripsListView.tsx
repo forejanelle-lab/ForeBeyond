@@ -30,11 +30,11 @@ function downloadInvoice(trip: TripRow) {
     `Location: ${[trip.listing?.city, trip.listing?.country].filter(Boolean).join(", ") || "N/A"}`,
     `Dates: ${trip.start_date} to ${trip.end_date}`,
     `Status: ${trip.status}`,
-    trip.booking ? `Total: $${trip.booking.total_amount}` : "",
-    trip.booking ? `Payment: ${trip.booking.payment_status}` : "",
+    trip.booking ? `Stay total (host): $${trip.booking.total_amount}` : "",
+    trip.booking?.payment_status === "paid" ? "Service fee: paid at confirmation" : "",
     "",
-    "Deposit to host is coordinated directly between traveler and host within one week of travel.",
-    "Fore Beyond service fee is charged only after both parties approve the stay.",
+    "Stay payment is coordinated directly between traveler and host.",
+    "Fore Beyond service fee is charged when the traveler confirms the stay.",
   ].filter(Boolean);
 
   const blob = new Blob([lines.join("\n")], { type: "text/plain" });
@@ -116,9 +116,9 @@ export function TripsListView({ trips }: TripsListViewProps) {
             <TripListCard
               trip={trip}
               listing={trip.listing}
+              listingId={trip.listing?.id ?? trip.listing_id}
               booking={trip.booking}
               coverPhotoUrl={trip.coverPhotoUrl}
-              listingId={trip.listing?.id ?? trip.listing_id}
             />
             {trip.status === "completed" && (
               <div className="flex justify-end pr-1">

@@ -47,7 +47,7 @@ export function TripCompleteButton({ tripId, userId, canComplete }: TripComplete
       <Card variant="outline" padding="md" className="bg-sage/30">
         <div className="flex items-center gap-2 text-forest">
           <CheckCircle2 className="h-5 w-5" />
-          <p className="text-sm font-medium">Trip marked complete. You can now leave a review.</p>
+          <p className="text-sm font-medium">Trip marked complete. You and your guest can now leave reviews.</p>
         </div>
       </Card>
     );

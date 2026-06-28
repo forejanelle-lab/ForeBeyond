@@ -2,32 +2,26 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Home, Plane } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatAuthError } from "@/lib/auth-errors";
 import { isEmailNotConfirmedError } from "@/lib/auth-verification";
-import { DEMO_HOST, DEMO_TRAVELER } from "@/lib/demo-credentials";
+import { normalizeLoginEmail } from "@/lib/demo-credentials";
+import { getPostLoginPath } from "@/lib/post-login";
+import { recordLoginAudit } from "@/app/auth/actions";
+import type { Profile } from "@/types/database";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 
 function SignInForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [needsVerification, setNeedsVerification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  function fillDemoCredentials(demo: { email: string; password: string }) {
-    setEmail(demo.email);
-    setPassword(demo.password);
-    setError("");
-    setNeedsVerification(false);
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,8 +30,9 @@ function SignInForm() {
     setIsLoading(true);
 
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+    const normalizedEmail = normalizeLoginEmail(email);
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
       password,
     });
 
@@ -48,18 +43,28 @@ function SignInForm() {
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const user = data.user;
+    if (!user || !data.session) {
       setError("Sign in failed. Please try again.");
       setIsLoading(false);
       return;
     }
 
-    const redirectParam = searchParams.get("redirect");
-    const redirectTo =
-      redirectParam && redirectParam.startsWith("/") ? redirectParam : "/dashboard";
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin, role")
+      .eq("id", user.id)
+      .single();
 
-    router.refresh();
+    const redirectParam = searchParams.get("redirect");
+    const redirectTo = getPostLoginPath(
+      user.email ?? "",
+      profile as Pick<Profile, "is_admin" | "role"> | null,
+      redirectParam
+    );
+
+    void recordLoginAudit("password");
+
     window.location.assign(redirectTo);
   }
 
@@ -107,35 +112,6 @@ function SignInForm() {
           Sign In
         </Button>
       </form>
-
-      <div className="mt-6 pt-6 border-t border-sage-dark/30 space-y-3">
-        <p className="text-sm font-medium text-forest text-center">Try a demo account</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full justify-center"
-            onClick={() => fillDemoCredentials(DEMO_HOST)}
-          >
-            <Home className="h-4 w-4 shrink-0" />
-            {DEMO_HOST.shortLabel}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full justify-center"
-            onClick={() => fillDemoCredentials(DEMO_TRAVELER)}
-          >
-            <Plane className="h-4 w-4 shrink-0" />
-            {DEMO_TRAVELER.shortLabel}
-          </Button>
-        </div>
-        <p className="text-xs text-charcoal-light text-center">
-          Autofills email and password — click Sign In to continue.
-        </p>
-      </div>
 
       <div className="mt-6 space-y-2 text-center text-sm text-charcoal-light">
         <div>

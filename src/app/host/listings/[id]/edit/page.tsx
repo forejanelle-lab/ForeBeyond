@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ListingWizard } from "@/components/listings/ListingWizard";
 import { Container } from "@/components/ui/Container";
-import type { HostListing, ListingContactDetails, ListingPhoto, Profile } from "@/types/database";
+import type { HostListing, ListingBlockedDate, ListingContactDetails, ListingPhoto, Profile } from "@/types/database";
 
 export const metadata = { title: "Edit Listing" };
 
@@ -25,17 +25,23 @@ export default async function EditListingPage({
 
   if (!listing) notFound();
 
-  const { data: photos } = await supabase
-    .from("listing_photos")
-    .select("*")
-    .eq("listing_id", id)
-    .order("sort_order");
-
-  const { data: contactDetails } = await supabase
-    .from("listing_contact_details")
-    .select("contact_email, contact_address")
-    .eq("listing_id", id)
-    .maybeSingle();
+  const [{ data: photos }, { data: contactDetails }, { data: blockedDates }] = await Promise.all([
+    supabase
+      .from("listing_photos")
+      .select("*")
+      .eq("listing_id", id)
+      .order("sort_order"),
+    supabase
+      .from("listing_contact_details")
+      .select("contact_email, contact_address")
+      .eq("listing_id", id)
+      .maybeSingle(),
+    supabase
+      .from("listing_blocked_dates")
+      .select("*")
+      .eq("listing_id", id)
+      .order("start_date", { ascending: true }),
+  ]);
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -57,6 +63,7 @@ export default async function EditListingPage({
         listing={listing as HostListing}
         existingPhotos={(photos as ListingPhoto[]) ?? []}
         contactDetails={contactDetails as Pick<ListingContactDetails, "contact_email" | "contact_address"> | null}
+        existingBlockedDates={(blockedDates as ListingBlockedDate[]) ?? []}
         mode="edit"
       />
     </Container>

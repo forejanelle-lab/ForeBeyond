@@ -1,11 +1,36 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureStayConversation } from "@/lib/messaging";
 import {
+  findStayDateConflict,
+  getHostApproveConflictMessage,
+  getStayBlockedDates,
+} from "@/lib/stay-availability";
+import {
   calculateEffectiveNightlyTotal,
   calculateStayTotal,
   type ListingPricing,
 } from "@/lib/stay-requests";
 import type { StayRequest } from "@/types/database";
+
+async function assertNoApprovedStayConflict(
+  supabase: SupabaseClient,
+  request: Pick<StayRequest, "id" | "listing_id" | "start_date" | "end_date">
+): Promise<string | null> {
+  if (!request.listing_id || !request.start_date || !request.end_date) return null;
+
+  const blockedRanges = await getStayBlockedDates(
+    supabase,
+    request.listing_id,
+    request.id
+  );
+  const conflict = findStayDateConflict(
+    request.start_date,
+    request.end_date,
+    blockedRanges
+  );
+
+  return conflict ? getHostApproveConflictMessage(conflict) : null;
+}
 
 /** Host approves — traveler must confirm before trip/booking is created */
 export async function approveStayRequest(
@@ -13,6 +38,9 @@ export async function approveStayRequest(
   request: StayRequest,
   hostResponse?: string | null
 ) {
+  const conflictError = await assertNoApprovedStayConflict(supabase, request);
+  if (conflictError) return { error: conflictError, tripId: null };
+
   const { error: updateError } = await supabase
     .from("stay_requests")
     .update({
@@ -35,6 +63,9 @@ export async function confirmStayByTraveler(
   request: StayRequest,
   pricing: ListingPricing
 ) {
+  const conflictError = await assertNoApprovedStayConflict(supabase, request);
+  if (conflictError) return { error: conflictError, tripId: null };
+
   const { error: updateError } = await supabase
     .from("stay_requests")
     .update({ status: "approved" })
@@ -78,7 +109,7 @@ export async function confirmStayByTraveler(
     guest_count: request.guest_count,
     nightly_rate: nightlyRate,
     total_amount: totalAmount,
-    payment_status: "pending",
+    payment_status: "paid",
   });
 
   if (bookingError) return { error: bookingError.message, tripId: trip.id };
@@ -135,4 +166,20 @@ export async function respondToStayRequest(
     .eq("host_id", hostId);
 
   return { error: error?.message ?? null };
+}
+
+export async function withdrawApprovedStay(
+  supabase: SupabaseClient,
+  requestId: string,
+  hostId: string,
+  reason: string
+) {
+  void hostId;
+  const { error } = await supabase.rpc("withdraw_approved_stay", {
+    p_stay_request_id: requestId,
+    p_reason: reason,
+  });
+
+  if (error) return { error: error.message };
+  return { error: null };
 }

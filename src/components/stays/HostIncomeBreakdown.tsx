@@ -51,7 +51,7 @@ export function HostIncomeBreakdown({
   );
   if (!earnings) return null;
 
-  const commissionPct = Math.round(SERVICE_FEE_RATE * 100);
+  const serviceChargePct = Math.round(SERVICE_FEE_RATE * 100);
   const rateLine = `${earnings.rateLabel} × ${earnings.nights} night${earnings.nights !== 1 ? "s" : ""} · ${earnings.guestCount} guest${earnings.guestCount !== 1 ? "s" : ""}`;
 
   if (variant === "compact") {
@@ -66,7 +66,7 @@ export function HostIncomeBreakdown({
           {formatCurrency(earnings.netEarnings)}
         </p>
         <p className="text-[11px] text-charcoal-light">
-          {rateLine} · {commissionPct}% platform fee applied
+          {rateLine} · {serviceChargePct}% service charge applied
         </p>
       </div>
     );
@@ -84,7 +84,7 @@ export function HostIncomeBreakdown({
       <div className="space-y-2.5 px-4 py-4">
         <LineItem label={rateLine} amount={formatCurrency(earnings.gross)} muted />
         <LineItem
-          label={`Fore Beyond commission (${commissionPct}%)`}
+          label={`Service charge (${serviceChargePct}%)`}
           amount={formatCurrency(earnings.commission)}
           negative
         />
@@ -99,7 +99,7 @@ export function HostIncomeBreakdown({
         </div>
 
         <p className="text-xs text-charcoal-light leading-relaxed pt-1">
-          Commission is deducted from your stay payout. Coordinate the deposit directly with your
+          Service charge is deducted from your stay payout. Coordinate the deposit directly with your
           traveler within one week of travel.
         </p>
       </div>

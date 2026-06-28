@@ -4,6 +4,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { sampleImages } from "@/lib/sample-images";
 import { PageHero } from "@/components/design/PageHero";
+import { getStayBlockedDates } from "@/lib/stay-availability";
 import { RequestStayWizard } from "@/components/stays/RequestStayWizard";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
@@ -39,9 +40,14 @@ export default async function RequestStayPage({
     supabase.auth.getUser(),
   ]);
 
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("bio").eq("id", user.id).maybeSingle()
+    : { data: null };
+
   if (!listing) notFound();
 
   const typedListing = listing as PublicListing;
+  const blockedDateRanges = await getStayBlockedDates(supabase, id);
 
   return (
     <>
@@ -66,7 +72,12 @@ export default async function RequestStayPage({
         <TrackPageEvent event={AnalyticsEvents.REQUEST_START} data={{ listing_id: id }} />
 
         <Card variant="elevated" padding="lg" className="max-w-2xl mx-auto">
-          <RequestStayWizard listing={typedListing} userId={user?.id ?? null} />
+          <RequestStayWizard
+            listing={typedListing}
+            userId={user?.id ?? null}
+            blockedDateRanges={blockedDateRanges}
+            profileBio={(profile as { bio: string | null } | null)?.bio ?? null}
+          />
           <p className="flex items-center justify-center gap-1.5 text-xs text-charcoal-light mt-6 pt-6 border-t border-sage-dark/20">
             <Lock className="h-3.5 w-3.5" />
             Your information is safe and private

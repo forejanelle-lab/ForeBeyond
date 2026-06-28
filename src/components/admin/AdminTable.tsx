@@ -6,18 +6,22 @@ interface AdminTableColumn<T> {
   key: string;
   label: string;
   render: (row: T) => React.ReactNode;
+  className?: string;
+  headerClassName?: string;
 }
 
 interface AdminTableProps<T> {
   rows: T[];
   columns: AdminTableColumn<T>[];
   emptyMessage?: string;
+  wide?: boolean;
 }
 
 export function AdminTable<T extends { id: string }>({
   rows,
   columns,
   emptyMessage = "No records found.",
+  wide = false,
 }: AdminTableProps<T>) {
   if (rows.length === 0) {
     return (
@@ -29,14 +33,16 @@ export function AdminTable<T extends { id: string }>({
 
   return (
     <Card variant="outline" padding="md" className="overflow-hidden p-0">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className={wide ? "overflow-x-auto lg:overflow-visible" : "overflow-x-auto"}>
+        <table className={`w-full text-sm ${wide ? "table-fixed" : ""}`}>
           <thead>
             <tr className="border-b border-sage-dark/30 bg-sage/20">
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-4 py-3 text-left font-semibold text-forest whitespace-nowrap"
+                  className={`px-4 py-3 text-left font-semibold text-forest ${
+                    wide ? col.headerClassName ?? "" : `whitespace-nowrap ${col.headerClassName ?? ""}`
+                  }`}
                 >
                   {col.label}
                 </th>
@@ -47,7 +53,12 @@ export function AdminTable<T extends { id: string }>({
             {rows.map((row) => (
               <tr key={row.id} className="border-b border-sage-dark/20 last:border-0">
                 {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3 text-charcoal-light align-top">
+                  <td
+                    key={col.key}
+                    className={`px-4 py-3 text-charcoal-light align-top ${
+                      col.className ?? ""
+                    }`}
+                  >
                     {col.render(row)}
                   </td>
                 ))}

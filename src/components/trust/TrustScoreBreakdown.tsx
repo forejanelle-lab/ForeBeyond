@@ -1,10 +1,12 @@
-import { TRUST_SCORE_FACTORS, type TrustScoreBreakdown } from "@/lib/trust-score";
+import { TRUST_SCORE_FACTORS, getTrustScoreFactorDescription, type TrustScoreBreakdown } from "@/lib/trust-score";
+import type { UserRole } from "@/types/database";
 
 interface TrustScoreBreakdownProps {
   breakdown: TrustScoreBreakdown;
+  role?: UserRole | null;
 }
 
-export function TrustScoreBreakdown({ breakdown }: TrustScoreBreakdownProps) {
+export function TrustScoreBreakdown({ breakdown, role }: TrustScoreBreakdownProps) {
   return (
     <div className="space-y-4">
       {TRUST_SCORE_FACTORS.map((factor) => {
@@ -16,7 +18,9 @@ export function TrustScoreBreakdown({ breakdown }: TrustScoreBreakdownProps) {
             <div className="flex items-center justify-between mb-1.5">
               <div>
                 <p className="text-sm font-medium text-charcoal">{factor.label}</p>
-                <p className="text-xs text-charcoal-light">{factor.description}</p>
+                <p className="text-xs text-charcoal-light">
+                  {getTrustScoreFactorDescription(factor.key, role)}
+                </p>
               </div>
               <span className="text-sm font-semibold text-forest tabular-nums">
                 {earned}/{factor.maxPoints}

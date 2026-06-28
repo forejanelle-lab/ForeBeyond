@@ -4,8 +4,9 @@ import { Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { sampleImages } from "@/lib/sample-images";
 import { PageHero } from "@/components/design/PageHero";
-import { SearchMapPlaceholder } from "@/components/design/SearchMapPlaceholder";
+import { SearchFamilyMap } from "@/components/search/SearchFamilyMap";
 import { SearchFiltersPanel } from "@/components/search/SearchFiltersPanel";
+import { resolveListingMapPoints } from "@/lib/geocode-location";
 import { SearchResultsGrid } from "@/components/search/SearchResultsGrid";
 import { SearchAnalyticsTracker } from "@/components/analytics/SearchAnalyticsTracker";
 import { Container } from "@/components/ui/Container";
@@ -14,6 +15,7 @@ import {
   getUniqueCountries,
   parseSearchParams,
 } from "@/lib/search";
+import { formatMemberDisplayName } from "@/lib/member-display-name";
 import type { ListingPhoto, PublicListing } from "@/types/database";
 
 export const metadata = { title: "Search Families" };
@@ -56,7 +58,23 @@ async function SearchResults({
   const allListings = (listings as PublicListing[]) ?? [];
   const filtered = filterListingsClientSide(allListings, filters);
   const countries = getUniqueCountries(allListings);
-  const coverPhotos = await getCoverPhotos(filtered.map((listing) => listing.id));
+  const hostIds = [...new Set(filtered.map((listing) => listing.host_id))];
+  const [{ data: hostProfiles }, coverPhotos, mapPoints] = await Promise.all([
+    hostIds.length > 0
+      ? supabase.from("profiles").select("id, full_name").in("id", hostIds)
+      : Promise.resolve({ data: [] }),
+    getCoverPhotos(filtered.map((listing) => listing.id)),
+    resolveListingMapPoints(filtered),
+  ]);
+
+  const hostDisplayNameById = Object.fromEntries(
+    ((hostProfiles as { id: string; full_name: string | null }[]) ?? []).map((profile) => [
+      profile.id,
+      formatMemberDisplayName(profile.full_name, {
+        fallback: filtered.find((l) => l.host_id === profile.id)?.host_first_name ?? "Host",
+      }),
+    ])
+  );
 
   let savedListingIds: string[] = [];
   if (user) {
@@ -68,20 +86,21 @@ async function SearchResults({
   }
 
   return (
-    <>
+    <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_minmax(240px,320px)] gap-6 lg:gap-8">
       <SearchFiltersPanel countries={countries} resultCount={filtered.length} />
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_minmax(240px,320px)] gap-6 md:gap-8">
-        <div className="space-y-6 min-w-0">
-          <SearchResultsGrid
-            listings={filtered}
-            coverPhotos={coverPhotos}
-            savedListingIds={savedListingIds}
-            layout="list"
-          />
-        </div>
-        <SearchMapPlaceholder listings={filtered} />
+      <div className="min-w-0 space-y-6">
+        <SearchResultsGrid
+          listings={filtered}
+          coverPhotos={coverPhotos}
+          hostDisplayNames={hostDisplayNameById}
+          savedListingIds={savedListingIds}
+          layout="list"
+        />
       </div>
-    </>
+      <div className="hidden lg:block min-w-0">
+        <SearchFamilyMap mapPoints={mapPoints} />
+      </div>
+    </div>
   );
 }
 

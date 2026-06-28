@@ -1,3 +1,4 @@
+import { formatMemberDisplayName } from "@/lib/member-display-name";
 import type { Profile } from "@/types/database";
 
 /** Fields hidden from other users until a stay request is approved */
@@ -16,7 +17,9 @@ export function maskProfileForPublic(
     }
   }
   if (masked.full_name) {
-    masked.full_name = masked.full_name.split(" ")[0] ?? masked.full_name;
+    masked.full_name = formatMemberDisplayName(masked.full_name, {
+      fallback: masked.full_name.split(" ")[0] ?? "Member",
+    });
   }
   return masked;
 }

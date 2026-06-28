@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  Home,
   Building2,
   ShieldCheck,
   Star,
   Flag,
+  LifeBuoy,
   Gauge,
 } from "lucide-react";
 import { ADMIN_NAV } from "@/lib/admin";
@@ -19,11 +19,11 @@ import { Badge } from "@/components/ui/Badge";
 const navIcons: Record<string, typeof LayoutDashboard> = {
   "/admin": LayoutDashboard,
   "/admin/users": Users,
-  "/admin/hosts": Home,
   "/admin/listings": Building2,
   "/admin/verifications": ShieldCheck,
   "/admin/reviews": Star,
   "/admin/reports": Flag,
+  "/admin/support": LifeBuoy,
   "/admin/trust-scores": Gauge,
 };
 
@@ -31,14 +31,18 @@ interface AdminShellProps {
   title: string;
   description?: string;
   children: React.ReactNode;
+  wide?: boolean;
 }
 
-export function AdminShell({ title, description, children }: AdminShellProps) {
+export function AdminShell({ title, description, children, wide = false }: AdminShellProps) {
   const pathname = usePathname();
 
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-cream">
-      <Container className="py-8 md:py-12">
+      <Container
+        size={wide ? "xl" : "lg"}
+        className={`py-8 md:py-12 ${wide ? "max-w-none" : ""}`}
+      >
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="lg:w-64 shrink-0">
             <div className="sticky top-24 space-y-4">

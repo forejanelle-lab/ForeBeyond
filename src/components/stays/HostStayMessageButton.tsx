@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
-import { isStayMessagingOpen, todayIso } from "@/lib/messaging";
+import { getStayMessagingLockReason, isStayMessagingOpen } from "@/lib/messaging";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import type { StayRequest } from "@/types/database";
@@ -8,22 +8,7 @@ import type { StayRequest } from "@/types/database";
 function getHostStayMessagingLockReason(
   request: Pick<StayRequest, "status" | "end_date"> | null | undefined
 ): string {
-  if (isStayMessagingOpen(request)) return "";
-
-  if (
-    !request ||
-    request.status === "pending" ||
-    request.status === "rejected" ||
-    request.status === "cancelled"
-  ) {
-    return "Messaging unlocks after you approve this stay request.";
-  }
-
-  if (request.end_date && request.end_date < todayIso()) {
-    return "Messaging closed after the stay dates passed.";
-  }
-
-  return "Messaging is not available for this stay request.";
+  return getStayMessagingLockReason(request, { viewerIsHost: true });
 }
 
 interface HostStayMessageButtonProps {
@@ -37,9 +22,9 @@ export function HostStayMessageButton({
   conversationId,
   guestName,
 }: HostStayMessageButtonProps) {
-  const canMessage = isStayMessagingOpen(request) && Boolean(conversationId);
+  const canMessage =
+    isStayMessagingOpen(request, { viewerIsHost: true }) && Boolean(conversationId);
   const lockReason = getHostStayMessagingLockReason(request);
-  const guestFirstName = guestName.split(" ")[0] || "guest";
 
   return (
     <Card variant="outline" padding="md" className="space-y-3">
@@ -47,7 +32,9 @@ export function HostStayMessageButton({
         <h3 className="font-semibold text-forest">Message guest</h3>
         <p className="text-sm text-charcoal-light mt-1">
           {canMessage
-            ? `Chat with ${guestName} about arrival details and your stay.`
+            ? request.status === "pending"
+              ? `Ask ${guestName} questions before you approve this request.`
+              : `Chat with ${guestName} about arrival details and your stay.`
             : lockReason || "Messaging is not available for this request."}
         </p>
       </div>
@@ -59,7 +46,7 @@ export function HostStayMessageButton({
           className="w-full justify-center"
         >
           <MessageSquare className="h-4 w-4" />
-          Message {guestFirstName}
+          Message {guestName}
         </ButtonLink>
       ) : (
         <span
@@ -79,7 +66,8 @@ export function HostStayMessageLink({
   request,
   conversationId,
 }: Pick<HostStayMessageButtonProps, "request" | "conversationId">) {
-  const canMessage = isStayMessagingOpen(request) && Boolean(conversationId);
+  const canMessage =
+    isStayMessagingOpen(request, { viewerIsHost: true }) && Boolean(conversationId);
   if (!canMessage || !conversationId) return null;
 
   return (

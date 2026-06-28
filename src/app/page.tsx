@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Home, Plane } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { brand } from "@/lib/brand";
 import { getPopularDestinations } from "@/lib/destinations";
@@ -27,7 +27,7 @@ const steps = [
 
 const trustPillars = [
   "Government ID verification",
-  "Background checks for hosts",
+  "Video and address verification",
   "Community vouching system",
   "24/7 safety support",
   "Transparent reviews",
@@ -74,6 +74,25 @@ export default async function HomePage() {
               disabled={isHostUser}
               disabledMessage="Please create a traveler account to search families."
             />
+            {!user && (
+              <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="text-xs text-white/50 mr-1">Already a member?</span>
+                <Link
+                  href="/auth/sign-in?redirect=/trips"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-sm text-white/80 hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors backdrop-blur-sm"
+                >
+                  <Plane className="h-3.5 w-3.5 opacity-80" />
+                  Traveler login
+                </Link>
+                <Link
+                  href="/auth/sign-in?redirect=/host/requests"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-sm text-white/80 hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors backdrop-blur-sm"
+                >
+                  <Home className="h-3.5 w-3.5 opacity-80" />
+                  Host login
+                </Link>
+              </div>
+            )}
           </div>
           <div className="mt-8 pb-4">
             <TrustIndicators variant="hero" />

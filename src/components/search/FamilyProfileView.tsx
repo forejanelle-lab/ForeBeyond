@@ -1,13 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, MessageCircleReply } from "lucide-react";
+import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, Clock } from "lucide-react";
 import { FamilyProfileContent } from "@/components/search/FamilyProfileContent";
 import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
+import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
 import { formatBudget } from "@/lib/search";
 import { formatAverageRating } from "@/lib/reviews";
-import { formatResponseRate } from "@/lib/host-stats";
+import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
+import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
 import type { HostListing, ListingPhoto, PublicListing, PublicReview, TrustBadge } from "@/types/database";
@@ -25,8 +27,18 @@ interface FamilyProfileViewProps {
   showBookingActions?: boolean;
   userId?: string | null;
   bookingCount?: number;
-  responseRate?: number | null;
+  memberSince?: string | null;
+  avgResponseTimeMinutes?: number | null;
   totalStayRequests?: number;
+  respondedStayRequests?: number;
+  canLeaveReview?: boolean;
+  canEditReview?: boolean;
+  reviewExisting?: HostReviewExisting | null;
+  reviewTarget?: HostReviewTarget | null;
+  hostId?: string;
+  canMessageHost?: boolean;
+  messageConversationId?: string | null;
+  messageLockReason?: string;
 }
 
 export function FamilyProfileView({
@@ -41,8 +53,18 @@ export function FamilyProfileView({
   showBookingActions = true,
   userId = null,
   bookingCount = 0,
-  responseRate = null,
+  memberSince = null,
+  avgResponseTimeMinutes = null,
   totalStayRequests = 0,
+  respondedStayRequests = 0,
+  canLeaveReview = false,
+  canEditReview = false,
+  reviewExisting = null,
+  reviewTarget = null,
+  hostId,
+  canMessageHost = false,
+  messageConversationId = null,
+  messageLockReason = "Messaging opens when the host messages you first or approves your stay request.",
 }: FamilyProfileViewProps) {
   const coverPhoto = photos.find((p) => p.is_cover) ?? photos[0];
   const budget = "budget_per_night" in listing ? listing.budget_per_night : null;
@@ -99,7 +121,17 @@ export function FamilyProfileView({
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
           <div className="lg:col-span-2">
-            <FamilyProfileContent listing={listing} photos={photos} reviews={reviews} />
+            <FamilyProfileContent
+              listing={listing}
+              photos={photos}
+              reviews={reviews}
+              reviewUserId={showBookingActions ? userId : null}
+              canLeaveReview={canLeaveReview}
+              canEditReview={canEditReview}
+              reviewExisting={reviewExisting}
+              reviewTarget={reviewTarget}
+              hostName={hostFirstName}
+            />
           </div>
 
           <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
@@ -111,15 +143,33 @@ export function FamilyProfileView({
             />
 
             <Card variant="outline" padding="md" className="space-y-3">
-              <h3 className="text-sm font-semibold text-forest">Host reliability</h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-forest">Host reliability</h3>
+                {hostId && userId && userId !== hostId && (
+                  <ReportUserButton
+                    reportedUserId={hostId}
+                    reportedListingId={listing.id}
+                    label="Report host"
+                  />
+                )}
+              </div>
+              {bookingCount === 0 && memberSince && (
+                <p className="text-sm text-charcoal-light">
+                  Member since {formatMemberSince(memberSince)}
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-xl bg-sage/40 px-3 py-2.5">
                   <p className="flex items-center gap-1.5 text-xs text-charcoal-light mb-0.5">
-                    <MessageCircleReply className="h-3.5 w-3.5" />
-                    Response rate
+                    <Clock className="h-3.5 w-3.5" />
+                    Avg. response time
                   </p>
                   <p className="font-semibold text-forest">
-                    {formatResponseRate(responseRate, totalStayRequests)}
+                    {formatAverageResponseTime(
+                      avgResponseTimeMinutes,
+                      totalStayRequests,
+                      respondedStayRequests
+                    )}
                   </p>
                 </div>
                 <div className="rounded-xl bg-sage/40 px-3 py-2.5">
@@ -146,13 +196,23 @@ export function FamilyProfileView({
                       >
                         Request to Stay
                       </Link>
-                      <Link
-                        href="/messages"
-                        className="inline-flex items-center justify-center gap-2 rounded-full border border-forest/30 bg-white px-5 py-3 text-sm font-medium text-forest hover:bg-sage/40 transition-colors w-full"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        Message Family
-                      </Link>
+                      {canMessageHost && messageConversationId ? (
+                        <Link
+                          href={`/messages/${messageConversationId}`}
+                          className="inline-flex items-center justify-center gap-2 rounded-full border border-forest/30 bg-white px-5 py-3 text-sm font-medium text-forest hover:bg-sage/40 transition-colors w-full"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Message Family
+                        </Link>
+                      ) : (
+                        <span
+                          className="inline-flex items-center justify-center gap-2 rounded-full border border-sage-dark/50 bg-sage/20 px-5 py-3 text-sm font-medium text-charcoal-light w-full cursor-not-allowed"
+                          title={messageLockReason}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Message Family
+                        </span>
+                      )}
                     </>
                   ) : (
                     <Link

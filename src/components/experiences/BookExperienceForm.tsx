@@ -13,13 +13,14 @@ import type { PublicExperience } from "@/types/database";
 
 interface BookExperienceFormProps {
   experience: PublicExperience;
+  profileBio?: string | null;
 }
 
-export function BookExperienceForm({ experience }: BookExperienceFormProps) {
+export function BookExperienceForm({ experience, profileBio = null }: BookExperienceFormProps) {
   const router = useRouter();
   const [scheduledDate, setScheduledDate] = useState("");
   const [guestCount, setGuestCount] = useState("1");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(profileBio?.trim() ?? "");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +81,14 @@ export function BookExperienceForm({ experience }: BookExperienceFormProps) {
     <Card variant="outline" padding="md">
       <h3 className="font-semibold text-forest mb-1">Book this experience</h3>
       <p className="text-sm text-charcoal-light mb-4">
-        Book independently — no accommodation required.{" "}
+        {experience.visibility === "approved_guests_only" ? (
+          <>
+            Because of your accommodation booking, you have the option to connect more with your
+            Beyond family.
+          </>
+        ) : (
+          <>Book independently — no accommodation required.</>
+        )}{" "}
         {experience.price_per_person != null && (
           <span className="font-medium text-forest">{formatPrice(experience.price_per_person)}</span>
         )}
@@ -104,7 +112,7 @@ export function BookExperienceForm({ experience }: BookExperienceFormProps) {
           required
         />
         <Textarea
-          label="Message to host (optional)"
+          label="About me"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Share dietary needs, language preferences, or questions..."

@@ -1,4 +1,5 @@
 import type { ExperienceCategory, ExperienceStatus } from "@/types/database";
+import { sampleImages } from "@/lib/sample-images";
 
 export const EXPERIENCE_CATEGORIES: {
   value: ExperienceCategory;
@@ -72,6 +73,20 @@ export const EXPERIENCE_STATUS_LABELS: Record<
 
 export function getCategoryLabel(category: ExperienceCategory) {
   return EXPERIENCE_CATEGORIES.find((c) => c.value === category)?.label ?? category;
+}
+
+const EXPERIENCE_HERO_IMAGES: Record<ExperienceCategory, string> = {
+  family_dinner: sampleImages.experiencesDining,
+  cooking_class: sampleImages.cookingClass,
+  market_tour: sampleImages.marketTour,
+  tea_ceremony: sampleImages.teaCeremony,
+  cultural_workshop: sampleImages.experiencesWorkshop,
+  hiking: sampleImages.hiking,
+  other: sampleImages.experiencesHero,
+};
+
+export function getExperienceHeroImage(category: ExperienceCategory) {
+  return EXPERIENCE_HERO_IMAGES[category] ?? sampleImages.experiencesHero;
 }
 
 export function formatDuration(minutes: number | null | undefined) {

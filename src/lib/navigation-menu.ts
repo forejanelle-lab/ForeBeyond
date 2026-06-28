@@ -11,26 +11,37 @@ export function getTravelerNav(): NavItem[] {
     { label: "My Trips", href: "/trips" },
     { label: "Experiences", href: "/experiences" },
     { label: "Saved", href: "/saved" },
-    { label: "Saved Experiences", href: "/experiences/saved" },
     { label: "Messages", href: "/messages" },
     { label: "Trust Center", href: "/trust-center/dashboard" },
-    { label: "Settings", href: "/settings" },
   ];
 }
 
 export function getHostNav(): NavItem[] {
   return [
-    { label: "Pending Requests", href: "/host/requests" },
+    { label: "Requests", href: "/host/requests" },
     { label: "My Listings", href: "/host/listings" },
     { label: "Experiences", href: "/host/experiences" },
     { label: "Messages", href: "/messages" },
     { label: "Trust Center", href: "/trust-center/dashboard" },
-    { label: "Settings", href: "/settings" },
   ];
 }
 
 export function getUserNav(role?: UserRole | null): NavItem[] {
   return role === "host" ? getHostNav() : getTravelerNav();
+}
+
+/** Admin sidebar links — shown instead of traveler/host nav for platform admins */
+export function getAdminNav(): NavItem[] {
+  return [
+    { label: "Overview", href: "/admin" },
+    { label: "Users", href: "/admin/users" },
+    { label: "Listings", href: "/admin/listings" },
+    { label: "Verifications", href: "/admin/verifications" },
+    { label: "Reviews", href: "/admin/reviews" },
+    { label: "Reports", href: "/admin/reports" },
+    { label: "Support", href: "/admin/support" },
+    { label: "Trust Scores", href: "/admin/trust-scores" },
+  ];
 }
 
 /** Platform admin: must be flagged in DB and match allowlisted email */

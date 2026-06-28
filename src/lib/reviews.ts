@@ -42,8 +42,8 @@ export function canShowReviewForm(params: {
   existingReview?: Review | null;
 }) {
   if (params.tripStatus !== "completed") return false;
-  if (params.existingReview) return false;
-  return params.userId === params.travelerId || params.userId === params.hostId;
+  if (params.userId !== params.travelerId && params.userId !== params.hostId) return false;
+  return true;
 }
 
 export function getRevieweeId(params: {

@@ -19,9 +19,28 @@ const ACCEPT_BY_TYPE: Partial<Record<DocumentType, string>> = {
   government_id: "image/jpeg,image/png,image/webp,application/pdf",
   selfie: "image/jpeg,image/png,image/webp",
   address_proof: "image/jpeg,image/png,image/webp,application/pdf",
-  background_check: "",
   video_verification: "video/webm,video/mp4,video/quicktime",
 };
+
+const VERIFICATION_BUCKET = "verification-documents";
+
+function getSupportedRecorderMimeType(): string | null {
+  if (typeof MediaRecorder === "undefined") return null;
+
+  const candidates = [
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm",
+    "video/mp4",
+  ];
+
+  return candidates.find((type) => MediaRecorder.isTypeSupported(type)) ?? null;
+}
+
+function extensionForMime(mime: string) {
+  if (mime.includes("mp4") || mime.includes("quicktime")) return "mp4";
+  return "webm";
+}
 
 export function VerificationSubmitModal({
   open,
@@ -32,7 +51,6 @@ export function VerificationSubmitModal({
   onSubmitted,
 }: VerificationSubmitModalProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -43,11 +61,11 @@ export function VerificationSubmitModal({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const recorderMimeRef = useRef("video/webm");
 
   useEffect(() => {
     if (!open) {
       setFile(null);
-      setConsent(false);
       setError("");
       setRecordedBlob(null);
       setPreviewUrl(null);
@@ -62,38 +80,85 @@ export function VerificationSubmitModal({
     };
   }, [previewUrl]);
 
-  function stopCamera() {
-    mediaRecorderRef.current?.stop();
-    mediaRecorderRef.current = null;
+  function stopStreamTracks() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }
+
+  function stopCamera() {
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+    mediaRecorderRef.current = null;
+    stopStreamTracks();
     setIsRecording(false);
+  }
+
+  function setVideoPreviewFromBlob(blob: Blob) {
+    setRecordedBlob(blob);
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return URL.createObjectURL(blob);
+    });
   }
 
   async function startRecording() {
     setError("");
+    setFile(null);
+
+    const mimeType = getSupportedRecorderMimeType();
+    if (!mimeType) {
+      setError("Video recording is not supported in this browser. Upload a video file instead.");
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+        audio: true,
+      });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.muted = true;
         await videoRef.current.play();
       }
 
-      const recorder = new MediaRecorder(stream);
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recorderMimeRef.current = mimeType;
       chunksRef.current = [];
+
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
+
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        setRecordedBlob(blob);
-        setPreviewUrl(URL.createObjectURL(blob));
+        const blob = new Blob(chunksRef.current, {
+          type: recorderMimeRef.current || "video/webm",
+        });
+        chunksRef.current = [];
+        mediaRecorderRef.current = null;
+        stopStreamTracks();
+        setIsRecording(false);
+
+        if (blob.size === 0) {
+          setError("Recording was empty. Try again or upload a video file.");
+          return;
+        }
+
+        setVideoPreviewFromBlob(blob);
+      };
+
+      recorder.onerror = () => {
+        setError("Recording failed. Try again or upload a video file.");
         stopCamera();
       };
 
       mediaRecorderRef.current = recorder;
-      recorder.start();
+      recorder.start(250);
       setIsRecording(true);
     } catch {
       setError("Camera access is required for video verification. Check browser permissions.");
@@ -101,25 +166,49 @@ export function VerificationSubmitModal({
   }
 
   function stopRecording() {
-    mediaRecorderRef.current?.stop();
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+  }
+
+  function clearVideoPreview() {
+    setRecordedBlob(null);
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+    setFile(null);
+  }
+
+  function handleVideoFileSelect(next: File | null) {
+    if (!next) return;
+    clearVideoPreview();
+    setFile(next);
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return URL.createObjectURL(next);
+    });
+    setError("");
   }
 
   async function handleSubmit() {
     if (!documentType) return;
 
-    if (documentType === "background_check" && !consent) {
-      setError("Please consent to the background check to continue.");
-      return;
+    let uploadFile: File | null = null;
+
+    if (documentType === "video_verification") {
+      if (recordedBlob) {
+        const mime = recordedBlob.type || recorderMimeRef.current || "video/webm";
+        const ext = extensionForMime(mime);
+        uploadFile = new File([recordedBlob], `verification.${ext}`, { type: mime });
+      } else {
+        uploadFile = file;
+      }
+    } else {
+      uploadFile = file;
     }
 
-    const uploadFile =
-      documentType === "video_verification"
-        ? recordedBlob
-          ? new File([recordedBlob], "verification.webm", { type: "video/webm" })
-          : file
-        : file;
-
-    if (documentType !== "background_check" && !uploadFile) {
+    if (!uploadFile) {
       setError(
         documentType === "video_verification"
           ? "Record or upload a short video before submitting."
@@ -132,7 +221,9 @@ export function VerificationSubmitModal({
     setError("");
 
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       setError("You must be signed in to submit verification.");
       setIsSubmitting(false);
@@ -145,11 +236,18 @@ export function VerificationSubmitModal({
       const ext = uploadFile.name.split(".").pop() ?? "bin";
       const path = `${user.id}/${documentType}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
-        .from("verification-documents")
-        .upload(path, uploadFile, { upsert: false });
+        .from(VERIFICATION_BUCKET)
+        .upload(path, uploadFile, {
+          upsert: false,
+          contentType: uploadFile.type || undefined,
+        });
 
       if (uploadError) {
-        setError(uploadError.message);
+        setError(
+          uploadError.message.includes("Bucket not found")
+            ? "Verification storage is not set up yet. Please try again shortly or contact support."
+            : uploadError.message
+        );
         setIsSubmitting(false);
         return;
       }
@@ -163,6 +261,8 @@ export function VerificationSubmitModal({
         document_type: documentType,
         file_url: fileUrl,
         status: "pending",
+        notes: null,
+        reviewed_at: null,
       },
       { onConflict: "user_id,document_type" }
     );
@@ -173,6 +273,12 @@ export function VerificationSubmitModal({
       return;
     }
 
+    await supabase
+      .from("profiles")
+      .update({ verification_status: "pending" })
+      .eq("id", user.id)
+      .eq("verification_status", "rejected");
+
     setIsSubmitting(false);
     onSubmitted();
     onClose();
@@ -181,7 +287,6 @@ export function VerificationSubmitModal({
   if (!open || !documentType) return null;
 
   const isVideo = documentType === "video_verification";
-  const isBackground = documentType === "background_check";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -209,25 +314,31 @@ export function VerificationSubmitModal({
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          {isBackground ? (
-            <label className="flex items-start gap-3 text-sm text-charcoal-light">
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-                className="mt-1"
-              />
-              <span>
-                I consent to a background check as part of the Fore Beyond trust and safety process.
-              </span>
-            </label>
-          ) : isVideo ? (
+          {isVideo ? (
             <div className="space-y-4">
               <div className="rounded-xl overflow-hidden bg-charcoal/5 aspect-video relative">
                 {previewUrl ? (
-                  <video src={previewUrl} controls className="w-full h-full object-cover" />
+                  <video
+                    key={previewUrl}
+                    src={previewUrl}
+                    controls
+                    playsInline
+                    className="w-full h-full object-cover bg-black"
+                  />
                 ) : (
-                  <video ref={videoRef} muted playsInline className="w-full h-full object-cover" />
+                  <video
+                    ref={videoRef}
+                    muted
+                    playsInline
+                    autoPlay
+                    className="w-full h-full object-cover bg-black"
+                  />
+                )}
+                {isRecording && (
+                  <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-1 text-xs font-medium text-white">
+                    <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                    Recording
+                  </span>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -243,15 +354,7 @@ export function VerificationSubmitModal({
                   </Button>
                 )}
                 {previewUrl && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setPreviewUrl(null);
-                      setRecordedBlob(null);
-                    }}
-                  >
+                  <Button type="button" variant="outline" size="sm" onClick={clearVideoPreview}>
                     Record again
                   </Button>
                 )}
@@ -296,8 +399,13 @@ export function VerificationSubmitModal({
             className="hidden"
             onChange={(e) => {
               const next = e.target.files?.[0] ?? null;
-              setFile(next);
-              setError("");
+              if (isVideo) {
+                handleVideoFileSelect(next);
+              } else {
+                setFile(next);
+                setError("");
+              }
+              e.target.value = "";
             }}
           />
 

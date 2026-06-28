@@ -48,6 +48,8 @@ export type ReportStatus = "pending" | "reviewing" | "resolved" | "dismissed";
 
 export type ReportCategory = "spam" | "harassment" | "fraud" | "inappropriate" | "other";
 
+export type SupportRequestStatus = "open" | "resolved" | "archived";
+
 export type ReviewModerationStatus = "pending" | "approved" | "rejected" | "hidden";
 
 export type TripStatus = "upcoming" | "active" | "completed" | "cancelled";
@@ -100,8 +102,20 @@ export interface Profile {
   address_verified_at: string | null;
   is_trust_moderator?: boolean;
   is_admin?: boolean;
+  last_login_at: string | null;
+  last_active_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserLoginEvent {
+  id: string;
+  user_id: string;
+  logged_in_at: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  auth_method: string;
+  created_at: string;
 }
 
 export interface PublicProfile {
@@ -173,11 +187,20 @@ export interface StayRequest {
   status: StayRequestStatus;
   message: string | null;
   host_response: string | null;
+  withdrawal_reason: string | null;
   start_date: string | null;
   end_date: string | null;
   guest_count: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface StayRequestPhoto {
+  id: string;
+  stay_request_id: string;
+  file_url: string;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface StayBooking {
@@ -254,6 +277,7 @@ export interface Trip {
 export interface Review {
   id: string;
   trip_id: string | null;
+  experience_booking_id: string | null;
   reviewer_id: string;
   reviewee_id: string;
   rating: number;
@@ -270,6 +294,7 @@ export interface Review {
 export interface PublicReview {
   id: string;
   trip_id: string | null;
+  listing_id: string | null;
   reviewer_id: string;
   reviewee_id: string;
   rating: number;
@@ -293,6 +318,20 @@ export interface ContentReport {
   resolved_by: string | null;
   resolved_at: string | null;
   created_at: string;
+}
+
+export interface SupportRequest {
+  id: string;
+  user_id: string;
+  user_full_name: string | null;
+  user_email: string | null;
+  message: string;
+  status: SupportRequestStatus;
+  admin_response: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PrivacySettings {
@@ -341,6 +380,7 @@ export interface HostListing {
   host_id: string;
   title: string | null;
   family_story: string | null;
+  stay_details: string | null;
   languages: string[] | null;
   country: string | null;
   city: string | null;
@@ -378,11 +418,22 @@ export interface ListingContactDetails {
   updated_at: string;
 }
 
+export interface ListingBlockedDate {
+  id: string;
+  listing_id: string;
+  start_date: string;
+  end_date: string;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PublicListing {
   id: string;
   host_id: string;
   title: string | null;
   family_story: string | null;
+  stay_details: string | null;
   languages: string[] | null;
   country: string | null;
   city: string | null;

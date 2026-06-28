@@ -52,7 +52,9 @@ export function ReviewModerationPanel({ reviews: initialReviews }: ReviewModerat
     router.refresh();
   }
 
-  const pending = reviews.filter((r) => r.moderation_status === "pending");
+  const pending = reviews.filter(
+    (r) => r.moderation_status === "pending" && r.rating <= 3
+  );
 
   return (
     <div className="space-y-6">
@@ -65,7 +67,7 @@ export function ReviewModerationPanel({ reviews: initialReviews }: ReviewModerat
           Reviews rated 1–3 stars require manual approval before they appear publicly and affect trust scores.
         </p>
         <p className="text-sm font-medium text-forest mt-3">
-          {pending.length} pending review{pending.length === 1 ? "" : "s"}
+          {pending.length} pending guest review{pending.length === 1 ? "" : "s"}
         </p>
       </Card>
 

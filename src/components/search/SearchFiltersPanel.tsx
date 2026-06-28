@@ -1,8 +1,8 @@
 "use client";
 
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
-import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import {
   BUDGET_RANGES,
   COMMON_LANGUAGES,
@@ -14,6 +14,7 @@ import {
   parseSearchParams,
   type SearchFilters,
 } from "@/lib/search";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 
@@ -55,13 +56,21 @@ function FilterFields({
   filters,
   countries,
   onChange,
+  onSubmit,
 }: {
   filters: SearchFilters;
   countries: string[];
   onChange: (key: keyof SearchFilters, value: string | boolean) => void;
+  onSubmit: () => void;
 }) {
   return (
-    <div className="space-y-4">
+    <form
+      className="space-y-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
+      }}
+    >
       <Input
         label="Search"
         value={filters.q}
@@ -134,7 +143,12 @@ function FilterFields({
         />
         <span className="text-sm font-medium text-charcoal">Verified hosts only</span>
       </label>
-    </div>
+
+      <Button type="submit" variant="primary" size="md" className="w-full justify-center gap-2">
+        <Search className="h-4 w-4" />
+        Search families
+      </Button>
+    </form>
   );
 }
 
@@ -142,7 +156,12 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const filters = parseSearchParams(Object.fromEntries(searchParams.entries()));
+  const appliedFilters = parseSearchParams(Object.fromEntries(searchParams.entries()));
+  const [draftFilters, setDraftFilters] = useState<SearchFilters>(appliedFilters);
+
+  useEffect(() => {
+    setDraftFilters(parseSearchParams(Object.fromEntries(searchParams.entries())));
+  }, [searchParams]);
 
   function applyFilters(next: SearchFilters) {
     const params = filtersToSearchParams(next);
@@ -152,55 +171,89 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
     });
   }
 
-  function updateFilter(key: keyof SearchFilters, value: string | boolean) {
-    applyFilters({ ...filters, [key]: value });
+  function updateDraft(key: keyof SearchFilters, value: string | boolean) {
+    setDraftFilters((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleSearch() {
+    applyFilters(draftFilters);
   }
 
   function clearFilters() {
+    setDraftFilters(DEFAULT_SEARCH_FILTERS);
     applyFilters(DEFAULT_SEARCH_FILTERS);
   }
 
   const hasActiveFilters =
-    JSON.stringify(filters) !== JSON.stringify(DEFAULT_SEARCH_FILTERS);
+    JSON.stringify(appliedFilters) !== JSON.stringify(DEFAULT_SEARCH_FILTERS);
+  const hasDraftChanges =
+    JSON.stringify(draftFilters) !== JSON.stringify(appliedFilters);
+
+  const panelBody = (
+    <>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <p className="text-sm text-charcoal-light">
+          {resultCount} {resultCount === 1 ? "family" : "families"} found
+          {hasDraftChanges && !isPending && (
+            <span className="text-gold"> · press Search to apply</span>
+          )}
+        </p>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="text-xs font-medium text-forest hover:underline inline-flex items-center gap-1 shrink-0"
+          >
+            <X className="h-3 w-3" />
+            Clear
+          </button>
+        )}
+      </div>
+      <FilterFields
+        filters={draftFilters}
+        countries={countries}
+        onChange={updateDraft}
+        onSubmit={handleSearch}
+      />
+      {isPending && (
+        <p className="text-xs text-charcoal-light mt-4">Updating results...</p>
+      )}
+    </>
+  );
 
   return (
-    <details className="group mb-6">
-      <summary className="list-none cursor-pointer">
-        <Card variant="outline" padding="md" className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-forest font-medium">
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters &amp; search
-            {hasActiveFilters && (
-              <span className="text-xs font-normal text-gold">(active)</span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-charcoal-light">
-            <span>{resultCount} {resultCount === 1 ? "family" : "families"}</span>
-            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-          </div>
-        </Card>
-      </summary>
-      <Card variant="outline" padding="md" className="mt-3">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <p className="text-sm text-charcoal-light">
-            Refine by budget, language, meals, and verification
-          </p>
+    <>
+      <Card variant="outline" padding="md" className="hidden lg:block sticky top-24 mb-6">
+        <div className="flex items-center gap-2 text-forest font-medium mb-4">
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters &amp; search
           {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="text-xs font-medium text-forest hover:underline inline-flex items-center gap-1 shrink-0"
-            >
-              <X className="h-3 w-3" />
-              Clear
-            </button>
+            <span className="text-xs font-normal text-gold">(active)</span>
           )}
         </div>
-        <FilterFields filters={filters} countries={countries} onChange={updateFilter} />
-        {isPending && (
-          <p className="text-xs text-charcoal-light mt-4">Updating results...</p>
-        )}
+        {panelBody}
       </Card>
-    </details>
+
+      <details className="group lg:hidden mb-6">
+        <summary className="list-none cursor-pointer">
+          <Card variant="outline" padding="md" className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-forest font-medium">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters &amp; search
+              {hasActiveFilters && (
+                <span className="text-xs font-normal text-gold">(active)</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-charcoal-light">
+              <span>{resultCount} {resultCount === 1 ? "family" : "families"}</span>
+              <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+            </div>
+          </Card>
+        </summary>
+        <Card variant="outline" padding="md" className="mt-3">
+          {panelBody}
+        </Card>
+      </details>
+    </>
   );
 }

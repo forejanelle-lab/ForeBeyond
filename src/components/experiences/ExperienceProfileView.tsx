@@ -3,11 +3,11 @@ import { Clock, Globe, MapPin, Shield, Users } from "lucide-react";
 import { ListingTrustPanel } from "@/components/listings/ListingTrustPanel";
 import { BookExperienceForm } from "@/components/experiences/BookExperienceForm";
 import { SaveExperienceButton } from "@/components/experiences/SaveExperienceButton";
-import { ExperienceCoverFallback } from "@/components/experiences/ExperienceCoverFallback";
 import {
   formatDuration,
   formatPrice,
   getCategoryLabel,
+  getExperienceHeroImage,
 } from "@/lib/experiences";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
@@ -20,6 +20,7 @@ interface ExperienceProfileViewProps {
   badges: TrustBadge[];
   reviews: PublicReview[];
   isSaved?: boolean;
+  profileBio?: string | null;
 }
 
 export function ExperienceProfileView({
@@ -28,25 +29,23 @@ export function ExperienceProfileView({
   badges,
   reviews,
   isSaved = false,
+  profileBio = null,
 }: ExperienceProfileViewProps) {
   const coverPhoto = photos.find((p) => p.is_cover) ?? photos[0];
+  const heroImage = coverPhoto?.file_url ?? getExperienceHeroImage(experience.category);
 
   return (
     <>
       <Section background="cream" className="!py-0">
         <div className="relative h-64 md:h-96 bg-sage">
-          {coverPhoto ? (
-            <Image
-              src={coverPhoto.file_url}
-              alt={experience.title ?? "Experience"}
-              fill
-              className="object-cover"
-              priority
-              sizes="100vw"
-            />
-          ) : (
-            <ExperienceCoverFallback size="lg" />
-          )}
+          <Image
+            src={heroImage}
+            alt={experience.title ?? "Experience"}
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <Container className="absolute bottom-0 left-0 right-0 pb-6 md:pb-8">
             <Badge variant="gold" className="mb-3">
@@ -151,7 +150,7 @@ export function ExperienceProfileView({
 
           <div className="space-y-6">
             <SaveExperienceButton experienceId={experience.id} initialSaved={isSaved} />
-            <BookExperienceForm experience={experience} />
+            <BookExperienceForm experience={experience} profileBio={profileBio} />
             <ListingTrustPanel
               hostFirstName={experience.host_first_name}
               trustScore={experience.trust_score}

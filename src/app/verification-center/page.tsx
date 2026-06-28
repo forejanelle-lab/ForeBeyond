@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
+import { getProfileVerificationStatusLabel } from "@/lib/verification-labels";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
@@ -24,7 +25,7 @@ import { Badge } from "@/components/ui/Badge";
 import { PageShell } from "@/components/layout/PageShell";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationSubmitModal } from "@/components/verification/VerificationSubmitModal";
-import type { DocumentType, VerificationStatus } from "@/types/database";
+import type { DocumentType, UserRole, VerificationStatus } from "@/types/database";
 
 interface VerificationStep {
   type: DocumentType;
@@ -76,14 +77,6 @@ const verificationSteps: VerificationStep[] = [
     required: false,
     points: 15,
   },
-  {
-    type: "background_check",
-    title: "Background Check",
-    description: "Consent to a background check (required for hosts).",
-    icon: Shield,
-    required: false,
-    points: 0,
-  },
 ];
 
 const statusConfig: Record<
@@ -94,7 +87,7 @@ const statusConfig: Record<
   pending: { label: "Submitted", variant: "warning", icon: Clock },
   in_review: { label: "In Review", variant: "gold", icon: Clock },
   verified: { label: "Verified", variant: "success", icon: CheckCircle2 },
-  rejected: { label: "Rejected", variant: "outline", icon: AlertCircle },
+  rejected: { label: "Needs resubmission", variant: "outline", icon: AlertCircle },
 };
 
 export default function VerificationCenterPage() {
@@ -108,6 +101,8 @@ export default function VerificationCenterPage() {
   const [activeStep, setActiveStep] = useState<VerificationStep | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [isFinishing, setIsFinishing] = useState(false);
 
   async function loadStatus() {
     const supabase = createClient();
@@ -128,6 +123,7 @@ export default function VerificationCenterPage() {
       setOverallStatus(profile.verification_status);
       setPhone(profile.phone ?? "");
       setTrustScore(profile.trust_score ?? 0);
+      setUserRole(profile.role);
       if (profile.phone_verified_at) {
         setDocuments((prev) => ({ ...prev, phone_verification: "verified" }));
       }
@@ -187,35 +183,67 @@ export default function VerificationCenterPage() {
   }
 
   async function handleCompleteOnboarding() {
+    setIsFinishing(true);
+    setErrorMessage("");
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({
         onboarding_complete: true,
         onboarding_step: "complete",
-        verification_status: "pending",
+        verification_status: overallStatus === "unverified" ? "pending" : overallStatus,
         email_verified_at: user.email_confirmed_at ?? new Date().toISOString(),
       })
       .eq("id", user.id);
 
+    if (error) {
+      setErrorMessage(error.message);
+      setIsFinishing(false);
+      return;
+    }
+
     trackEvent(AnalyticsEvents.VERIFICATION_COMPLETION);
-    router.push("/trust-center/dashboard");
+
+    if (userRole === "host") {
+      router.push("/host/listings/new");
+      return;
+    }
+
+    router.push("/search");
   }
 
   function handleDocumentSubmitted(type: DocumentType) {
+    const wasRejected = documents[type] === "rejected";
     setDocuments((prev) => ({ ...prev, [type]: "pending" }));
+    if (overallStatus === "rejected") {
+      setOverallStatus("pending");
+    }
     const step = verificationSteps.find((s) => s.type === type);
-    setSuccessMessage(`${step?.title ?? "Document"} submitted for review.`);
+    setSuccessMessage(
+      `${step?.title ?? "Document"} ${wasRejected ? "resubmitted" : "submitted"} for review.`
+    );
     setErrorMessage("");
     loadStatus();
   }
 
   const requiredComplete = verificationSteps
     .filter((s) => s.required)
-    .every((s) => documents[s.type] && documents[s.type] !== "unverified");
+    .every((s) => {
+      const docStatus = documents[s.type];
+      return (
+        docStatus &&
+        docStatus !== "unverified" &&
+        docStatus !== "rejected"
+      );
+    });
+
+  const hasRejectedDocs = verificationSteps.some(
+    (s) => documents[s.type] === "rejected"
+  );
 
   if (isLoading) {
     return (
@@ -225,7 +253,11 @@ export default function VerificationCenterPage() {
     );
   }
 
-  const overall = statusConfig[overallStatus];
+  const overall = {
+    label: getProfileVerificationStatusLabel(overallStatus),
+    variant: statusConfig[overallStatus].variant,
+    icon: statusConfig[overallStatus].icon,
+  };
 
   return (
     <PageShell
@@ -240,6 +272,11 @@ export default function VerificationCenterPage() {
       {errorMessage && (
         <div className="mb-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {errorMessage}
+        </div>
+      )}
+      {hasRejectedDocs && (
+        <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-charcoal">
+          Verification is incomplete. Update the items marked below and submit again.
         </div>
       )}
 
@@ -268,7 +305,8 @@ export default function VerificationCenterPage() {
                     </div>
                     <p className="mt-1 text-sm text-charcoal-light">{step.description}</p>
 
-                    {step.type === "phone_verification" && status === "unverified" && (
+                    {step.type === "phone_verification" &&
+                      (status === "unverified" || status === "rejected") && (
                       <div className="mt-3 flex gap-2">
                         <Input
                           type="tel"
@@ -295,7 +333,7 @@ export default function VerificationCenterPage() {
                       onClick={() => setActiveStep(step)}
                     >
                       <Upload className="h-4 w-4" />
-                      Submit
+                      {status === "rejected" ? "Resubmit" : "Submit"}
                     </Button>
                   )}
                 </div>
@@ -306,6 +344,16 @@ export default function VerificationCenterPage() {
 
         <div className="space-y-4">
           <TrustScorePanel score={trustScore} compact showBreakdownLink />
+          {userRole === "traveler" && (
+            <Card variant="outline" padding="md" className="space-y-3">
+              <p className="text-sm font-medium text-forest">Next step</p>
+              <p className="text-sm text-charcoal-light">
+                {requiredComplete
+                  ? "Find a host family that fits your journey."
+                  : "Finish phone, ID, and selfie verification above to unlock Search Families."}
+              </p>
+            </Card>
+          )}
           <Link href="/trust-center/dashboard" className="block text-center text-sm text-forest hover:underline">
             View Trust Dashboard →
           </Link>
@@ -314,11 +362,18 @@ export default function VerificationCenterPage() {
 
       {requiredComplete && (
         <div className="mt-8 text-center">
-          <Button variant="primary" size="lg" onClick={handleCompleteOnboarding}>
-            Complete &amp; Go to Trust Dashboard
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={handleCompleteOnboarding}
+            isLoading={isFinishing}
+          >
+            {userRole === "host" ? "Next — Create Your Listing" : "Next — Search Families"}
           </Button>
           <p className="mt-3 text-sm text-charcoal-light">
-            Your documents will be reviewed within 24-48 hours.
+            {userRole === "host"
+              ? "Set up your family listing so travelers can find you."
+              : "Browse verified host families and send your first stay request. Your documents stay in review."}
           </p>
         </div>
       )}

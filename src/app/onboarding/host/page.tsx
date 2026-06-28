@@ -58,17 +58,20 @@ export default function HostOnboardingPage() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("host_profiles").upsert({
-      user_id: user.id,
-      cultural_offerings: offerings,
-      household_description: household,
-      experience_description: experience,
-      city,
-      country,
-      neighborhood,
-      max_guests: parseInt(maxGuests, 10) || 1,
-      languages_spoken: languages.split(",").map((l) => l.trim()).filter(Boolean),
-    });
+    const { error: insertError } = await supabase.from("host_profiles").upsert(
+      {
+        user_id: user.id,
+        cultural_offerings: offerings,
+        household_description: household,
+        experience_description: experience,
+        city,
+        country,
+        neighborhood,
+        max_guests: parseInt(maxGuests, 10) || 1,
+        languages_spoken: languages.split(",").map((l) => l.trim()).filter(Boolean),
+      },
+      { onConflict: "user_id" }
+    );
 
     if (insertError) {
       setError(insertError.message);

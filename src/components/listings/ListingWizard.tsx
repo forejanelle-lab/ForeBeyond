@@ -17,7 +17,12 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PhotoUpload } from "@/components/listings/PhotoUpload";
-import type { HostListing, ListingContactDetails, ListingPhoto, ListingStatus } from "@/types/database";
+import { ListingBlockedDatesEditor } from "@/components/listings/ListingBlockedDatesEditor";
+import {
+  syncListingBlockedDates,
+  type EditableBlockedDateRange,
+} from "@/lib/listing-blocked-dates";
+import type { HostListing, ListingBlockedDate, ListingContactDetails, ListingPhoto, ListingStatus } from "@/types/database";
 
 interface ListingWizardProps {
   userId: string;
@@ -25,6 +30,7 @@ interface ListingWizardProps {
   listing?: HostListing;
   existingPhotos?: ListingPhoto[];
   contactDetails?: Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
+  existingBlockedDates?: ListingBlockedDate[];
   mode?: "create" | "edit";
 }
 
@@ -49,6 +55,7 @@ export function ListingWizard({
   listing,
   existingPhotos = [],
   contactDetails = null,
+  existingBlockedDates = [],
 }: ListingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -57,6 +64,7 @@ export function ListingWizard({
     listing?.title?.trim() || defaultFamilyListingTitle(hostName)
   );
   const [familyStory, setFamilyStory] = useState(listing?.family_story ?? "");
+  const [stayDetails, setStayDetails] = useState(listing?.stay_details ?? "");
   const [country, setCountry] = useState(listing?.country ?? "");
   const [city, setCity] = useState(listing?.city ?? "");
   const [languages, setLanguages] = useState(listing?.languages?.join(", ") ?? "");
@@ -77,10 +85,18 @@ export function ListingWizard({
   const [contactEmail, setContactEmail] = useState(contactDetails?.contact_email ?? "");
   const [contactAddress, setContactAddress] = useState(contactDetails?.contact_address ?? "");
   const [photos, setPhotos] = useState<ListingPhoto[]>(existingPhotos);
+  const [blockedDates, setBlockedDates] = useState<EditableBlockedDateRange[]>(
+    existingBlockedDates.map((range) => ({
+      id: range.id,
+      start_date: range.start_date,
+      end_date: range.end_date,
+      note: range.note,
+    }))
+  );
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const steps = ["Family Story", "Details", "Photos", "Publish"];
+  const steps = ["Family Story", "Details", "Blocked Dates", "Photos", "Publish"];
 
   async function ensureListingDraft(): Promise<string | null> {
     if (listingId) return listingId;
@@ -94,6 +110,7 @@ export function ListingWizard({
         host_id: userId,
         title: listingTitle,
         family_story: familyStory,
+        stay_details: stayDetails.trim() || null,
         country,
         city,
         languages: languages.split(",").map((l) => l.trim()).filter(Boolean),
@@ -146,7 +163,7 @@ export function ListingWizard({
     return true;
   }
 
-  async function saveListing(status: ListingStatus = "draft") {
+  async function saveListing(publishStatus?: ListingStatus) {
     setError("");
     setIsLoading(true);
 
@@ -155,6 +172,7 @@ export function ListingWizard({
     const payload = {
       title: listingTitle,
       family_story: familyStory,
+      stay_details: stayDetails.trim() || null,
       country,
       city,
       languages: languages.split(",").map((l) => l.trim()).filter(Boolean),
@@ -168,8 +186,10 @@ export function ListingWizard({
       budget_per_night_5_guests: parsePrice(budget5Guests),
       budget_per_night_6_plus_guests: parsePrice(budget6PlusGuests),
       max_capacity: maxCapacity.trim() ? Math.max(1, parseInt(maxCapacity, 10) || 1) : null,
-      status,
-      published_at: status === "published" ? new Date().toISOString() : null,
+      ...(publishStatus !== undefined && {
+        status: publishStatus,
+        published_at: publishStatus === "published" ? new Date().toISOString() : null,
+      }),
     };
 
     let activeListingId = listingId;
@@ -190,7 +210,12 @@ export function ListingWizard({
     } else {
       const { data, error: insertError } = await supabase
         .from("host_listings")
-        .insert({ host_id: userId, ...payload })
+        .insert({
+          host_id: userId,
+          ...payload,
+          status: publishStatus ?? "draft",
+          published_at: publishStatus === "published" ? new Date().toISOString() : null,
+        })
         .select("id")
         .single();
 
@@ -213,6 +238,25 @@ export function ListingWizard({
     return true;
   }
 
+  async function saveBlockedDates(activeListingId: string): Promise<boolean> {
+    setError("");
+    setIsLoading(true);
+
+    const supabase = createClient();
+    const { error: syncError } = await syncListingBlockedDates(
+      supabase,
+      activeListingId,
+      blockedDates
+    );
+
+    setIsLoading(false);
+    if (syncError) {
+      setError(syncError);
+      return false;
+    }
+    return true;
+  }
+
   async function handleNext() {
     if (step === 0 && !title.trim()) {
       setError("Please add a listing title");
@@ -229,10 +273,16 @@ export function ListingWizard({
     setError("");
 
     if (step === 1) {
-      const ok = await saveListing("draft");
+      const ok = await saveListing();
       if (!ok) return;
     }
     if (step === 2) {
+      const id = listingId || (await ensureListingDraft());
+      if (!id) return;
+      const ok = await saveBlockedDates(id);
+      if (!ok) return;
+    }
+    if (step === 3) {
       const id = await ensureListingDraft();
       if (!id) return;
     }
@@ -241,12 +291,13 @@ export function ListingWizard({
   }
 
   async function handlePublish() {
-    const ok = await saveListing("published");
-    if (ok) router.push("/host/listings");
-  }
+    const activeListingId = listingId || (await ensureListingDraft());
+    if (!activeListingId) return;
 
-  async function handleSaveDraft() {
-    const ok = await saveListing("draft");
+    const blockedSaved = await saveBlockedDates(activeListingId);
+    if (!blockedSaved) return;
+
+    const ok = await saveListing("published");
     if (ok) router.push("/host/listings");
   }
 
@@ -364,6 +415,13 @@ export function ListingWizard({
               <h2 className="text-xl font-semibold text-forest">What you offer</h2>
               <p className="text-sm text-charcoal-light mt-1">Select everything that applies to your home.</p>
             </div>
+            <Textarea
+              label="Details"
+              value={stayDetails}
+              onChange={(e) => setStayDetails(e.target.value)}
+              placeholder="Parking instructions, check-in times, accessibility notes, neighborhood tips..."
+              hint="Any additional details you want your guests to know about the stay"
+            />
             <Input
               label="Max capacity (guests)"
               type="number"
@@ -428,6 +486,10 @@ export function ListingWizard({
         )}
 
         {step === 2 && (
+          <ListingBlockedDatesEditor ranges={blockedDates} onChange={setBlockedDates} />
+        )}
+
+        {step === 3 && (
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-semibold text-forest">Family photos</h2>
@@ -441,12 +503,12 @@ export function ListingWizard({
                 onPhotosChange={setPhotos}
               />
             ) : (
-              <p className="text-sm text-charcoal-light">Saving draft to enable uploads...</p>
+              <p className="text-sm text-charcoal-light">Preparing photo uploads...</p>
             )}
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-semibold text-forest">Review & publish</h2>
@@ -459,7 +521,9 @@ export function ListingWizard({
               <p><strong className="text-forest">Max capacity:</strong> {maxCapacity.trim() ? `${maxCapacity} guests` : "Not set"}</p>
               <p><strong className="text-forest">Contact email:</strong> {contactEmail.trim() || "Not set"}</p>
               <p><strong className="text-forest">Contact address:</strong> {contactAddress.trim() ? "Provided" : "Not set"}</p>
+              <p><strong className="text-forest">Details:</strong> {stayDetails.trim() ? "Provided" : "Not set"}</p>
               <p><strong className="text-forest">Meals:</strong> {meals.length} selected</p>
+              <p><strong className="text-forest">Blocked-out dates:</strong> {blockedDates.length} range{blockedDates.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
         )}
@@ -479,14 +543,9 @@ export function ListingWizard({
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
-            <>
-              <Button variant="secondary" size="lg" onClick={handleSaveDraft} isLoading={isLoading} className="flex-1">
-                Save Draft
-              </Button>
-              <Button variant="primary" size="lg" onClick={handlePublish} isLoading={isLoading} className="flex-1">
-                Publish Listing
-              </Button>
-            </>
+            <Button variant="primary" size="lg" onClick={handlePublish} isLoading={isLoading} className="flex-1">
+              Publish Listing
+            </Button>
           )}
         </div>
       </Card>

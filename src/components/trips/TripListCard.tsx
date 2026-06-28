@@ -24,11 +24,12 @@ export function TripListCard({
 }: TripListCardProps) {
   const status = TRIP_STATUS_LABELS[trip.status] ?? TRIP_STATUS_LABELS.upcoming;
   const image = resolveListingImage(coverPhotoUrl, listing?.country, listing?.city);
-  const href = listingId ? `/families/${listingId}` : `/trips/${trip.id}`;
+  const tripHref = `/trips/${trip.id}`;
+  const familyHref = listingId ? `/families/${listingId}` : null;
 
   return (
-    <Link href={href} className="block group">
-      <Card variant="outline" padding="sm" className="overflow-hidden !p-0 hover:shadow-md transition-shadow h-full">
+    <Card variant="outline" padding="sm" className="overflow-hidden !p-0 hover:shadow-md transition-shadow h-full">
+      <Link href={tripHref} className="block group">
         <div className="flex flex-col sm:flex-row sm:items-stretch">
           <div className="relative w-full h-44 sm:w-48 md:w-56 shrink-0 self-stretch min-h-[140px] overflow-hidden bg-sage">
             <Image
@@ -62,12 +63,20 @@ export function TripListCard({
               <Calendar className="h-3.5 w-3.5 shrink-0" />
               {formatDateRange(trip.start_date, trip.end_date)}
             </p>
-            {listingId && (
-              <p className="text-xs text-forest mt-2">View family listing →</p>
-            )}
+            <p className="text-xs text-forest mt-2">View booking details →</p>
           </div>
         </div>
-      </Card>
-    </Link>
+      </Link>
+      {familyHref && (
+        <div className="border-t border-sage-dark/20 px-4 py-3 bg-sage/10">
+          <Link
+            href={familyHref}
+            className="text-xs font-medium text-forest hover:underline"
+          >
+            View family listing →
+          </Link>
+        </div>
+      )}
+    </Card>
   );
 }

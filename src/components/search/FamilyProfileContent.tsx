@@ -4,7 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import { Globe, Utensils, Home, Sparkles, Shield } from "lucide-react";
 import { ProfileTabs } from "@/components/design/ProfileTabs";
+import { ListingReviewAction } from "@/components/reviews/ListingReviewAction";
 import { ReviewList } from "@/components/reviews/ReviewList";
+import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
 import { Badge } from "@/components/ui/Badge";
 import type { HostListing, ListingPhoto, PublicListing, PublicReview } from "@/types/database";
 
@@ -12,6 +14,12 @@ interface FamilyProfileContentProps {
   listing: HostListing | PublicListing;
   photos: ListingPhoto[];
   reviews: PublicReview[];
+  reviewUserId?: string | null;
+  canLeaveReview?: boolean;
+  canEditReview?: boolean;
+  reviewExisting?: HostReviewExisting | null;
+  reviewTarget?: HostReviewTarget | null;
+  hostName?: string | null;
 }
 
 const tabs = [
@@ -23,7 +31,17 @@ const tabs = [
   { id: "reviews", label: "Reviews" },
 ];
 
-export function FamilyProfileContent({ listing, photos, reviews }: FamilyProfileContentProps) {
+export function FamilyProfileContent({
+  listing,
+  photos,
+  reviews,
+  reviewUserId = null,
+  canLeaveReview = false,
+  canEditReview = false,
+  reviewExisting = null,
+  reviewTarget = null,
+  hostName = null,
+}: FamilyProfileContentProps) {
   const [activeTab, setActiveTab] = useState("about");
 
   const tagSections = [
@@ -44,6 +62,14 @@ export function FamilyProfileContent({ listing, photos, reviews }: FamilyProfile
               <h2 className="text-xl font-semibold text-forest mb-3">Our Family Story</h2>
               <p className="text-charcoal-light leading-relaxed whitespace-pre-wrap">
                 {listing.family_story}
+              </p>
+            </section>
+          )}
+          {listing.stay_details && (
+            <section>
+              <h2 className="text-xl font-semibold text-forest mb-3">Details</h2>
+              <p className="text-charcoal-light leading-relaxed whitespace-pre-wrap">
+                {listing.stay_details}
               </p>
             </section>
           )}
@@ -173,7 +199,17 @@ export function FamilyProfileContent({ listing, photos, reviews }: FamilyProfile
       )}
 
       {activeTab === "reviews" && (
-        <div className="pt-4">
+        <div className="pt-4 space-y-6">
+          {reviewUserId && (
+            <ListingReviewAction
+              canReview={canLeaveReview}
+              canEdit={canEditReview}
+              target={reviewTarget}
+              existingReview={reviewExisting}
+              userId={reviewUserId}
+              hostName={hostName ?? "your host"}
+            />
+          )}
           <ReviewList
             title="Traveler Reviews"
             reviews={reviews}

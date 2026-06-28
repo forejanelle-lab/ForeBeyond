@@ -4,24 +4,30 @@ import { ArrowLeft, Calendar, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { HostRequestActions } from "@/components/stays/HostRequestActions";
 import { HostIncomeBreakdown } from "@/components/stays/HostIncomeBreakdown";
+import { GuestRequestMedia } from "@/components/stays/GuestRequestMedia";
 import { HostStayMessageButton } from "@/components/stays/HostStayMessageButton";
+import { TripCompleteButton } from "@/components/reviews/TripCompleteButton";
+import { TripReviewSection } from "@/components/reviews/TripReviewSection";
+import { isTripPastEndDate } from "@/lib/reviews";
 import {
   ensureStayConversation,
-  isStayMessagingOpen,
 } from "@/lib/messaging";
+import { formatMemberDisplayName } from "@/lib/member-display-name";
+import { guestProfilePath } from "@/lib/host-guest-access";
 import { StayRequestStatusBadge } from "@/components/stays/StayRequestStatusBadge";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import {
   formatBookingReference,
   formatDateRange,
   LISTING_PRICING_SELECT,
+  parseStayRequestMessage,
   pickListingPricing,
   type ListingPricing,
 } from "@/lib/stay-requests";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
-import type { Profile, HostListing, PublicReview, StayRequest } from "@/types/database";
+import type { Profile, HostListing, PublicReview, Review, StayRequest, StayRequestPhoto, Trip } from "@/types/database";
 
 export const metadata = { title: "Review Request" };
 
@@ -56,7 +62,7 @@ export default async function HostRequestDetailPage({
 
   const typedRequest = request as StayRequest;
 
-  const [{ data: listing }, { data: traveler }, { data: travelerReviews }] =
+  const [{ data: listing }, { data: traveler }, { data: travelerReviews }, { data: requestPhotos }, { data: trip }] =
     await Promise.all([
       typedRequest.listing_id
         ? supabase
@@ -67,7 +73,7 @@ export default async function HostRequestDetailPage({
         : Promise.resolve({ data: null }),
       supabase
         .from("profiles")
-        .select("full_name, bio, location")
+        .select("full_name, bio, location, avatar_url, trust_score, verification_status")
         .eq("id", typedRequest.traveler_id)
         .single(),
       supabase
@@ -76,12 +82,32 @@ export default async function HostRequestDetailPage({
         .eq("reviewee_id", typedRequest.traveler_id)
         .eq("reviewer_role", "host")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("stay_request_photos")
+        .select("*")
+        .eq("stay_request_id", id)
+        .order("sort_order", { ascending: true }),
+      supabase.from("trips").select("*").eq("stay_request_id", id).maybeSingle(),
     ]);
 
-  let conversationId: string | null = null;
-  if (isStayMessagingOpen(typedRequest)) {
-    conversationId = await ensureStayConversation(supabase, id);
-  }
+  const typedTrip = trip as Trip | null;
+  const [{ data: tripReviews }, { data: hostTripReview }] = typedTrip
+    ? await Promise.all([
+        supabase
+          .from("reviews")
+          .select("*")
+          .eq("trip_id", typedTrip.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("reviews")
+          .select("*")
+          .eq("trip_id", typedTrip.id)
+          .eq("reviewer_id", user.id)
+          .maybeSingle(),
+      ])
+    : [{ data: [] }, { data: null }];
+
+  let conversationId = await ensureStayConversation(supabase, id);
   if (!conversationId) {
     const { data: conversation } = await supabase
       .from("conversations")
@@ -95,17 +121,30 @@ export default async function HostRequestDetailPage({
     full_name: string | null;
     bio: string | null;
     location: string | null;
+    avatar_url: string | null;
+    trust_score: number | null;
+    verification_status: string | null;
   } | null;
-  const travelerFullName = travelerProfile?.full_name?.trim() || "Traveler";
+  const guestProfileHref = guestProfilePath(typedRequest.traveler_id, typedRequest.id);
+  const travelerDisplayName = formatMemberDisplayName(travelerProfile?.full_name, {
+    fallback: "Traveler",
+    stayStatus: typedRequest.status,
+  });
+  const { intro: travelerIntro } = parseStayRequestMessage(typedRequest.message);
   const listingData = listing as (Pick<HostListing, "title"> & ListingPricing) | null;
   const listingPricing = pickListingPricing(listingData ?? {});
   const reviews = (travelerReviews as PublicReview[]) ?? [];
+  const guestPhotos = (requestPhotos as StayRequestPhoto[]) ?? [];
+  const canCompleteTrip =
+    typedTrip != null &&
+    typedTrip.status !== "completed" &&
+    isTripPastEndDate(typedTrip.end_date);
 
   return (
     <Container size="md" className="py-10 md:py-16">
       <Link href="/host/requests" className="inline-flex items-center gap-2 text-sm text-forest hover:underline mb-6">
         <ArrowLeft className="h-4 w-4" />
-        Pending requests
+        Requests
       </Link>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -113,16 +152,36 @@ export default async function HostRequestDetailPage({
         <Badge variant="outline">Booking ref: {formatBookingReference(typedRequest.id)}</Badge>
       </div>
 
-      <h1 className="text-3xl font-bold text-forest">{travelerFullName}</h1>
+      <h1 className="text-3xl font-bold text-forest">
+        <Link href={guestProfileHref} className="hover:underline">
+          {travelerDisplayName}
+        </Link>
+      </h1>
       <p className="text-charcoal-light mt-2">
         {listingData?.title ?? "Stay request"}
+        {" · "}
+        <Link href={guestProfileHref} className="text-forest hover:underline">
+          View trust profile
+          {travelerProfile?.trust_score != null ? ` (${travelerProfile.trust_score})` : ""}
+        </Link>
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         <div className="lg:col-span-2 space-y-6">
+          <GuestRequestMedia
+            guestName={travelerDisplayName}
+            guestUserId={typedRequest.traveler_id}
+            guestProfileHref={guestProfileHref}
+            avatarUrl={travelerProfile?.avatar_url ?? null}
+            message={typedRequest.message}
+            photos={guestPhotos}
+          />
+
           <Card variant="outline" padding="md">
             <h2 className="font-semibold text-forest mb-3">Traveler introduction</h2>
-            <p className="text-charcoal-light whitespace-pre-wrap">{typedRequest.message}</p>
+            <p className="text-charcoal-light whitespace-pre-wrap">
+              {travelerIntro || "No introduction provided."}
+            </p>
             {travelerProfile?.bio && (
               <p className="text-sm text-charcoal-light mt-4 pt-4 border-t border-sage-dark/30">
                 <strong className="text-forest">Bio:</strong> {travelerProfile.bio}
@@ -153,14 +212,38 @@ export default async function HostRequestDetailPage({
             showReviewerName
             emptyMessage="This guest has no reviews from other host families yet."
           />
+
+          {typedTrip && (
+            <>
+              <TripCompleteButton
+                tripId={typedTrip.id}
+                userId={user.id}
+                canComplete={canCompleteTrip}
+              />
+              <TripReviewSection
+                tripId={typedTrip.id}
+                userId={user.id}
+                travelerId={typedTrip.traveler_id}
+                hostId={typedTrip.host_id}
+                tripStatus={typedTrip.status}
+                otherName={travelerDisplayName}
+                tripReviews={(tripReviews as Review[]) ?? []}
+                userReview={(hostTripReview as Review | null) ?? null}
+              />
+            </>
+          )}
         </div>
 
         <div className="space-y-4">
-          <HostRequestActions request={typedRequest} listingPricing={listingPricing} />
+          <HostRequestActions
+            request={typedRequest}
+            listingPricing={listingPricing}
+            guestName={travelerDisplayName}
+          />
           <HostStayMessageButton
             request={typedRequest}
             conversationId={conversationId}
-            guestName={travelerFullName}
+            guestName={travelerDisplayName}
           />
         </div>
       </div>

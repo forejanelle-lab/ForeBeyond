@@ -1,9 +1,8 @@
-import { Shield, MapPin, CheckCircle2, Users } from "lucide-react";
+import { Shield, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 const defaultBadges = [
   { icon: Shield, label: "Verified Identity" },
-  { icon: CheckCircle2, label: "Background Checked" },
   { icon: MapPin, label: "Address Verified" },
   { icon: Users, label: "Community Reviewed" },
 ];

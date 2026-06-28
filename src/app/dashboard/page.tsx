@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getPostLoginPath } from "@/lib/post-login";
 import type { Profile } from "@/types/database";
 
 export default async function DashboardRedirectPage() {
@@ -9,11 +10,10 @@ export default async function DashboardRedirectPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_admin")
     .eq("id", user.id)
     .single();
 
-  const role = (profile as Pick<Profile, "role"> | null)?.role;
-  if (role === "host") redirect("/host/requests");
-  redirect("/trips");
+  const typedProfile = profile as Pick<Profile, "role" | "is_admin"> | null;
+  redirect(getPostLoginPath(user.email ?? "", typedProfile));
 }

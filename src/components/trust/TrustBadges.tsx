@@ -21,7 +21,9 @@ interface TrustBadgesProps {
 }
 
 export function TrustBadges({ badges, emptyMessage = "No badges earned yet" }: TrustBadgesProps) {
-  if (badges.length === 0) {
+  const visibleBadges = badges.filter((badge) => badge.badge_type !== "background_checked");
+
+  if (visibleBadges.length === 0) {
     return (
       <p className="text-sm text-charcoal-light text-center py-6">{emptyMessage}</p>
     );
@@ -29,7 +31,7 @@ export function TrustBadges({ badges, emptyMessage = "No badges earned yet" }: T
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {badges.map((badge) => {
+      {visibleBadges.map((badge) => {
         const Icon = BADGE_ICONS[badge.badge_type] ?? BadgeCheck;
         return (
           <div

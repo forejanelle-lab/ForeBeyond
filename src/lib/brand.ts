@@ -19,7 +19,7 @@ export const navigation = {
   main: [
     { label: "How It Works", href: "/#how-it-works" },
     { label: "About", href: "/#mission" },
-    { label: "Contact", href: "mailto:hello@forebeyond.com" },
+    { label: "Contact", href: "mailto:contact@forebeyond.com" },
   ],
   auth: [
     { label: "Sign In", href: "/auth/sign-in" },
@@ -31,15 +31,12 @@ export const footer = {
   product: [
     { label: "How It Works", href: "/#how-it-works" },
     { label: "Search Families", href: "/search" },
-    { label: "Experiences", href: "/experiences" },
-    { label: "For Travelers", href: "/onboarding/traveler" },
-    { label: "For Hosts", href: "/host/dashboard" },
     { label: "Trust Center", href: "/trust-center" },
   ],
   company: [
     { label: "About", href: "/#mission" },
     { label: "Verification Center", href: "/verification-center" },
-    { label: "Contact", href: "mailto:hello@forebeyond.com" },
+    { label: "Contact", href: "mailto:contact@forebeyond.com" },
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy" },

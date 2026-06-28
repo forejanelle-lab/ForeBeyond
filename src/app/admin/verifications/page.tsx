@@ -28,10 +28,15 @@ export default async function AdminVerificationsPage() {
     ...doc,
     user_name: profileMap.get(doc.user_id)?.full_name ?? null,
     user_email: profileMap.get(doc.user_id)?.email ?? null,
+    user_id: doc.user_id,
   }));
 
   return (
-    <AdminShell title="Verification Requests" description="Review identity and trust documents.">
+    <AdminShell
+      wide
+      title="Verification Requests"
+      description="Review identity and trust documents grouped by member."
+    >
       <AdminVerificationPanel documents={rows} />
     </AdminShell>
   );

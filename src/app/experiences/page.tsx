@@ -1,15 +1,11 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Heart, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { sampleImages } from "@/lib/sample-images";
-import { PageHero } from "@/components/design/PageHero";
-import { ExperienceCategoryPills } from "@/components/design/ExperienceCategoryPills";
 import { ExperienceFiltersPanel } from "@/components/experiences/ExperienceFiltersPanel";
 import { ExperienceResultsGrid } from "@/components/experiences/ExperienceResultsGrid";
-import { Container } from "@/components/ui/Container";
-import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Container } from "@/components/ui/Container";
 import {
   filterExperiencesByVisibility,
   fetchApprovedHostIdsForUser,
@@ -21,7 +17,7 @@ import {
 } from "@/lib/experience-search";
 import type { ExperiencePhoto, PublicExperience } from "@/types/database";
 
-export const metadata = { title: "Experiences Marketplace" };
+export const metadata = { title: "Experiences" };
 
 async function getCoverPhotos(experienceIds: string[]) {
   if (experienceIds.length === 0) return {};
@@ -83,7 +79,7 @@ async function ExperienceResults({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 lg:gap-8">
+    <div className="space-y-6">
       <ExperienceFiltersPanel countries={countries} resultCount={filtered.length} />
       <ExperienceResultsGrid
         experiences={filtered}
@@ -102,46 +98,27 @@ export default async function ExperiencesMarketplacePage({
   const params = await searchParams;
 
   return (
-    <>
-      <PageHero
-        image={sampleImages.cookingClass}
-        imageAlt="Local cultural experiences with host families"
-        eyebrow="Experiences Marketplace"
-        title="Explore Local Experiences"
-        subtitle="Family dinners, cooking classes, market tours, and more — book independently of where you stay."
-        height="md"
-      />
-
-      <Container className="py-10 md:py-14">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <ExperienceCategoryPills />
-          <Link
-            href="/experiences/saved"
-            className="inline-flex items-center gap-2 text-sm font-medium text-forest hover:underline shrink-0"
-          >
-            <Heart className="h-4 w-4" />
-            Saved experiences
-          </Link>
-        </div>
-
-        <Suspense fallback={<p className="text-sm text-charcoal-light">Loading experiences...</p>}>
-          <ExperienceResults searchParams={params} />
-        </Suspense>
-
-        <Card
-          variant="elevated"
-          padding="lg"
-          className="mt-14 text-center bg-forest text-white border-0"
-        >
-          <h2 className="text-2xl font-bold mb-2">Can&apos;t stay overnight? No problem!</h2>
-          <p className="text-white/80 mb-6 max-w-lg mx-auto">
-            Book cultural experiences with local families even if you&apos;re not staying with them.
+    <Container className="py-16 md:py-24">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+        <div>
+          <Badge variant="gold" className="mb-4">
+            <Sparkles className="h-3 w-3" />
+            Experiences
+          </Badge>
+          <h1 className="text-3xl font-bold text-forest">Explore experiences</h1>
+          <p className="mt-2 text-charcoal-light">
+            Family dinners, cooking classes, market tours, and more with local hosts.
           </p>
-          <ButtonLink href="/search" variant="gold" size="lg">
-            Explore More
-          </ButtonLink>
-        </Card>
-      </Container>
-    </>
+        </div>
+        <ButtonLink href="/experiences/saved" variant="secondary" size="md">
+          <Heart className="h-4 w-4" />
+          Saved experiences
+        </ButtonLink>
+      </div>
+
+      <Suspense fallback={<p className="text-sm text-charcoal-light">Loading experiences...</p>}>
+        <ExperienceResults searchParams={params} />
+      </Suspense>
+    </Container>
   );
 }

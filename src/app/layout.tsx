@@ -52,11 +52,18 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  let navUser: { id: string; email: string; role?: UserRole | null; isAdmin?: boolean } | null = null;
+  let navUser: {
+    id: string;
+    email: string;
+    role?: UserRole | null;
+    isAdmin?: boolean;
+    avatarUrl?: string | null;
+    fullName?: string | null;
+  } | null = null;
   if (user) {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role, is_admin")
+      .select("role, is_admin, avatar_url, full_name")
       .eq("id", user.id)
       .single();
 
@@ -70,6 +77,8 @@ export default async function RootLayout({
       email: user.email ?? "",
       role,
       isAdmin,
+      avatarUrl: profileError ? null : profile?.avatar_url ?? null,
+      fullName: profileError ? null : profile?.full_name ?? null,
     };
   }
 

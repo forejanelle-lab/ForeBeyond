@@ -2,19 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { HelpCircle, Menu, X } from "lucide-react";
 import { LogoutButton } from "@/components/layout/LogoutButton";
+import { SupportRequestModal } from "@/components/support/SupportRequestModal";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import type { NavItem } from "@/lib/navigation-menu";
 
 interface MobileNavMenuProps {
   items: readonly NavItem[];
-  showAdmin?: boolean;
+  showSupport?: boolean;
   isLoggedIn: boolean;
+  userId?: string;
+  userFullName?: string | null;
+  userEmail?: string;
 }
 
-export function MobileNavMenu({ items, showAdmin = false, isLoggedIn }: MobileNavMenuProps) {
+export function MobileNavMenu({
+  items,
+  showSupport = false,
+  isLoggedIn,
+  userId = "",
+  userFullName = null,
+  userEmail = "",
+}: MobileNavMenuProps) {
   const [open, setOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   return (
     <div className="relative">
@@ -51,14 +63,18 @@ export function MobileNavMenu({ items, showAdmin = false, isLoggedIn }: MobileNa
                 {item.label}
               </Link>
             ))}
-            {showAdmin && (
-              <Link
-                href="/admin"
-                onClick={() => setOpen(false)}
-                className="px-3 py-2.5 text-sm font-medium text-forest hover:bg-sage/50 rounded-lg"
+            {showSupport && userId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setSupportOpen(true);
+                }}
+                className="px-3 py-2.5 text-sm font-medium text-charcoal hover:bg-sage/50 rounded-lg transition-colors text-left inline-flex items-center gap-2"
               >
-                Admin
-              </Link>
+                <HelpCircle className="h-4 w-4 text-forest" />
+                Help &amp; Support
+              </button>
             )}
             <hr className="my-2 border-sage-dark/30" />
             {isLoggedIn ? (
@@ -85,6 +101,16 @@ export function MobileNavMenu({ items, showAdmin = false, isLoggedIn }: MobileNa
             )}
           </div>
         </>
+      )}
+
+      {showSupport && userId && (
+        <SupportRequestModal
+          open={supportOpen}
+          onClose={() => setSupportOpen(false)}
+          userId={userId}
+          fullName={userFullName}
+          email={userEmail}
+        />
       )}
     </div>
   );

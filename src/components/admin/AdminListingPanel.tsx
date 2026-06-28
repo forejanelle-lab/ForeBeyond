@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -48,7 +50,14 @@ export function AdminListingPanel({ listings: initial }: AdminListingPanelProps)
           className="rounded-xl border border-sage-dark/30 bg-white p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between"
         >
           <div>
-            <p className="font-medium text-forest">{listing.title ?? "Untitled listing"}</p>
+            <Link
+              href={`/families/${listing.id}`}
+              target="_blank"
+              className="font-medium text-forest hover:underline inline-flex items-center gap-1.5"
+            >
+              {listing.title ?? "Untitled listing"}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
             <p className="text-xs text-charcoal-light">
               {listing.host_name ?? "Host"} · {[listing.city, listing.country].filter(Boolean).join(", ")}
             </p>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Calendar, CreditCard, ImagePlus, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
+import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
 import { formatBudget } from "@/lib/search";
 import {
   calculateStayWithServiceFee,
@@ -13,7 +14,14 @@ import {
   missingPricingMessage,
   pickListingPricing,
 } from "@/lib/stay-requests";
+import { BlockedDatesNotice } from "@/components/stays/BlockedDatesNotice";
+import { StayRequestMediaUpload, type DraftStayRequestPhoto } from "@/components/stays/StayRequestMediaUpload";
 import { StayTravelerPricingBreakdown } from "@/components/stays/StayTravelerPricingBreakdown";
+import {
+  findStayDateConflict,
+  getStayDateConflictMessage,
+  type BlockedDateRange,
+} from "@/lib/stay-availability";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Input } from "@/components/ui/Input";
@@ -39,21 +47,29 @@ interface RequestStayWizardProps {
     | "host_first_name"
   >;
   userId?: string | null;
+  blockedDateRanges?: BlockedDateRange[];
+  profileBio?: string | null;
 }
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function RequestStayWizard({ listing, userId }: RequestStayWizardProps) {
+export function RequestStayWizard({
+  listing,
+  userId,
+  blockedDateRanges = [],
+  profileBio = null,
+}: RequestStayWizardProps) {
   const router = useRouter();
   const minDate = todayIso();
   const [step, setStep] = useState(0);
-  const [intro, setIntro] = useState("");
+  const [intro, setIntro] = useState(profileBio?.trim() ?? "");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [guestCount, setGuestCount] = useState("1");
   const [mediaNote, setMediaNote] = useState("");
+  const [draftPhotos, setDraftPhotos] = useState<DraftStayRequestPhoto[]>([]);
   const [cardName, setCardName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
@@ -100,6 +116,13 @@ export function RequestStayWizard({ listing, userId }: RequestStayWizardProps) {
     }
 
     const guests = parseInt(guestCount, 10) || 1;
+    const conflict = findStayDateConflict(startDate, endDate, blockedDateRanges);
+    if (conflict) {
+      setError(getStayDateConflictMessage(conflict));
+      setIsLoading(false);
+      return;
+    }
+
     const fullMessage = mediaNote.trim()
       ? `${intro.trim()}\n\n---\nOptional media note: ${mediaNote.trim()}`
       : intro.trim();
@@ -125,8 +148,25 @@ export function RequestStayWizard({ listing, userId }: RequestStayWizardProps) {
       return;
     }
 
+    if (draftPhotos.length > 0) {
+      const { error: photosError } = await supabase.from("stay_request_photos").insert(
+        draftPhotos.map((photo, index) => ({
+          stay_request_id: data.id,
+          file_url: photo.file_url,
+          sort_order: index,
+        }))
+      );
+
+      if (photosError) {
+        setError(photosError.message);
+        setIsLoading(false);
+        return;
+      }
+    }
+
     setSubmittedId(data.id);
     setIsLoading(false);
+    dispatchHostAlert({ event: "stay_request_submitted", stayRequestId: data.id });
     trackEvent(AnalyticsEvents.REQUEST_SUBMISSION, {
       listing_id: listing.id,
       request_id: data.id,
@@ -138,7 +178,20 @@ export function RequestStayWizard({ listing, userId }: RequestStayWizardProps) {
     if (startDate < minDate) return "Check-in cannot be in the past.";
     if (endDate < minDate) return "Check-out cannot be in the past.";
     if (endDate <= startDate) return "Check-out must be after check-in.";
+    const conflict = findStayDateConflict(startDate, endDate, blockedDateRanges);
+    if (conflict) return getStayDateConflictMessage(conflict);
     return null;
+  }
+
+  function applyDateSelection(nextStart: string, nextEnd: string) {
+    setStartDate(nextStart);
+    setEndDate(nextEnd);
+    if (nextStart && nextEnd && nextEnd > nextStart) {
+      const conflict = findStayDateConflict(nextStart, nextEnd, blockedDateRanges);
+      setError(conflict ? getStayDateConflictMessage(conflict) : "");
+    } else {
+      setError("");
+    }
   }
 
   async function handleNext() {
@@ -235,7 +288,7 @@ export function RequestStayWizard({ listing, userId }: RequestStayWizardProps) {
 
       {step === 0 && (
         <Textarea
-          label="Introduce yourself"
+          label="About me"
           value={intro}
           onChange={(e) => setIntro(e.target.value)}
           placeholder="Share who you are, why you'd like to stay, your travel interests, and anything the host should know..."
@@ -245,14 +298,16 @@ export function RequestStayWizard({ listing, userId }: RequestStayWizardProps) {
 
       {step === 1 && (
         <div className="space-y-4">
+          <BlockedDatesNotice blockedRanges={blockedDateRanges} />
           <Input
             label="Check-in"
             type="date"
             min={minDate}
             value={startDate}
             onChange={(e) => {
-              setStartDate(e.target.value);
-              if (endDate && e.target.value >= endDate) setEndDate("");
+              const nextStart = e.target.value;
+              const nextEnd = endDate && nextStart >= endDate ? "" : endDate;
+              applyDateSelection(nextStart, nextEnd);
             }}
             required
           />
@@ -261,7 +316,7 @@ export function RequestStayWizard({ listing, userId }: RequestStayWizardProps) {
             type="date"
             min={startDate || minDate}
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={(e) => applyDateSelection(startDate, e.target.value)}
             required
           />
           <Input
@@ -299,17 +354,27 @@ export function RequestStayWizard({ listing, userId }: RequestStayWizardProps) {
         <div className="space-y-4">
           <div className="rounded-xl border border-dashed border-sage-dark p-6 text-center">
             <ImagePlus className="h-8 w-8 text-forest mx-auto mb-2" />
-            <p className="text-sm font-medium text-forest">Optional photos or videos</p>
+            <p className="text-sm font-medium text-forest">Optional photos</p>
             <p className="text-xs text-charcoal-light mt-1 max-w-sm mx-auto">
-              Help your host get to know you. Describe links to photos or videos below (file upload
-              coming soon).
+              Help your host get to know you. Upload family photos or add links to videos below.
             </p>
           </div>
+          {userId ? (
+            <StayRequestMediaUpload
+              userId={userId}
+              photos={draftPhotos}
+              onPhotosChange={setDraftPhotos}
+            />
+          ) : (
+            <p className="text-sm text-charcoal-light rounded-xl bg-sage/30 px-4 py-3">
+              Sign in to upload photos with your request.
+            </p>
+          )}
           <Textarea
-            label="Media links or description (optional)"
+            label="Video links or notes (optional)"
             value={mediaNote}
             onChange={(e) => setMediaNote(e.target.value)}
-            placeholder="e.g. Family photo album link, short intro video URL..."
+            placeholder="e.g. Short intro video URL..."
           />
         </div>
       )}

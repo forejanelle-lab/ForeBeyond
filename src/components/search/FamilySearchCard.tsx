@@ -15,6 +15,7 @@ import type { PublicListing } from "@/types/database";
 interface FamilySearchCardProps {
   listing: PublicListing;
   coverPhotoUrl?: string | null;
+  hostDisplayName?: string | null;
   isSaved?: boolean;
   showSaveButton?: boolean;
   layout?: "grid" | "list";
@@ -23,6 +24,7 @@ interface FamilySearchCardProps {
 export function FamilySearchCard({
   listing,
   coverPhotoUrl,
+  hostDisplayName,
   isSaved = false,
   showSaveButton = true,
   layout = "grid",
@@ -148,8 +150,10 @@ export function FamilySearchCard({
         )}
       </div>
 
-      {listing.host_first_name && (
-        <p className="text-xs text-charcoal-light">Hosted by {listing.host_first_name}</p>
+      {(hostDisplayName ?? listing.host_first_name) && (
+        <p className="text-xs text-charcoal-light">
+          Hosted by {hostDisplayName ?? listing.host_first_name}
+        </p>
       )}
 
       <div className="flex flex-wrap gap-1.5 pt-1">

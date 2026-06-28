@@ -7,6 +7,7 @@ interface StayMessagingPanelProps {
   stayRequestId: string;
   userId: string;
   otherPartyName: string;
+  currentUserName?: string;
   unlocked: boolean;
   lockReason?: string;
 }

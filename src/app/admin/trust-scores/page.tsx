@@ -11,7 +11,7 @@ export default async function AdminTrustScoresPage() {
     .from("profiles")
     .select("id, full_name, email, role, trust_score, verification_status")
     .order("trust_score", { ascending: false })
-    .limit(50);
+    .limit(200);
 
   return (
     <AdminShell title="Trust Scores" description="Monitor and recalculate member trust scores.">

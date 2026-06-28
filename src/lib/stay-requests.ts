@@ -103,7 +103,7 @@ export const PAYMENT_STATUS_LABELS: Record<
   { label: string; variant: "outline" | "success" | "warning" | "default" }
 > = {
   pending: { label: "Payment Pending", variant: "warning" },
-  paid: { label: "Paid", variant: "success" },
+  paid: { label: "Service fee paid", variant: "success" },
   failed: { label: "Payment Failed", variant: "default" },
   refunded: { label: "Refunded", variant: "outline" },
 };
@@ -188,6 +188,35 @@ export function calculateHostEarnings(
   };
 }
 
+const STAY_REQUEST_MEDIA_MARKER = "\n\n---\nOptional media note: ";
+
+export function parseStayRequestMessage(message: string | null | undefined) {
+  const text = message?.trim() ?? "";
+  if (!text) return { intro: "", mediaNote: null as string | null };
+
+  const markerIndex = text.indexOf(STAY_REQUEST_MEDIA_MARKER);
+  if (markerIndex === -1) {
+    return { intro: text, mediaNote: null as string | null };
+  }
+
+  return {
+    intro: text.slice(0, markerIndex).trim(),
+    mediaNote: text.slice(markerIndex + STAY_REQUEST_MEDIA_MARKER.length).trim() || null,
+  };
+}
+
+const URL_PATTERN = /https?:\/\/[^\s<>"']+/gi;
+
+export function extractUrlsFromText(text: string | null | undefined): string[] {
+  if (!text?.trim()) return [];
+  return [...new Set(text.match(URL_PATTERN) ?? [])];
+}
+
+export function isLikelyImageUrl(url: string): boolean {
+  if (/\.(jpe?g|png|gif|webp|avif)(\?|$)/i.test(url)) return true;
+  return /images\.unsplash\.com|supabase\.co\/storage/i.test(url);
+}
+
 export function formatCurrency(amount: number | null | undefined) {
   if (amount == null) return "Price on request";
   return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -200,4 +229,34 @@ export function missingPricingMessage(guestCount: number): string {
     return "This host has not set a nightly rate for groups of 6 or more guests.";
   }
   return `This host has not set a nightly rate for ${guests} guests yet.`;
+}
+
+export function getConfirmStayDisabledReason(
+  request: {
+    start_date: string | null;
+    end_date: string | null;
+    guest_count: number;
+  },
+  listingPricing: ListingPricing
+): string | null {
+  if (!request.start_date || !request.end_date) {
+    return "Check-in and check-out dates are required before you can confirm.";
+  }
+
+  const hasAnyRate =
+    listingPricing.budget_per_night != null ||
+    listingPricing.budget_per_night_3_guests != null ||
+    listingPricing.budget_per_night_4_guests != null ||
+    listingPricing.budget_per_night_5_guests != null ||
+    listingPricing.budget_per_night_6_plus_guests != null;
+
+  if (!hasAnyRate) {
+    return "Pricing is unavailable for this stay. Ask your host to set nightly rates on their listing.";
+  }
+
+  if (!hasPricingForGuestCount(listingPricing, request.guest_count)) {
+    return missingPricingMessage(request.guest_count);
+  }
+
+  return null;
 }

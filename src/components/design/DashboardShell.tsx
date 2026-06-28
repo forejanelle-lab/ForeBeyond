@@ -7,10 +7,8 @@ import {
   Compass,
   Heart,
   MessageSquare,
-  Star,
   Shield,
   Settings,
-  Home,
   Inbox,
   Sparkles,
   List,
@@ -26,7 +24,6 @@ export interface DashboardNavItem {
 const travelerNav: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/trips", label: "My Trips", icon: Compass },
-  { href: "/dashboard/requests", label: "Pending Requests", icon: Inbox },
   { href: "/saved", label: "Saved Families", icon: Heart },
   { href: "/messages", label: "Messages", icon: MessageSquare },
   { href: "/trust-center/dashboard", label: "Trust Center", icon: Shield },
@@ -35,7 +32,7 @@ const travelerNav: DashboardNavItem[] = [
 
 const hostNav: DashboardNavItem[] = [
   { href: "/host/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/host/requests", label: "Pending Requests", icon: Inbox },
+  { href: "/host/requests", label: "Requests", icon: Inbox },
   { href: "/host/listings", label: "My Listings", icon: List },
   { href: "/host/experiences", label: "Experiences", icon: Sparkles },
   { href: "/messages", label: "Messages", icon: MessageSquare },

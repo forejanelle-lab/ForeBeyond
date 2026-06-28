@@ -1,5 +1,4 @@
 import {
-  Shield,
   CheckCircle2,
   Users,
   Eye,
@@ -29,10 +28,10 @@ const trustLayers = [
       "Every member verifies their government-issued ID. We use industry-leading document verification to confirm authenticity.",
   },
   {
-    icon: Shield,
-    title: "Background Checks",
+    icon: BadgeCheck,
+    title: "Multi-Step Verification",
     description:
-      "Host families undergo comprehensive background screening before welcoming travelers into their homes.",
+      "Phone, government ID, selfie, and optional video verification help confirm members are who they say they are.",
   },
   {
     icon: Users,

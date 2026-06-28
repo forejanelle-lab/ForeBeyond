@@ -1,6 +1,6 @@
 import { createPgClient } from "./pg-connect.mjs";
 
-const DEMO_HOST_EMAIL = "demo@forebeyond.demo";
+const DEMO_HOST_EMAIL = "maria@forebeyond.demo";
 const MARIA_LISTING_TITLE = "Maria Tanaka's Family in Kyoto, Japan";
 
 async function consolidateDemoHostListing(client, demoHostId, listingTitle) {

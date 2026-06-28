@@ -21,7 +21,7 @@ export function ConversationListItem({
 
   return (
     <Link href={`/messages/${conversation.id}`} className="block group">
-      <Card variant="outline" padding="md" className="hover:shadow-md transition-shadow">
+      <Card variant="outline" padding="md" className="hover:shadow-md transition-shadow py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

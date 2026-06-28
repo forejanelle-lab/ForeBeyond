@@ -14,6 +14,13 @@ export const sampleImages = {
     "https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?w=800&q=80",
   cookingClass:
     "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&q=80",
+  /** Diverse group enjoying time together — experiences marketplace hero */
+  experiencesHero:
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1920&q=80",
+  experiencesWorkshop:
+    "https://images.unsplash.com/photo-1515378791034-0648a3ef77b2?w=1920&q=80",
+  experiencesDining:
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=80",
   teaCeremony:
     "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80",
   marketTour:

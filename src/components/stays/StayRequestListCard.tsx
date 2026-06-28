@@ -7,6 +7,7 @@ import type { StayRequest } from "@/types/database";
 interface StayRequestListCardProps {
   request: StayRequest;
   travelerName: string;
+  guestProfileHref?: string;
   listingTitle: string;
   incomeTotal: number | null;
   href: string;
@@ -15,6 +16,7 @@ interface StayRequestListCardProps {
 export function StayRequestTableRow({
   request,
   travelerName,
+  guestProfileHref,
   listingTitle,
   incomeTotal,
   href,
@@ -24,15 +26,26 @@ export function StayRequestTableRow({
   return (
     <tr className="group border-b border-sage-dark/20 last:border-b-0 hover:bg-sage/25">
       <td className="px-4 py-4 align-middle">
-        <Link href={href} className="block min-w-0">
-          <p className="font-semibold text-forest truncate group-hover:text-forest-light transition-colors">
-            {travelerName}
-          </p>
-          <p className="text-xs text-charcoal-light mt-0.5 truncate">{listingTitle}</p>
-          <p className="text-[10px] font-mono text-charcoal-light/80 mt-0.5">
-            Ref {formatBookingReference(request.id)}
-          </p>
-        </Link>
+        <div className="min-w-0">
+          {guestProfileHref ? (
+            <Link
+              href={guestProfileHref}
+              className="font-semibold text-forest truncate block hover:text-forest-light hover:underline transition-colors"
+            >
+              {travelerName}
+            </Link>
+          ) : (
+            <p className="font-semibold text-forest truncate">{travelerName}</p>
+          )}
+          <Link href={href} className="block min-w-0 group/link">
+            <p className="text-xs text-charcoal-light mt-0.5 truncate group-hover/link:text-charcoal transition-colors">
+              {listingTitle}
+            </p>
+            <p className="text-[10px] font-mono text-charcoal-light/80 mt-0.5">
+              Ref {formatBookingReference(request.id)}
+            </p>
+          </Link>
+        </div>
       </td>
       <td className="px-4 py-4 align-middle">
         <Link href={href} className="block min-w-0">
@@ -64,6 +77,7 @@ export function StayRequestTableRow({
 export function StayRequestListCard({
   request,
   travelerName,
+  guestProfileHref,
   listingTitle,
   incomeTotal,
   href,
@@ -71,19 +85,28 @@ export function StayRequestListCard({
   const status = STAY_REQUEST_STATUS_LABELS[request.status] ?? STAY_REQUEST_STATUS_LABELS.pending;
 
   return (
-    <Link href={href} className="block group px-4 py-4 hover:bg-sage/25 transition-colors sm:hidden">
+    <div className="group px-4 py-4 hover:bg-sage/25 transition-colors sm:hidden">
       <div className="space-y-3">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-wide font-medium text-charcoal-light mb-0.5">
             Guest
           </p>
-          <p className="font-semibold text-forest truncate group-hover:text-forest-light transition-colors">
-            {travelerName}
-          </p>
-          <p className="text-xs text-charcoal-light mt-0.5 truncate">{listingTitle}</p>
-          <p className="text-[10px] font-mono text-charcoal-light/80 mt-0.5">
-            Ref {formatBookingReference(request.id)}
-          </p>
+          {guestProfileHref ? (
+            <Link
+              href={guestProfileHref}
+              className="font-semibold text-forest truncate block hover:text-forest-light hover:underline transition-colors"
+            >
+              {travelerName}
+            </Link>
+          ) : (
+            <p className="font-semibold text-forest truncate">{travelerName}</p>
+          )}
+          <Link href={href} className="block min-w-0">
+            <p className="text-xs text-charcoal-light mt-0.5 truncate">{listingTitle}</p>
+            <p className="text-[10px] font-mono text-charcoal-light/80 mt-0.5">
+              Ref {formatBookingReference(request.id)}
+            </p>
+          </Link>
         </div>
 
         <div className="min-w-0">
@@ -105,10 +128,10 @@ export function StayRequestListCard({
           </p>
         </div>
 
-        <div className="flex items-center justify-end gap-3">
+        <Link href={href} className="flex items-center justify-end gap-3">
           <Badge variant={status.variant}>{status.label}</Badge>
-        </div>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
