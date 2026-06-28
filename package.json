@@ -55,6 +55,7 @@
     "db:wipe": "node scripts/wipe-except-admin.mjs",
     "db:seed-marketplace": "node scripts/seed-marketplace-hosts.mjs",
     "db:fix-listing-photos": "node scripts/fix-listing-photos.mjs",
+    "db:fix-admin": "node scripts/fix-admin.mjs",
     "db:fix-demo-host": "node scripts/fix-demo-host.mjs",
     "db:delete-user": "node scripts/delete-user.mjs",
     "db:discover": "node scripts/discover-db-url.mjs"

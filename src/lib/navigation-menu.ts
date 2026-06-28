@@ -1,5 +1,7 @@
 import type { UserRole } from "@/types/database";
 
+export { isPlatformAdmin } from "@/lib/platform-admin";
+
 export interface NavItem {
   label: string;
   href: string;
@@ -42,12 +44,4 @@ export function getAdminNav(): NavItem[] {
     { label: "Support", href: "/admin/support" },
     { label: "Trust Scores", href: "/admin/trust-scores" },
   ];
-}
-
-/** Platform admin: must be flagged in DB and match allowlisted email */
-export function isPlatformAdmin(email: string, isAdmin?: boolean): boolean {
-  if (!isAdmin) return false;
-  const allowed = process.env.PLATFORM_ADMIN_EMAIL?.trim().toLowerCase();
-  if (!allowed) return false;
-  return email.trim().toLowerCase() === allowed;
 }
