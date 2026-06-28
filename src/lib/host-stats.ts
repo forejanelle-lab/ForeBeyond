@@ -56,9 +56,10 @@ export async function getHostListingStats(
 ): Promise<HostListingStats> {
   const [{ count: bookingCount }, { data: requests }] = await Promise.all([
     supabase
-      .from("stay_bookings")
+      .from("trips")
       .select("id", { count: "exact", head: true })
-      .eq("listing_id", listingId),
+      .eq("listing_id", listingId)
+      .eq("status", "completed"),
     supabase
       .from("stay_requests")
       .select("id, status, host_response, created_at, updated_at")

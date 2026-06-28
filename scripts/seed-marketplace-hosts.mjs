@@ -3,7 +3,7 @@
  * Preserves platform admin (forejanelle@gmail.com).
  *
  * Totals: 33 hosts — PR 10, Spain 6, Alaska 2, Japan 8, Italy 4, Canada 3
- * Each host: 7+ completed bookings, 5+ approved listing reviews, trust score >= 80
+ * Each host: 5 completed bookings with 5 matching approved reviews, trust score >= 80
  */
 import { createPgClient } from "./pg-connect.mjs";
 import { readFileSync } from "fs";
@@ -50,8 +50,7 @@ function resolveCatalogListingPhoto(city, country, fallbackIndex = 0) {
 
 const PASSWORD = "ForeBeyond123!";
 const INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
-const BOOKINGS_PER_HOST = 7;
-const REVIEWS_PER_LISTING = 5;
+const STAYS_PER_HOST = 5;
 const TRAVELER_COUNT = 55;
 const MIN_TRUST = 80;
 
@@ -526,10 +525,10 @@ async function main() {
 
         const tripsForReviews = [];
 
-        for (let b = 0; b < BOOKINGS_PER_HOST; b++) {
+        for (let stayIndex = 0; stayIndex < STAYS_PER_HOST; stayIndex++) {
           bookingSeq += 1;
-          const traveler = travelers[(globalHostIndex * 7 + b) % travelers.length];
-          const { start, end } = bookingWindow(globalHostIndex, b);
+          const traveler = travelers[(globalHostIndex * STAYS_PER_HOST + stayIndex) % travelers.length];
+          const { start, end } = bookingWindow(globalHostIndex, stayIndex);
           const requestId = nextUuid("e5000001");
           const tripId = nextUuid("f5000001");
 
@@ -548,7 +547,7 @@ async function main() {
           tripsForReviews.push({ tripId, travelerId: traveler.id, start });
         }
 
-        for (let r = 0; r < REVIEWS_PER_LISTING; r++) {
+        for (let r = 0; r < STAYS_PER_HOST; r++) {
           const trip = tripsForReviews[r];
           const rating = r % 5 === 3 ? 4 : 5;
           await seedListingReview(client, {
@@ -580,8 +579,7 @@ async function main() {
 
     console.log("Marketplace seed complete.\n");
     console.log("Hosts created: %d", hosts.length);
-    console.log("Bookings per host: %d", BOOKINGS_PER_HOST);
-    console.log("Reviews per listing: %d", REVIEWS_PER_LISTING);
+    console.log("Stays per host (bookings = reviews): %d", STAYS_PER_HOST);
     console.log("Traveler pool: %d\n", TRAVELER_COUNT);
 
     for (const region of REGIONS) {

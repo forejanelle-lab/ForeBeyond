@@ -54,6 +54,7 @@
     "db:reset-seed": "node scripts/reset-and-seed.mjs",
     "db:wipe": "node scripts/wipe-except-admin.mjs",
     "db:seed-marketplace": "node scripts/seed-marketplace-hosts.mjs",
+    "db:sync-host-stays": "node scripts/sync-host-stays-reviews.mjs",
     "db:fix-listing-photos": "node scripts/fix-listing-photos.mjs",
     "db:fix-admin": "node scripts/fix-admin.mjs",
     "db:fix-demo-host": "node scripts/fix-demo-host.mjs",
