@@ -4,9 +4,7 @@ import { Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { sampleImages } from "@/lib/sample-images";
 import { PageHero } from "@/components/design/PageHero";
-import { SearchFamilyMap } from "@/components/search/SearchFamilyMap";
 import { SearchFiltersPanel } from "@/components/search/SearchFiltersPanel";
-import { resolveListingMapPoints } from "@/lib/geocode-location";
 import { SearchResultsGrid } from "@/components/search/SearchResultsGrid";
 import { SearchAnalyticsTracker } from "@/components/analytics/SearchAnalyticsTracker";
 import { Container } from "@/components/ui/Container";
@@ -59,12 +57,11 @@ async function SearchResults({
   const filtered = filterListingsClientSide(allListings, filters);
   const countries = getUniqueCountries(allListings);
   const hostIds = [...new Set(filtered.map((listing) => listing.host_id))];
-  const [{ data: hostProfiles }, coverPhotos, mapPoints] = await Promise.all([
+  const [{ data: hostProfiles }, coverPhotos] = await Promise.all([
     hostIds.length > 0
       ? supabase.from("profiles").select("id, full_name").in("id", hostIds)
       : Promise.resolve({ data: [] }),
     getCoverPhotos(filtered.map((listing) => listing.id)),
-    resolveListingMapPoints(filtered),
   ]);
 
   const hostDisplayNameById = Object.fromEntries(
@@ -86,7 +83,7 @@ async function SearchResults({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_minmax(280px,340px)] gap-6 lg:gap-8 lg:items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8">
       <SearchFiltersPanel countries={countries} resultCount={filtered.length} />
       <div className="min-w-0 space-y-6">
         <SearchResultsGrid
@@ -96,11 +93,6 @@ async function SearchResults({
           savedListingIds={savedListingIds}
           layout="list"
         />
-      </div>
-      <div className="hidden lg:block min-w-0">
-        <div className="sticky top-24 h-[calc(100vh-7rem)]">
-          <SearchFamilyMap mapPoints={mapPoints} />
-        </div>
       </div>
     </div>
   );
