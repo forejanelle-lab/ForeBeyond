@@ -6,47 +6,7 @@
  * Each host: 5 completed bookings with 5 matching approved reviews, trust score >= 80
  */
 import { createPgClient } from "./pg-connect.mjs";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const photoCatalog = JSON.parse(
-  readFileSync(join(__dirname, "..", "src", "data", "listing-photo-catalog.json"), "utf8")
-);
-
-function photoUrl(photoId) {
-  return `https://images.unsplash.com/${photoId}?w=1200&q=80`;
-}
-
-function normalizeLocationKey(value) {
-  return (value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "");
-}
-
-function resolveCatalogListingPhoto(city, country, fallbackIndex = 0) {
-  const cityKey = normalizeLocationKey(city);
-  const normalizedByCity = Object.fromEntries(
-    Object.entries(photoCatalog.byCity).map(([key, id]) => [normalizeLocationKey(key), id])
-  );
-  if (cityKey && normalizedByCity[cityKey]) {
-    return photoUrl(normalizedByCity[cityKey]);
-  }
-
-  const countryKey = normalizeLocationKey(country);
-  const normalizedByCountry = Object.fromEntries(
-    Object.entries(photoCatalog.byCountry).map(([key, id]) => [normalizeLocationKey(key), id])
-  );
-  if (countryKey && normalizedByCountry[countryKey]) {
-    return photoUrl(normalizedByCountry[countryKey]);
-  }
-
-  const pool = photoCatalog.fallbackPool;
-  return photoUrl(pool[fallbackIndex % pool.length]);
-}
+import { resolveCatalogListingGallery } from "./listing-photo-catalog.mjs";
 
 const PASSWORD = "ForeBeyond123!";
 const INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
@@ -292,7 +252,7 @@ async function seedTravelerProfile(client, userId, index) {
   );
 }
 
-async function seedListing(client, hostId, listing) {
+async function seedListing(client, hostId, listing, listingIndex) {
   await client.query(
     `INSERT INTO host_listings (
       id, host_id, title, family_story, stay_details, languages, country, city,
@@ -327,11 +287,21 @@ async function seedListing(client, hostId, listing) {
     ]
   );
 
-  await client.query(
-    `INSERT INTO listing_photos (listing_id, file_url, caption, sort_order, is_cover)
-     VALUES ($1, $2, $3, 0, TRUE)`,
-    [listing.id, listing.photoUrl, listing.title]
+  const gallery = resolveCatalogListingGallery(
+    listing.city,
+    listing.country,
+    listing.title,
+    listingIndex
   );
+
+  for (let sortOrder = 0; sortOrder < gallery.length; sortOrder++) {
+    const entry = gallery[sortOrder];
+    await client.query(
+      `INSERT INTO listing_photos (listing_id, file_url, caption, sort_order, is_cover)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [listing.id, entry.url, entry.caption, sortOrder, entry.isCover]
+    );
+  }
 
   await client.query(
     `INSERT INTO listing_contact_details (listing_id, contact_email, contact_address)
@@ -467,7 +437,6 @@ function buildHost(region, indexInRegion, globalHostIndex) {
       amenities: ["Private room", "Shared bathroom", "WiFi", "Laundry access", "Guidebook"],
       familyActivities: ["Cooking together", "Neighborhood walks", "Local market visits", "Evening conversation"],
       houseRules: ["Shoes off indoors", "Quiet hours after 10pm", "No smoking indoors"],
-      photoUrl: resolveCatalogListingPhoto(city, region.country, globalHostIndex),
       budgetPerNight: budget,
       maxCapacity: 2 + (globalHostIndex % 3),
       contactEmail: email,
@@ -521,7 +490,7 @@ async function main() {
         await seedHostProfile(client, host.id, host, "host");
         await seedHostDetails(client, host.id, host.hostProfile);
         await seedHostVerification(client, host.id);
-        await seedListing(client, host.id, host.listing);
+        await seedListing(client, host.id, host.listing, globalHostIndex - 1);
 
         const tripsForReviews = [];
 

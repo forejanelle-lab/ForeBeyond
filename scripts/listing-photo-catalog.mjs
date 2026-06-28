@@ -1,16 +1,18 @@
-import catalog from "@/data/listing-photo-catalog.json";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
-export type ListingCatalogPhoto = {
-  url: string;
-  caption: string;
-  isCover: boolean;
-};
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-function photo(id: string) {
+const catalog = JSON.parse(
+  readFileSync(join(__dirname, "..", "src", "data", "listing-photo-catalog.json"), "utf8")
+);
+
+function photo(id) {
   return `https://images.unsplash.com/${id}?w=1200&q=85&auto=format&fit=crop`;
 }
 
-function normalizeLocationKey(value?: string | null): string {
+function normalizeLocationKey(value) {
   return (value ?? "")
     .trim()
     .toLowerCase()
@@ -18,7 +20,7 @@ function normalizeLocationKey(value?: string | null): string {
     .replace(/\p{M}/gu, "");
 }
 
-function cityHash(value: string): number {
+function cityHash(value) {
   let hash = 0;
   for (const char of value) {
     hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -26,11 +28,7 @@ function cityHash(value: string): number {
   return hash;
 }
 
-function resolveCoverPhotoId(
-  city?: string | null,
-  country?: string | null,
-  fallbackIndex = 0
-): string {
+function resolveCoverPhotoId(city, country, fallbackIndex = 0) {
   const cityKey = normalizeLocationKey(city);
   const normalizedByCity = Object.fromEntries(
     Object.entries(catalog.byCity).map(([key, id]) => [normalizeLocationKey(key), id])
@@ -41,10 +39,7 @@ function resolveCoverPhotoId(
 
   const countryKey = normalizeLocationKey(country);
   const normalizedByCountry = Object.fromEntries(
-    Object.entries(catalog.byCountry).map(([countryName, id]) => [
-      normalizeLocationKey(countryName),
-      id,
-    ])
+    Object.entries(catalog.byCountry).map(([key, id]) => [normalizeLocationKey(key), id])
   );
   if (countryKey && normalizedByCountry[countryKey]) {
     return normalizedByCountry[countryKey];
@@ -53,43 +48,24 @@ function resolveCoverPhotoId(
   return catalog.fallbackPool[fallbackIndex % catalog.fallbackPool.length];
 }
 
-export const LISTING_PHOTO_BY_CITY: Record<string, string> = Object.fromEntries(
-  Object.entries(catalog.byCity).map(([city, id]) => [normalizeLocationKey(city), photo(id)])
-);
-
-const COUNTRY_FALLBACKS: Record<string, string> = Object.fromEntries(
-  Object.entries(catalog.byCountry).map(([country, id]) => [normalizeLocationKey(country), photo(id)])
-);
-
-const UNIQUE_FALLBACK_POOL = catalog.fallbackPool.map(photo);
-
-export function resolveCatalogListingPhoto(
-  city?: string | null,
-  country?: string | null,
-  fallbackIndex = 0
-): string {
+export function resolveCatalogListingPhoto(city, country, fallbackIndex = 0) {
   return photo(resolveCoverPhotoId(city, country, fallbackIndex));
 }
 
-export function resolveCatalogListingGallery(
-  city?: string | null,
-  country?: string | null,
-  listingTitle?: string | null,
-  fallbackIndex = 0
-): ListingCatalogPhoto[] {
+export function resolveCatalogListingGallery(city, country, listingTitle, fallbackIndex = 0) {
   const coverId = resolveCoverPhotoId(city, country, fallbackIndex);
   const interiors = catalog.homeInteriors ?? [];
   const interiorCount = catalog.interiorPhotoCount ?? 5;
   const seed = cityHash(`${city ?? ""}|${country ?? ""}|${fallbackIndex}`);
-  const gallery: ListingCatalogPhoto[] = [
+  const gallery = [
     {
       url: photo(coverId),
-      caption: listingTitle?.trim() || "Family home",
+      caption: listingTitle ?? "Family home",
       isCover: true,
     },
   ];
 
-  const used = new Set<string>([coverId]);
+  const used = new Set([coverId]);
   let offset = seed % Math.max(interiors.length, 1);
   let scan = 0;
 
