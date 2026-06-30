@@ -1,6 +1,6 @@
-<svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fore Beyond">
+<svg width="180" height="180" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fore Beyond">
   <defs>
-    <linearGradient id="favicon-logo-star" x1="6" y1="20" x2="34" y2="20" gradientUnits="userSpaceOnUse">
+    <linearGradient id="apple-logo-star" x1="6" y1="20" x2="34" y2="20" gradientUnits="userSpaceOnUse">
       <stop offset="0.5" stop-color="#214E34" />
       <stop offset="0.5" stop-color="#D4AF37" />
     </linearGradient>
@@ -11,5 +11,5 @@
   <line x1="20" y1="35" x2="20" y2="38.5" stroke="#214E34" stroke-width="1" />
   <line x1="1.5" y1="20" x2="5" y2="20" stroke="#214E34" stroke-width="1" />
   <line x1="35" y1="20" x2="38.5" y2="20" stroke="#214E34" stroke-width="1" />
-  <path d="M20 8 L23.8 18.2 L34 20 L23.8 21.8 L20 32 L16.2 21.8 L6 20 L16.2 18.2 Z" fill="url(#favicon-logo-star)" />
+  <path d="M20 8 L23.8 18.2 L34 20 L23.8 21.8 L20 32 L16.2 21.8 L6 20 L16.2 18.2 Z" fill="url(#apple-logo-star)" />
 </svg>
