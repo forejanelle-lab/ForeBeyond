@@ -1,4 +1,6 @@
 export const LISTING_MEALS = [
+  "No Meals Included",
+  "Some Meals - Will Specify",
   "Breakfast included",
   "Shared home cooking",
   "Vegetarian options",
@@ -49,16 +51,15 @@ export const LISTING_STATUS_LABELS = {
   archived: { label: "Archived", variant: "default" as const },
 };
 
-export function extractHostLastName(fullName?: string | null): string {
+export function extractHostFirstName(fullName?: string | null): string {
   if (!fullName?.trim()) return "";
-  const parts = fullName.trim().split(/\s+/);
-  return parts[parts.length - 1] ?? "";
+  return fullName.trim().split(/\s+/)[0] ?? "";
 }
 
 export function defaultFamilyListingTitle(hostName?: string | null): string {
-  const lastName = extractHostLastName(hostName);
-  if (!lastName) return "The Family";
-  return `The ${lastName} Family`;
+  const firstName = extractHostFirstName(hostName);
+  if (!firstName) return "The Family";
+  return `${firstName}'s Family`;
 }
 
 export function generateListingTitle(city: string, country: string, hostName?: string | null) {

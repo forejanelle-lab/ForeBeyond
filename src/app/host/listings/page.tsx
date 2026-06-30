@@ -60,13 +60,17 @@ export default async function ManageListingsPage() {
           </Badge>
           <h1 className="text-3xl font-bold text-forest">Your family listings</h1>
           <p className="mt-2 text-charcoal-light">
-            {typedListings.length} listing{typedListings.length !== 1 ? "s" : ""}
+            {typedListings.length === 0
+              ? "Create your family listing to welcome travelers."
+              : "One listing per account — edit yours below."}
           </p>
         </div>
-        <ButtonLink href="/host/listings/new" variant="primary" size="md">
-          <Plus className="h-4 w-4" />
-          New Listing
-        </ButtonLink>
+        {typedListings.length === 0 && (
+          <ButtonLink href="/host/listings/new" variant="primary" size="md">
+            <Plus className="h-4 w-4" />
+            New Listing
+          </ButtonLink>
+        )}
       </div>
 
       {typedListings.length === 0 ? (

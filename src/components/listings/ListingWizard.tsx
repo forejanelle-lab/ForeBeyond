@@ -11,12 +11,17 @@ import {
   LISTING_HOUSE_RULES,
   defaultFamilyListingTitle,
 } from "@/lib/listings";
+import {
+  ONE_LISTING_PER_HOST_MESSAGE,
+  isOneListingPerHostError,
+} from "@/lib/host-listing-limit";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PhotoUpload } from "@/components/listings/PhotoUpload";
+import { IntroVideoUpload } from "@/components/listings/IntroVideoUpload";
 import { ListingBlockedDatesEditor } from "@/components/listings/ListingBlockedDatesEditor";
 import {
   syncListingBlockedDates,
@@ -36,6 +41,31 @@ interface ListingWizardProps {
 
 function toggleItem(list: string[], item: string) {
   return list.includes(item) ? list.filter((i) => i !== item) : [...list, item];
+}
+
+function toggleMeal(list: string[], item: string) {
+  if (item === "No Meals Included") {
+    return list.includes(item) ? [] : [item];
+  }
+
+  const withoutNone = list.filter((meal) => meal !== "No Meals Included");
+  return withoutNone.includes(item)
+    ? withoutNone.filter((meal) => meal !== item)
+    : [...withoutNone, item];
+}
+
+function hasContactDetails(email: string, address: string) {
+  return email.trim().length > 0 && address.trim().length > 0;
+}
+
+function hasRequiredPricing(
+  base: string,
+  tier3: string,
+  tier4: string,
+  tier5: string,
+  tier6Plus: string
+) {
+  return [base, tier3, tier4, tier5, tier6Plus].every((value) => parsePrice(value) != null);
 }
 
 function priceFieldValue(value: number | null | undefined) {
@@ -85,6 +115,7 @@ export function ListingWizard({
   const [contactEmail, setContactEmail] = useState(contactDetails?.contact_email ?? "");
   const [contactAddress, setContactAddress] = useState(contactDetails?.contact_address ?? "");
   const [photos, setPhotos] = useState<ListingPhoto[]>(existingPhotos);
+  const [introVideoUrl, setIntroVideoUrl] = useState<string | null>(listing?.intro_video_url ?? null);
   const [blockedDates, setBlockedDates] = useState<EditableBlockedDateRange[]>(
     existingBlockedDates.map((range) => ({
       id: range.id,
@@ -104,6 +135,18 @@ export function ListingWizard({
     const supabase = createClient();
     const listingTitle = title.trim() || defaultFamilyListingTitle(hostName);
 
+    const { data: existing } = await supabase
+      .from("host_listings")
+      .select("id")
+      .eq("host_id", userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      setError(ONE_LISTING_PER_HOST_MESSAGE);
+      return null;
+    }
+
     const { data, error: insertError } = await supabase
       .from("host_listings")
       .insert({
@@ -120,7 +163,11 @@ export function ListingWizard({
       .single();
 
     if (insertError) {
-      setError(insertError.message);
+      setError(
+        isOneListingPerHostError(insertError.message)
+          ? ONE_LISTING_PER_HOST_MESSAGE
+          : insertError.message
+      );
       return null;
     }
 
@@ -208,6 +255,19 @@ export function ListingWizard({
       }
       activeListingId = listingId;
     } else {
+      const { data: existing } = await supabase
+        .from("host_listings")
+        .select("id")
+        .eq("host_id", userId)
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) {
+        setError(ONE_LISTING_PER_HOST_MESSAGE);
+        setIsLoading(false);
+        return false;
+      }
+
       const { data, error: insertError } = await supabase
         .from("host_listings")
         .insert({
@@ -220,7 +280,11 @@ export function ListingWizard({
         .single();
 
       if (insertError) {
-        setError(insertError.message);
+        setError(
+          isOneListingPerHostError(insertError.message)
+            ? ONE_LISTING_PER_HOST_MESSAGE
+            : insertError.message
+        );
         setIsLoading(false);
         return false;
       }
@@ -270,9 +334,24 @@ export function ListingWizard({
       setError("City and country are required");
       return;
     }
+    if (
+      step === 0 &&
+      !hasRequiredPricing(budgetPerNight, budget3Guests, budget4Guests, budget5Guests, budget6PlusGuests)
+    ) {
+      setError("Please set a nightly rate for each guest-count tier");
+      return;
+    }
     setError("");
 
     if (step === 1) {
+      if (meals.length === 0) {
+        setError("Please select at least one meals option");
+        return;
+      }
+      if (!hasContactDetails(contactEmail, contactAddress)) {
+        setError("Contact email and address are required");
+        return;
+      }
       const ok = await saveListing();
       if (!ok) return;
     }
@@ -293,6 +372,29 @@ export function ListingWizard({
   async function handlePublish() {
     const activeListingId = listingId || (await ensureListingDraft());
     if (!activeListingId) return;
+
+    if (meals.length === 0) {
+      setError("Please select at least one meals option");
+      return;
+    }
+
+    if (!hasContactDetails(contactEmail, contactAddress)) {
+      setError("Contact email and address are required");
+      return;
+    }
+
+    if (!hasRequiredPricing(budgetPerNight, budget3Guests, budget4Guests, budget5Guests, budget6PlusGuests)) {
+      setError("Please set a nightly rate for each guest-count tier");
+      return;
+    }
+
+    if (!introVideoUrl) {
+      const hasCover = photos.some((photo) => photo.is_cover);
+      if (!hasCover) {
+        setError("Upload an intro video or select a cover photo for search results");
+        return;
+      }
+    }
 
     const blockedSaved = await saveBlockedDates(activeListingId);
     if (!blockedSaved) return;
@@ -354,7 +456,9 @@ export function ListingWizard({
             />
             <div className="space-y-4 rounded-xl border border-sage-dark/40 p-4">
               <div>
-                <p className="text-sm font-medium text-forest">Stay pricing</p>
+                <p className="text-sm font-medium text-forest">
+                  Stay pricing <span className="text-red-600">*</span>
+                </p>
                 <p className="text-xs text-charcoal-light mt-1">
                   Set a nightly rate for each guest-count tier. The rate shown to travelers updates based on party size.
                 </p>
@@ -367,6 +471,7 @@ export function ListingWizard({
                 value={budgetPerNight}
                 onChange={(e) => setBudgetPerNight(e.target.value)}
                 placeholder="85.00"
+                required
               />
               <Input
                 label="3 guests: nightly rate (USD)"
@@ -376,6 +481,7 @@ export function ListingWizard({
                 value={budget3Guests}
                 onChange={(e) => setBudget3Guests(e.target.value)}
                 placeholder="120.00"
+                required
               />
               <Input
                 label="4 guests: nightly rate (USD)"
@@ -385,6 +491,7 @@ export function ListingWizard({
                 value={budget4Guests}
                 onChange={(e) => setBudget4Guests(e.target.value)}
                 placeholder="150.00"
+                required
               />
               <Input
                 label="5 guests: nightly rate (USD)"
@@ -394,6 +501,7 @@ export function ListingWizard({
                 value={budget5Guests}
                 onChange={(e) => setBudget5Guests(e.target.value)}
                 placeholder="175.00"
+                required
               />
               <Input
                 label="6+ guests: nightly rate (USD)"
@@ -404,6 +512,7 @@ export function ListingWizard({
                 onChange={(e) => setBudget6PlusGuests(e.target.value)}
                 placeholder="200.00"
                 hint="Applies to groups of 6 or more guests"
+                required
               />
             </div>
           </div>
@@ -433,19 +542,22 @@ export function ListingWizard({
               hint="Maximum number of guests you can host at one time"
             />
             {[
-              { label: "Meals", items: LISTING_MEALS, selected: meals, set: setMeals },
-              { label: "Amenities", items: LISTING_AMENITIES, selected: amenities, set: setAmenities },
-              { label: "Family Activities", items: LISTING_ACTIVITIES, selected: activities, set: setActivities },
-              { label: "House Rules", items: LISTING_HOUSE_RULES, selected: houseRules, set: setHouseRules },
+              { label: "Meals", items: LISTING_MEALS, selected: meals, set: setMeals, toggle: toggleMeal },
+              { label: "Amenities", items: LISTING_AMENITIES, selected: amenities, set: setAmenities, toggle: toggleItem },
+              { label: "Family Activities", items: LISTING_ACTIVITIES, selected: activities, set: setActivities, toggle: toggleItem },
+              { label: "House Rules", items: LISTING_HOUSE_RULES, selected: houseRules, set: setHouseRules, toggle: toggleItem },
             ].map((group) => (
               <div key={group.label}>
-                <p className="text-sm font-medium text-charcoal mb-2">{group.label}</p>
+                <p className="text-sm font-medium text-charcoal mb-2">
+                  {group.label}
+                  {group.label === "Meals" && <span className="text-red-600"> *</span>}
+                </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {group.items.map((item) => (
                     <button
                       key={item}
                       type="button"
-                      onClick={() => group.set(toggleItem(group.selected, item))}
+                      onClick={() => group.set(group.toggle(group.selected, item))}
                       className={`rounded-xl border-2 px-3 py-2 text-xs font-medium transition-all ${
                         group.selected.includes(item)
                           ? "border-forest bg-sage/30 text-forest"
@@ -460,10 +572,12 @@ export function ListingWizard({
             ))}
             <div className="space-y-4 rounded-xl border border-sage-dark/40 p-4">
               <div>
-                <p className="text-sm font-medium text-forest">Contact details</p>
+                <p className="text-sm font-medium text-forest">
+                  Contact details <span className="text-red-600">*</span>
+                </p>
                 <p className="flex items-start gap-1.5 text-xs text-charcoal-light mt-1">
                   <Lock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                  This information is kept private and is only shared with travelers once they book your accommodation.
+                  Required. Kept private and only shared with travelers once they book your accommodation.
                 </p>
               </div>
               <Input
@@ -473,6 +587,7 @@ export function ListingWizard({
                 onChange={(e) => setContactEmail(e.target.value)}
                 placeholder="your.family@email.com"
                 autoComplete="email"
+                required
               />
               <Textarea
                 label="Address"
@@ -480,6 +595,7 @@ export function ListingWizard({
                 onChange={(e) => setContactAddress(e.target.value)}
                 placeholder="Street address, city, postal code, country..."
                 hint="Full address for confirmed guests to coordinate arrival"
+                required
               />
             </div>
           </div>
@@ -490,20 +606,31 @@ export function ListingWizard({
         )}
 
         {step === 3 && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold text-forest">Family photos</h2>
-              <p className="text-sm text-charcoal-light mt-1">Show your home, family, and cultural experiences.</p>
+              <h2 className="text-xl font-semibold text-forest">Photos &amp; intro video</h2>
+              <p className="text-sm text-charcoal-light mt-1">
+                Show your home, family, and cultural experiences.
+              </p>
             </div>
             {listingId ? (
-              <PhotoUpload
-                listingId={listingId}
-                userId={userId}
-                existingPhotos={photos}
-                onPhotosChange={setPhotos}
-              />
+              <>
+                <IntroVideoUpload
+                  listingId={listingId}
+                  userId={userId}
+                  videoUrl={introVideoUrl}
+                  onVideoChange={setIntroVideoUrl}
+                />
+                <PhotoUpload
+                  listingId={listingId}
+                  userId={userId}
+                  existingPhotos={photos}
+                  onPhotosChange={setPhotos}
+                  showCoverSelection={!introVideoUrl}
+                />
+              </>
             ) : (
-              <p className="text-sm text-charcoal-light">Preparing photo uploads...</p>
+              <p className="text-sm text-charcoal-light">Preparing uploads...</p>
             )}
           </div>
         )}
@@ -517,10 +644,17 @@ export function ListingWizard({
             <div className="rounded-xl bg-sage/40 p-4 space-y-2 text-sm">
               <p><strong className="text-forest">Title:</strong> {title.trim() || defaultFamilyListingTitle(hostName)}</p>
               <p><strong className="text-forest">Location:</strong> {[city, country].filter(Boolean).join(", ")}</p>
+              <p><strong className="text-forest">Intro video:</strong> {introVideoUrl ? "Uploaded" : "Not set"}</p>
               <p><strong className="text-forest">Photos:</strong> {photos.length} uploaded</p>
+              {!introVideoUrl && (
+                <p>
+                  <strong className="text-forest">Cover photo:</strong>{" "}
+                  {photos.some((photo) => photo.is_cover) ? "Selected" : "Not set"}
+                </p>
+              )}
               <p><strong className="text-forest">Max capacity:</strong> {maxCapacity.trim() ? `${maxCapacity} guests` : "Not set"}</p>
-              <p><strong className="text-forest">Contact email:</strong> {contactEmail.trim() || "Not set"}</p>
-              <p><strong className="text-forest">Contact address:</strong> {contactAddress.trim() ? "Provided" : "Not set"}</p>
+              <p><strong className="text-forest">Contact email:</strong> {contactEmail.trim() || "Required — not set"}</p>
+              <p><strong className="text-forest">Contact address:</strong> {contactAddress.trim() ? "Provided" : "Required — not set"}</p>
               <p><strong className="text-forest">Details:</strong> {stayDetails.trim() ? "Provided" : "Not set"}</p>
               <p><strong className="text-forest">Meals:</strong> {meals.length} selected</p>
               <p><strong className="text-forest">Blocked-out dates:</strong> {blockedDates.length} range{blockedDates.length !== 1 ? "s" : ""}</p>

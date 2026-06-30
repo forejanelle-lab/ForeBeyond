@@ -20,6 +20,7 @@ interface FamilyProfileContentProps {
   reviewExisting?: HostReviewExisting | null;
   reviewTarget?: HostReviewTarget | null;
   hostName?: string | null;
+  hostMotivation?: string | null;
 }
 
 const tabs = [
@@ -41,8 +42,13 @@ export function FamilyProfileContent({
   reviewExisting = null,
   reviewTarget = null,
   hostName = null,
+  hostMotivation = null,
 }: FamilyProfileContentProps) {
   const [activeTab, setActiveTab] = useState("about");
+  const introVideoUrl = "intro_video_url" in listing ? listing.intro_video_url : null;
+  const motivation =
+    hostMotivation ??
+    ("host_motivation" in listing ? listing.host_motivation : null);
 
   const tagSections = [
     { icon: Utensils, label: "Meals", items: listing.meals },
@@ -57,11 +63,37 @@ export function FamilyProfileContent({
 
       {activeTab === "about" && (
         <div className="space-y-8 pt-4">
+          {introVideoUrl && (
+            <section>
+              <h2 className="text-xl font-semibold text-forest mb-3">Meet Your Host</h2>
+              <div className="rounded-2xl overflow-hidden bg-black aspect-video">
+                <video
+                  src={introVideoUrl}
+                  controls
+                  playsInline
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              {hostName && (
+                <p className="text-sm text-charcoal-light mt-2">
+                  A personal introduction from {hostName}
+                </p>
+              )}
+            </section>
+          )}
           {listing.family_story && (
             <section>
               <h2 className="text-xl font-semibold text-forest mb-3">Our Family Story</h2>
               <p className="text-charcoal-light leading-relaxed whitespace-pre-wrap">
                 {listing.family_story}
+              </p>
+            </section>
+          )}
+          {motivation && (
+            <section>
+              <h2 className="text-xl font-semibold text-forest mb-3">Why We Host</h2>
+              <p className="text-charcoal-light leading-relaxed whitespace-pre-wrap">
+                {motivation}
               </p>
             </section>
           )}

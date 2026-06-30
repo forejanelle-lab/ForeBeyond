@@ -10,6 +10,8 @@ import { Card } from "@/components/ui/Card";
 import { getVerificationStatusLabel } from "@/lib/trust-score-detail";
 import type { TrustScoreBreakdown as Breakdown } from "@/lib/trust-score";
 import type { Profile, PublicReview, TrustBadge, UserRole } from "@/types/database";
+import { TravelerOnboardingDetails } from "@/components/profile/TravelerOnboardingDetails";
+import type { TravelerOnboardingForHost } from "@/lib/traveler-onboarding-labels";
 
 interface GuestTrustProfileProps {
   displayName: string;
@@ -26,6 +28,7 @@ interface GuestTrustProfileProps {
     | "role"
     | "created_at"
   >;
+  travelerOnboarding?: TravelerOnboardingForHost | null;
   badges: TrustBadge[];
   reviews: PublicReview[];
 }
@@ -33,6 +36,7 @@ interface GuestTrustProfileProps {
 export function GuestTrustProfile({
   displayName,
   profile,
+  travelerOnboarding = null,
   badges,
   reviews,
 }: GuestTrustProfileProps) {
@@ -99,6 +103,8 @@ export function GuestTrustProfile({
             </div>
           )}
         </Card>
+
+        <TravelerOnboardingDetails profile={travelerOnboarding} />
 
         <ReviewList
           title="Reviews from other hosts"

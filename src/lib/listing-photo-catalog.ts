@@ -90,7 +90,7 @@ export function resolveCatalogListingGallery(
   ];
 
   const used = new Set<string>([coverId]);
-  let offset = seed % Math.max(interiors.length, 1);
+  const offset = seed % Math.max(interiors.length, 1);
   let scan = 0;
 
   while (gallery.length < interiorCount + 1 && scan < interiors.length * 2) {

@@ -55,6 +55,11 @@ export default function SignUpPage() {
         return;
       }
 
+      if (data.session) {
+        window.location.assign("/profile/complete");
+        return;
+      }
+
       router.push(`/auth/check-email?email=${encodeURIComponent(email.trim())}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";

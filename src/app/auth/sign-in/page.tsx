@@ -23,17 +23,16 @@ function SignInForm() {
   const [needsVerification, setNeedsVerification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function signInWithCredentials(rawEmail: string, rawPassword: string) {
     setError("");
     setNeedsVerification(false);
     setIsLoading(true);
 
     const supabase = createClient();
-    const normalizedEmail = normalizeLoginEmail(email);
+    const normalizedEmail = normalizeLoginEmail(rawEmail);
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
-      password,
+      password: rawPassword,
     });
 
     if (signInError) {
@@ -58,14 +57,18 @@ function SignInForm() {
 
     const redirectParam = searchParams.get("redirect");
     const redirectTo = getPostLoginPath(
-      user.email ?? "",
+      user.email ?? normalizedEmail,
       profile as Pick<Profile, "is_admin" | "role"> | null,
       redirectParam
     );
 
     void recordLoginAudit("password");
-
     window.location.assign(redirectTo);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await signInWithCredentials(email, password);
   }
 
   return (

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getHostListingId } from "@/lib/host-listing-limit";
 import { ListingWizard } from "@/components/listings/ListingWizard";
 import { Container } from "@/components/ui/Container";
 import type { Profile } from "@/types/database";
@@ -21,6 +22,11 @@ export default async function NewListingPage() {
 
   if (typedProfile?.role !== "host") {
     redirect("/profile/complete");
+  }
+
+  const existingListingId = await getHostListingId(supabase, user.id);
+  if (existingListingId) {
+    redirect(`/host/listings/${existingListingId}/edit`);
   }
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, CreditCard, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -22,12 +23,43 @@ interface TravelerConfirmStayProps {
   hostName: string;
 }
 
+const INITIAL_ACKNOWLEDGMENTS = {
+  accommodationDirect: false,
+  bookingProtectionNonRefundable: false,
+  cancellationPolicy: false,
+  termsOfService: false,
+} as const;
+
+type AcknowledgmentKey = keyof typeof INITIAL_ACKNOWLEDGMENTS;
+
+const SERVICE_FEE_COVERAGE = [
+  "Identity Verification",
+  "Trust & Safety",
+  "Secure Messaging",
+  "Booking Management",
+  "Customer Support",
+  "Platform Maintenance",
+] as const;
+
 export function TravelerConfirmStay({ request, listingPricing, hostName }: TravelerConfirmStayProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [acknowledgments, setAcknowledgments] = useState({ ...INITIAL_ACKNOWLEDGMENTS });
+
+  const allAcknowledged = Object.values(acknowledgments).every(Boolean);
+
+  function closeConfirmModal() {
+    if (isLoading) return;
+    setShowConfirmModal(false);
+    setAcknowledgments({ ...INITIAL_ACKNOWLEDGMENTS });
+  }
+
+  function toggleAcknowledgment(key: AcknowledgmentKey) {
+    setAcknowledgments((current) => ({ ...current, [key]: !current[key] }));
+  }
 
   const pricing =
     request.start_date && request.end_date
@@ -125,47 +157,138 @@ export function TravelerConfirmStay({ request, listingPricing, hostName }: Trave
           <button
             type="button"
             className="absolute inset-0 bg-black/50"
-            onClick={() => !isLoading && setShowConfirmModal(false)}
+            onClick={closeConfirmModal}
             aria-label="Close confirmation dialog"
           />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-stay-title"
-            className="relative w-full max-w-md rounded-2xl bg-white shadow-xl border border-sage-dark/30 p-6"
+            className="relative flex w-full max-w-lg max-h-[90vh] flex-col rounded-2xl bg-white shadow-xl border border-sage-dark/30"
           >
-            <button
-              type="button"
-              onClick={() => !isLoading && setShowConfirmModal(false)}
-              className="absolute right-4 top-4 text-charcoal-light hover:text-forest"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="overflow-y-auto p-6">
+              <button
+                type="button"
+                onClick={closeConfirmModal}
+                className="absolute right-4 top-4 text-charcoal-light hover:text-forest"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
 
-            <div className="flex items-start gap-3 mb-4 pr-8">
-              <div className="rounded-full bg-sage/60 p-2 text-forest shrink-0">
-                <CreditCard className="h-5 w-5" />
+              <div className="flex items-start gap-3 mb-4 pr-8">
+                <div className="rounded-full bg-sage/60 p-2 text-forest shrink-0">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 id="confirm-stay-title" className="text-lg font-semibold text-forest">
+                    Confirm and pay service fee
+                  </h2>
+                  <p className="text-sm text-charcoal-light mt-2 leading-relaxed">
+                    The service fee ({formatCurrency(pricing.serviceFee)}) is charged when you
+                    confirm. You must coordinate the remaining stay payment (
+                    {formatCurrency(pricing.subtotal)}) directly with {hostName}.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 id="confirm-stay-title" className="text-lg font-semibold text-forest">
-                  Confirm your stay
-                </h2>
-                <p className="text-sm text-charcoal-light mt-2 leading-relaxed">
-                  The service fee ({formatCurrency(pricing.serviceFee)}) is charged when you
-                  confirm. You must coordinate the remaining stay payment (
-                  {formatCurrency(pricing.subtotal)}) directly with {hostName} — Fore Beyond does
-                  not process the host payout.
+
+              <div className="rounded-xl bg-sage/30 p-4 text-sm text-charcoal-light space-y-3">
+                <p>Fore Beyond only collects the Service Fee.</p>
+                <p>Accommodation payment is made directly between the traveler and the host.</p>
+                <p>
+                  The Service Fee is <strong className="text-forest">NON-REFUNDABLE</strong> once
+                  payment has been completed.
+                </p>
+                <div>
+                  <p className="font-medium text-forest mb-1.5">This fee covers:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {SERVICE_FEE_COVERAGE.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <p>
+                  These services begin immediately after payment, therefore the Service Fee is
+                  non-refundable.
                 </p>
               </div>
+
+              <fieldset className="mt-5 space-y-3">
+                <legend className="text-sm font-medium text-forest mb-1">
+                  Please acknowledge before payment
+                </legend>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acknowledgments.accommodationDirect}
+                    onChange={() => toggleAcknowledgment("accommodationDirect")}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-sage-dark text-forest focus:ring-forest"
+                  />
+                  <span className="text-sm text-charcoal-light">
+                    I understand my accommodation payment is made directly to the host.
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acknowledgments.bookingProtectionNonRefundable}
+                    onChange={() => toggleAcknowledgment("bookingProtectionNonRefundable")}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-sage-dark text-forest focus:ring-forest"
+                  />
+                  <span className="text-sm text-charcoal-light">
+                    I understand the Fore Beyond Booking Protection Fee is non-refundable once paid,
+                    except if the host or Fore Beyond cancels the booking.
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acknowledgments.cancellationPolicy}
+                    onChange={() => toggleAcknowledgment("cancellationPolicy")}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-sage-dark text-forest focus:ring-forest"
+                  />
+                  <span className="text-sm text-charcoal-light">
+                    I have read and agree to the{" "}
+                    <Link
+                      href="/cancellation-policy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-forest underline"
+                    >
+                      Cancellation Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acknowledgments.termsOfService}
+                    onChange={() => toggleAcknowledgment("termsOfService")}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-sage-dark text-forest focus:ring-forest"
+                  />
+                  <span className="text-sm text-charcoal-light">
+                    I agree to the{" "}
+                    <Link
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-forest underline"
+                    >
+                      Terms of Service
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </fieldset>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row gap-2">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 border-t border-sage-dark/20 p-6 pt-4">
               <Button
                 variant="ghost"
                 size="md"
                 className="flex-1"
-                onClick={() => setShowConfirmModal(false)}
+                onClick={closeConfirmModal}
                 disabled={isLoading}
               >
                 Go back
@@ -176,6 +299,8 @@ export function TravelerConfirmStay({ request, listingPricing, hostName }: Trave
                 className="flex-1 justify-center"
                 onClick={handleConfirm}
                 isLoading={isLoading}
+                disabled={!allAcknowledged}
+                title={!allAcknowledged ? "Please acknowledge all items before paying" : undefined}
               >
                 Pay Service Fee
               </Button>

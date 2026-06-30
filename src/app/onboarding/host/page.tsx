@@ -35,6 +35,7 @@ export default function HostOnboardingPage() {
   const [neighborhood, setNeighborhood] = useState("");
   const [maxGuests, setMaxGuests] = useState("1");
   const [languages, setLanguages] = useState("");
+  const [hostMotivation, setHostMotivation] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -69,6 +70,7 @@ export default function HostOnboardingPage() {
         neighborhood,
         max_guests: parseInt(maxGuests, 10) || 1,
         languages_spoken: languages.split(",").map((l) => l.trim()).filter(Boolean),
+        host_motivation: hostMotivation.trim() || null,
       },
       { onConflict: "user_id" }
     );
@@ -81,10 +83,14 @@ export default function HostOnboardingPage() {
 
     await supabase
       .from("profiles")
-      .update({ onboarding_step: "verification", role: "host" })
+      .update({
+        role: "host",
+        onboarding_step: "complete",
+        onboarding_complete: true,
+      })
       .eq("id", user.id);
 
-    router.push("/verification-center");
+    window.location.assign("/verification-center");
   }
 
   return (
@@ -167,6 +173,14 @@ export default function HostOnboardingPage() {
               onChange={(e) => setExperience(e.target.value)}
               placeholder="What will a typical day look like for a traveler staying with you?"
             />
+            <Textarea
+              label="Why did you decide to host guests?"
+              value={hostMotivation}
+              onChange={(e) => setHostMotivation(e.target.value)}
+              placeholder="Share what inspired you to open your home and welcome travelers..."
+              hint="This appears on your family profile so travelers understand your motivation"
+              required
+            />
             <Input
               label="Languages Spoken"
               value={languages}
@@ -182,7 +196,7 @@ export default function HostOnboardingPage() {
                 variant="primary"
                 size="lg"
                 onClick={() => setStep(2)}
-                disabled={!household}
+                disabled={!household || !hostMotivation.trim()}
                 className="flex-1"
               >
                 Continue

@@ -6,15 +6,16 @@ import { ArrowLeft, ArrowRight, Calendar, CreditCard, ImagePlus, Users } from "l
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
-import { formatBudget } from "@/lib/search";
 import {
   calculateStayWithServiceFee,
   formatCurrency,
   formatDateRange,
+  formatStayRateLabel,
+  formatStayRequestMessage,
   missingPricingMessage,
   pickListingPricing,
 } from "@/lib/stay-requests";
-import { BlockedDatesNotice } from "@/components/stays/BlockedDatesNotice";
+import { StayDateRangePicker } from "@/components/stays/StayDateRangePicker";
 import { StayRequestMediaUpload, type DraftStayRequestPhoto } from "@/components/stays/StayRequestMediaUpload";
 import { StayTravelerPricingBreakdown } from "@/components/stays/StayTravelerPricingBreakdown";
 import {
@@ -49,6 +50,7 @@ interface RequestStayWizardProps {
   userId?: string | null;
   blockedDateRanges?: BlockedDateRange[];
   profileBio?: string | null;
+  profileStayMotivation?: string | null;
 }
 
 function todayIso() {
@@ -60,11 +62,13 @@ export function RequestStayWizard({
   userId,
   blockedDateRanges = [],
   profileBio = null,
+  profileStayMotivation = null,
 }: RequestStayWizardProps) {
   const router = useRouter();
   const minDate = todayIso();
   const [step, setStep] = useState(0);
   const [intro, setIntro] = useState(profileBio?.trim() ?? "");
+  const [stayMotivation, setStayMotivation] = useState(profileStayMotivation?.trim() ?? "");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [guestCount, setGuestCount] = useState("1");
@@ -123,9 +127,11 @@ export function RequestStayWizard({
       return;
     }
 
-    const fullMessage = mediaNote.trim()
-      ? `${intro.trim()}\n\n---\nOptional media note: ${mediaNote.trim()}`
-      : intro.trim();
+    const fullMessage = formatStayRequestMessage({
+      intro: intro.trim(),
+      motivation: stayMotivation.trim(),
+      mediaNote: mediaNote.trim() || null,
+    });
 
     const { data, error: insertError } = await supabase
       .from("stay_requests")
@@ -195,9 +201,15 @@ export function RequestStayWizard({
   }
 
   async function handleNext() {
-    if (step === 0 && intro.trim().length < 20) {
-      setError("Please write at least a few sentences introducing yourself.");
-      return;
+    if (step === 0) {
+      if (intro.trim().length < 20) {
+        setError("Please write at least a few sentences introducing yourself.");
+        return;
+      }
+      if (stayMotivation.trim().length < 20) {
+        setError("Please share why you're interested in staying with a host family.");
+        return;
+      }
     }
     if (step === 1) {
       const dateError = validateDates();
@@ -283,41 +295,38 @@ export function RequestStayWizard({
 
       <p className="text-sm text-charcoal-light mb-4">
         Requesting stay at <span className="font-medium text-forest">{listing.title}</span>
-        {" · "}{formatBudget(listing.budget_per_night)}
+        {" · "}
+        {formatStayRateLabel(listingPricing, parseInt(guestCount, 10) || 1)}
       </p>
 
       {step === 0 && (
-        <Textarea
-          label="About me"
-          value={intro}
-          onChange={(e) => setIntro(e.target.value)}
-          placeholder="Share who you are, why you'd like to stay, your travel interests, and anything the host should know..."
-          required
-        />
+        <div className="space-y-4">
+          <Textarea
+            label="About me"
+            value={intro}
+            onChange={(e) => setIntro(e.target.value)}
+            placeholder="Share who you are, your background, and anything the host should know about you..."
+            required
+          />
+          <Textarea
+            label="What are you hoping to get from this stay?"
+            value={stayMotivation}
+            onChange={(e) => setStayMotivation(e.target.value)}
+            placeholder="Why are you interested in staying with this family? What do you want to experience or learn?"
+            hint="Help the host understand your goals for this homestay"
+            required
+          />
+        </div>
       )}
 
       {step === 1 && (
         <div className="space-y-4">
-          <BlockedDatesNotice blockedRanges={blockedDateRanges} />
-          <Input
-            label="Check-in"
-            type="date"
-            min={minDate}
-            value={startDate}
-            onChange={(e) => {
-              const nextStart = e.target.value;
-              const nextEnd = endDate && nextStart >= endDate ? "" : endDate;
-              applyDateSelection(nextStart, nextEnd);
-            }}
-            required
-          />
-          <Input
-            label="Check-out"
-            type="date"
-            min={startDate || minDate}
-            value={endDate}
-            onChange={(e) => applyDateSelection(startDate, e.target.value)}
-            required
+          <StayDateRangePicker
+            minDate={minDate}
+            startDate={startDate}
+            endDate={endDate}
+            blockedRanges={blockedDateRanges}
+            onChange={applyDateSelection}
           />
           <Input
             label="Guests"
@@ -458,6 +467,7 @@ export function RequestStayWizard({
           <p className="font-medium text-forest">Review your request</p>
           <div className="rounded-xl bg-sage/40 p-4 space-y-2">
             <p><strong>Introduction:</strong> {intro.slice(0, 120)}{intro.length > 120 ? "…" : ""}</p>
+            <p><strong>Why this stay:</strong> {stayMotivation.slice(0, 120)}{stayMotivation.length > 120 ? "…" : ""}</p>
             <p className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" />
               {formatDateRange(startDate, endDate)}

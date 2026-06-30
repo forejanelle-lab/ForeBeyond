@@ -54,18 +54,28 @@ export async function getHostListingStats(
   hostId: string,
   listingId: string
 ): Promise<HostListingStats> {
-  const [{ count: bookingCount }, { data: requests }] = await Promise.all([
-    supabase
-      .from("trips")
-      .select("id", { count: "exact", head: true })
-      .eq("listing_id", listingId)
-      .eq("status", "completed"),
-    supabase
-      .from("stay_requests")
-      .select("id, status, host_response, created_at, updated_at")
-      .eq("host_id", hostId)
-      .eq("listing_id", listingId),
-  ]);
+  const [{ count: completedTripCount }, { count: listingReviewCount }, { data: requests }] =
+    await Promise.all([
+      supabase
+        .from("trips")
+        .select("id", { count: "exact", head: true })
+        .eq("listing_id", listingId)
+        .eq("status", "completed"),
+      supabase
+        .from("public_reviews")
+        .select("id", { count: "exact", head: true })
+        .eq("reviewee_id", hostId)
+        .eq("listing_id", listingId)
+        .eq("reviewer_role", "traveler"),
+      supabase
+        .from("stay_requests")
+        .select("id, status, host_response, created_at, updated_at")
+        .eq("host_id", hostId)
+        .eq("listing_id", listingId),
+    ]);
+
+  // Every approved listing review implies a completed stay; unreviewed stays can add more.
+  const bookingCount = Math.max(completedTripCount ?? 0, listingReviewCount ?? 0);
 
   const typedRequests = (requests as StayRequestStatsRow[] | null) ?? [];
   const totalRequests = typedRequests.length;
@@ -109,7 +119,7 @@ export async function getHostListingStats(
       : null;
 
   return {
-    bookingCount: bookingCount ?? 0,
+    bookingCount,
     avgResponseTimeMinutes,
     totalRequests,
     respondedRequests,

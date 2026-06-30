@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, Clock } from "lucide-react";
+import Image from "next/image";
+import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, Clock, User } from "lucide-react";
 import { FamilyProfileContent } from "@/components/search/FamilyProfileContent";
 import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
 import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
 import { ListingImage } from "@/components/listings/ListingImage";
-import { formatBudget } from "@/lib/search";
 import { formatAverageRating } from "@/lib/reviews";
 import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
+import { formatStayRateLabel, pickListingPricing } from "@/lib/stay-requests";
 import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
@@ -39,6 +40,9 @@ interface FamilyProfileViewProps {
   canMessageHost?: boolean;
   messageConversationId?: string | null;
   messageLockReason?: string;
+  hostMotivation?: string | null;
+  hostAvatarUrl?: string | null;
+  hostDisplayName?: string | null;
 }
 
 export function FamilyProfileView({
@@ -65,11 +69,22 @@ export function FamilyProfileView({
   canMessageHost = false,
   messageConversationId = null,
   messageLockReason = "Messaging opens when the host messages you first or approves your stay request.",
+  hostMotivation = null,
+  hostAvatarUrl = null,
+  hostDisplayName = null,
 }: FamilyProfileViewProps) {
   const coverPhoto = photos.find((p) => p.is_cover) ?? photos[0];
-  const budget = "budget_per_night" in listing ? listing.budget_per_night : null;
+  const listingPricing = pickListingPricing(listing);
+  const nightlyRateLabel = formatStayRateLabel(listingPricing, 1);
   const isVerified = verificationStatus === "verified";
   const avgRating = formatAverageRating(reviews);
+  const hostNameForDisplay = hostDisplayName ?? hostFirstName;
+  const hostInitials = hostNameForDisplay
+    ?.split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <>
@@ -102,7 +117,7 @@ export function FamilyProfileView({
               )}
               <p className="flex items-center gap-1.5 text-white/85 mt-2 text-sm md:text-base">
                 <DollarSign className="h-4 w-4" />
-                {formatBudget(budget)}
+                {nightlyRateLabel}
               </p>
             </div>
             {showSaveButton && (
@@ -131,6 +146,7 @@ export function FamilyProfileView({
               reviewExisting={reviewExisting}
               reviewTarget={reviewTarget}
               hostName={hostFirstName}
+              hostMotivation={hostMotivation}
             />
           </div>
 
@@ -153,10 +169,33 @@ export function FamilyProfileView({
                   />
                 )}
               </div>
-              {bookingCount === 0 && memberSince && (
-                <p className="text-sm text-charcoal-light">
-                  Member since {formatMemberSince(memberSince)}
-                </p>
+              {hostNameForDisplay && (
+                <div className="flex items-center gap-3">
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-sage-dark/40 bg-sage">
+                    {hostAvatarUrl ? (
+                      <Image
+                        src={hostAvatarUrl}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="56px"
+                        unoptimized
+                      />
+                    ) : hostInitials ? (
+                      <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-forest">
+                        {hostInitials}
+                      </span>
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-forest">
+                        <User className="h-6 w-6" />
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-forest">{hostNameForDisplay}</p>
+                    <p className="text-xs text-charcoal-light">Your host</p>
+                  </div>
+                </div>
               )}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-xl bg-sage/40 px-3 py-2.5">
@@ -180,6 +219,11 @@ export function FamilyProfileView({
                   <p className="font-semibold text-forest">{bookingCount}</p>
                 </div>
               </div>
+              {memberSince && (
+                <p className="text-sm text-charcoal-light">
+                  Member since {formatMemberSince(memberSince)}
+                </p>
+              )}
             </Card>
 
             <Card variant="outline" padding="md" className="space-y-4">

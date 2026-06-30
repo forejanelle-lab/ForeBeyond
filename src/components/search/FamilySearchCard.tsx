@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Heart, MapPin, Shield, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatBudget } from "@/lib/search";
-import { ListingImage } from "@/components/listings/ListingImage";
+import { ListingPreviewMedia } from "@/components/listings/ListingPreviewMedia";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import type { PublicListing } from "@/types/database";
@@ -73,12 +73,9 @@ export function FamilySearchCard({
           : "mb-4 aspect-[16/10] w-full rounded-xl"
       }`}
     >
-      <ListingImage
-        src={coverPhotoUrl}
-        country={listing.country}
-        city={listing.city}
-        alt={listing.title ?? "Family listing"}
-        fill
+      <ListingPreviewMedia
+        listing={listing}
+        coverPhotoUrl={coverPhotoUrl}
         className={`object-cover transition-transform duration-300 group-hover:scale-[1.02] ${
           layout === "list" ? "object-left" : "object-center"
         }`}

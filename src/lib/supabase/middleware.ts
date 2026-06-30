@@ -29,14 +29,24 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] = null;
+
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error("middleware getUser failed:", error.message);
+    } else {
+      user = data.user;
+    }
+  } catch (err) {
+    console.error("middleware getUser unreachable:", err);
+    return supabaseResponse;
+  }
 
   const pathname = request.nextUrl.pathname;
 
   const authRoutes = ["/auth/sign-in", "/auth/sign-up", "/auth/check-email", "/auth/verify-email", "/auth/resend-verification"];
-  const protectedRoutes = ["/dashboard", "/verification-center", "/profile", "/settings", "/trust-center/dashboard", "/host", "/saved", "/experiences/saved", "/trips", "/messages", "/notifications", "/admin"];
+  const protectedRoutes = ["/dashboard", "/verification-center", "/profile", "/settings", "/trust-center/dashboard", "/host", "/saved", "/experiences/saved", "/trips", "/messages", "/notifications", "/admin", "/onboarding"];
 
   if (pathname === "/auth/callback") {
     return supabaseResponse;

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Navigation } from "@/components/layout/Navigation";
+import { NavigationWithAuth } from "@/components/layout/NavigationWithAuth";
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
 import { Analytics } from "@vercel/analytics/next";
@@ -11,6 +11,8 @@ import { brand } from "@/lib/brand";
 import { isPlatformAdmin } from "@/lib/navigation-menu";
 import type { UserRole } from "@/types/database";
 import "./globals.css";
+
+export const dynamic = "force-dynamic";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -85,7 +87,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className={`${inter.className} min-h-screen flex flex-col antialiased bg-cream text-charcoal`}>
-        <Navigation user={navUser} />
+        <NavigationWithAuth serverUser={navUser} />
         <main className="flex-1">{children}</main>
         <Footer />
         <CookieConsent />

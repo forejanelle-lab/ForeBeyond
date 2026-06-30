@@ -9,7 +9,7 @@ import {
   hostHasGuestRequest,
   pickGuestNameRevealStatus,
 } from "@/lib/host-guest-access";
-import type { Profile, PublicReview, StayRequest, TrustBadge } from "@/types/database";
+import type { Profile, PublicReview, StayRequest, TravelerProfile, TrustBadge } from "@/types/database";
 
 export async function generateMetadata() {
   return { title: "Guest profile" };
@@ -46,7 +46,7 @@ export default async function HostGuestProfilePage({
   const canView = await hostHasGuestRequest(supabase, user.id, guestId);
   if (!canView) notFound();
 
-  const [{ data: guestProfile }, { data: guestRequests }, { data: badges }, { data: reviews }] =
+  const [{ data: guestProfile }, { data: guestRequests }, { data: badges }, { data: reviews }, { data: travelerOnboarding }] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -68,6 +68,11 @@ export default async function HostGuestProfilePage({
         .eq("reviewee_id", guestId)
         .eq("reviewer_role", "host")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("traveler_profiles")
+        .select("interests, travel_style, dietary_preferences, accessibility_needs, stay_motivation")
+        .eq("user_id", guestId)
+        .maybeSingle(),
     ]);
 
   if (!guestProfile) notFound();
@@ -116,6 +121,12 @@ export default async function HostGuestProfilePage({
       <GuestTrustProfile
         displayName={displayName}
         profile={typedGuest}
+        travelerOnboarding={
+          (travelerOnboarding as Pick<
+            TravelerProfile,
+            "interests" | "travel_style" | "dietary_preferences" | "accessibility_needs" | "stay_motivation"
+          > | null) ?? null
+        }
         badges={(badges as TrustBadge[]) ?? []}
         reviews={(reviews as PublicReview[]) ?? []}
       />

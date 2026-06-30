@@ -188,21 +188,51 @@ export function calculateHostEarnings(
   };
 }
 
-const STAY_REQUEST_MEDIA_MARKER = "\n\n---\nOptional media note: ";
+const STAY_REQUEST_SECTION_SEP = "\n\n---\n";
+const STAY_REQUEST_MOTIVATION_PREFIX = "Why I'm interested: ";
+const STAY_REQUEST_MEDIA_PREFIX = "Optional media note: ";
+
+export function formatStayRequestMessage({
+  intro,
+  motivation,
+  mediaNote,
+}: {
+  intro: string;
+  motivation: string;
+  mediaNote?: string | null;
+}) {
+  let message = intro.trim();
+  if (motivation.trim()) {
+    message += `${STAY_REQUEST_SECTION_SEP}${STAY_REQUEST_MOTIVATION_PREFIX}${motivation.trim()}`;
+  }
+  if (mediaNote?.trim()) {
+    message += `${STAY_REQUEST_SECTION_SEP}${STAY_REQUEST_MEDIA_PREFIX}${mediaNote.trim()}`;
+  }
+  return message;
+}
 
 export function parseStayRequestMessage(message: string | null | undefined) {
   const text = message?.trim() ?? "";
-  if (!text) return { intro: "", mediaNote: null as string | null };
-
-  const markerIndex = text.indexOf(STAY_REQUEST_MEDIA_MARKER);
-  if (markerIndex === -1) {
-    return { intro: text, mediaNote: null as string | null };
+  if (!text) {
+    return { intro: "", motivation: null as string | null, mediaNote: null as string | null };
   }
 
-  return {
-    intro: text.slice(0, markerIndex).trim(),
-    mediaNote: text.slice(markerIndex + STAY_REQUEST_MEDIA_MARKER.length).trim() || null,
-  };
+  const sections = text.split(STAY_REQUEST_SECTION_SEP);
+  const intro = sections[0]?.trim() ?? "";
+  let motivation: string | null = null;
+  let mediaNote: string | null = null;
+
+  for (const section of sections.slice(1)) {
+    const trimmed = section.trim();
+    if (trimmed.startsWith(STAY_REQUEST_MOTIVATION_PREFIX)) {
+      motivation =
+        trimmed.slice(STAY_REQUEST_MOTIVATION_PREFIX.length).trim() || null;
+    } else if (trimmed.startsWith(STAY_REQUEST_MEDIA_PREFIX)) {
+      mediaNote = trimmed.slice(STAY_REQUEST_MEDIA_PREFIX.length).trim() || null;
+    }
+  }
+
+  return { intro, motivation, mediaNote };
 }
 
 const URL_PATTERN = /https?:\/\/[^\s<>"']+/gi;

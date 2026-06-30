@@ -44,6 +44,14 @@ export default async function RequestStayPage({
     ? await supabase.from("profiles").select("bio").eq("id", user.id).maybeSingle()
     : { data: null };
 
+  const { data: travelerProfile } = user
+    ? await supabase
+        .from("traveler_profiles")
+        .select("stay_motivation")
+        .eq("user_id", user.id)
+        .maybeSingle()
+    : { data: null };
+
   if (!listing) notFound();
 
   const typedListing = listing as PublicListing;
@@ -77,6 +85,10 @@ export default async function RequestStayPage({
             userId={user?.id ?? null}
             blockedDateRanges={blockedDateRanges}
             profileBio={(profile as { bio: string | null } | null)?.bio ?? null}
+            profileStayMotivation={
+              (travelerProfile as { stay_motivation: string | null } | null)?.stay_motivation ??
+              null
+            }
           />
           <p className="flex items-center justify-center gap-1.5 text-xs text-charcoal-light mt-6 pt-6 border-t border-sage-dark/20">
             <Lock className="h-3.5 w-3.5" />

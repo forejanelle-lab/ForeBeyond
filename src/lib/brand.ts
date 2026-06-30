@@ -41,6 +41,7 @@ export const footer = {
   legal: [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
+    { label: "Cancellation Policy", href: "/cancellation-policy" },
     { label: "Community Guidelines", href: "/guidelines" },
   ],
 } as const;

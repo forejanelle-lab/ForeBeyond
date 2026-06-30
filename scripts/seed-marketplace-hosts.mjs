@@ -3,14 +3,14 @@
  * Preserves platform admin (forejanelle@gmail.com).
  *
  * Totals: 33 hosts — PR 10, Spain 6, Alaska 2, Japan 8, Italy 4, Canada 3
- * Each host: 5 completed bookings with 5 matching approved reviews, trust score >= 80
+ * Each host: varied completed stays/reviews (3–12) and trust scores >= 80
  */
 import { createPgClient } from "./pg-connect.mjs";
 import { resolveCatalogListingGallery } from "./listing-photo-catalog.mjs";
+import { hostVarietyProfile } from "./marketplace-host-variety.mjs";
 
 const PASSWORD = "ForeBeyond123!";
 const INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
-const STAYS_PER_HOST = 5;
 const TRAVELER_COUNT = 55;
 const MIN_TRUST = 80;
 
@@ -184,7 +184,11 @@ async function ensureAuthUser(client, user) {
   );
 }
 
-async function seedHostProfile(client, userId, user, role, { isAdmin = false } = {}) {
+async function seedHostProfile(client, userId, user, role, { isAdmin = false, verificationTier = "full" } = {}) {
+  const phoneVerified = verificationTier === "full" || verificationTier === "standard";
+  const addressVerified = verificationTier === "full" || verificationTier === "standard";
+  const videoVerified = verificationTier === "full";
+
   await client.query(
     `UPDATE profiles SET
       full_name = $2,
@@ -198,9 +202,9 @@ async function seedHostProfile(client, userId, user, role, { isAdmin = false } =
       onboarding_complete = TRUE,
       verification_status = 'verified',
       email_verified_at = NOW(),
-      phone_verified_at = NOW(),
-      address_verified_at = NOW(),
-      video_verified_at = NOW(),
+      phone_verified_at = CASE WHEN $9 THEN NOW() ELSE NULL END,
+      address_verified_at = CASE WHEN $10 THEN NOW() ELSE NULL END,
+      video_verified_at = CASE WHEN $11 THEN NOW() ELSE NULL END,
       updated_at = NOW()
      WHERE id = $1`,
     [
@@ -212,17 +216,25 @@ async function seedHostProfile(client, userId, user, role, { isAdmin = false } =
       user.languages ?? ["English"],
       role,
       isAdmin,
+      phoneVerified,
+      addressVerified,
+      videoVerified,
     ]
   );
 }
 
-async function seedHostVerification(client, userId) {
+async function seedHostVerification(client, userId, tier = "full") {
   const docs = [
     ["government_id", "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80"],
     ["selfie", "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&q=80"],
-    ["address_proof", "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"],
-    ["video_verification", "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80"],
   ];
+
+  if (tier === "full" || tier === "standard") {
+    docs.push(["address_proof", "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"]);
+  }
+  if (tier === "full") {
+    docs.push(["video_verification", "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80"]);
+  }
 
   for (const [type, url] of docs) {
     await client.query(
@@ -484,19 +496,22 @@ async function main() {
     for (const region of REGIONS) {
       for (let i = 0; i < region.count; i++) {
         const host = buildHost(region, i, globalHostIndex);
+        const variety = hostVarietyProfile(globalHostIndex);
         globalHostIndex += 1;
 
         await ensureAuthUser(client, host);
-        await seedHostProfile(client, host.id, host, "host");
+        await seedHostProfile(client, host.id, host, "host", {
+          verificationTier: variety.verificationTier,
+        });
         await seedHostDetails(client, host.id, host.hostProfile);
-        await seedHostVerification(client, host.id);
+        await seedHostVerification(client, host.id, variety.verificationTier);
         await seedListing(client, host.id, host.listing, globalHostIndex - 1);
 
         const tripsForReviews = [];
 
-        for (let stayIndex = 0; stayIndex < STAYS_PER_HOST; stayIndex++) {
+        for (let stayIndex = 0; stayIndex < variety.reviewCount; stayIndex++) {
           bookingSeq += 1;
-          const traveler = travelers[(globalHostIndex * STAYS_PER_HOST + stayIndex) % travelers.length];
+          const traveler = travelers[(globalHostIndex * 5 + stayIndex) % travelers.length];
           const { start, end } = bookingWindow(globalHostIndex, stayIndex);
           const requestId = nextUuid("e5000001");
           const tripId = nextUuid("f5000001");
@@ -516,15 +531,14 @@ async function main() {
           tripsForReviews.push({ tripId, travelerId: traveler.id, start });
         }
 
-        for (let r = 0; r < STAYS_PER_HOST; r++) {
+        for (let r = 0; r < variety.reviewCount; r++) {
           const trip = tripsForReviews[r];
-          const rating = r % 5 === 3 ? 4 : 5;
           await seedListingReview(client, {
             reviewId: nextUuid("d5000001"),
             tripId: trip.tripId,
             travelerId: trip.travelerId,
             hostId: host.id,
-            rating,
+            rating: variety.ratings[r],
             comment: REVIEW_COMMENTS[(globalHostIndex + r) % REVIEW_COMMENTS.length],
             createdAt: `${reviewDate(trip.start, 2 + r)}T16:00:00Z`,
           });
@@ -540,7 +554,12 @@ async function main() {
           throw new Error(`Host ${host.email} trust score ${score} is below ${MIN_TRUST}`);
         }
 
-        hosts.push({ ...host, trustScore: score, region: region.code });
+        hosts.push({
+          ...host,
+          trustScore: score,
+          reviewCount: variety.reviewCount,
+          region: region.code,
+        });
       }
     }
 
@@ -548,7 +567,8 @@ async function main() {
 
     console.log("Marketplace seed complete.\n");
     console.log("Hosts created: %d", hosts.length);
-    console.log("Stays per host (bookings = reviews): %d", STAYS_PER_HOST);
+    console.log("Review counts: %s", [...new Set(hosts.map((h) => h.reviewCount))].sort((a, b) => a - b).join(", "));
+    console.log("Trust scores: min %d, max %d", Math.min(...hosts.map((h) => h.trustScore)), Math.max(...hosts.map((h) => h.trustScore)));
     console.log("Traveler pool: %d\n", TRAVELER_COUNT);
 
     for (const region of REGIONS) {

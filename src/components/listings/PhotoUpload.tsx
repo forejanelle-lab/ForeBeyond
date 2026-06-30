@@ -12,6 +12,7 @@ interface PhotoUploadProps {
   userId: string;
   existingPhotos?: ListingPhoto[];
   onPhotosChange?: (photos: ListingPhoto[]) => void;
+  showCoverSelection?: boolean;
 }
 
 export function PhotoUpload({
@@ -19,6 +20,7 @@ export function PhotoUpload({
   userId,
   existingPhotos = [],
   onPhotosChange,
+  showCoverSelection = true,
 }: PhotoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<ListingPhoto[]>(existingPhotos);
@@ -30,6 +32,7 @@ export function PhotoUpload({
     setUploading(true);
     setError("");
     const supabase = createClient();
+    let workingPhotos = [...photos];
 
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
@@ -51,14 +54,14 @@ export function PhotoUpload({
       }
 
       const { data: urlData } = supabase.storage.from("listing-photos").getPublicUrl(path);
-      const isCover = photos.length === 0;
+      const isCover = showCoverSelection && workingPhotos.length === 0;
 
       const { data: photo, error: insertError } = await supabase
         .from("listing_photos")
         .insert({
           listing_id: listingId,
           file_url: urlData.publicUrl,
-          sort_order: photos.length,
+          sort_order: workingPhotos.length,
           is_cover: isCover,
         })
         .select()
@@ -67,12 +70,13 @@ export function PhotoUpload({
       if (insertError) {
         setError(insertError.message);
       } else if (photo) {
-        setPhotos((prev) => {
-          const next = [...prev, photo as ListingPhoto];
-          onPhotosChange?.(next);
-          return next;
-        });
+        workingPhotos = [...workingPhotos, photo as ListingPhoto];
       }
+    }
+
+    if (workingPhotos.length !== photos.length) {
+      setPhotos(workingPhotos);
+      onPhotosChange?.(workingPhotos);
     }
 
     setUploading(false);
@@ -82,22 +86,18 @@ export function PhotoUpload({
   async function removePhoto(photo: ListingPhoto) {
     const supabase = createClient();
     await supabase.from("listing_photos").delete().eq("id", photo.id);
-    setPhotos((prev) => {
-      const next = prev.filter((p) => p.id !== photo.id);
-      onPhotosChange?.(next);
-      return next;
-    });
+    const next = photos.filter((p) => p.id !== photo.id);
+    setPhotos(next);
+    onPhotosChange?.(next);
   }
 
   async function setCover(photo: ListingPhoto) {
     const supabase = createClient();
     await supabase.from("listing_photos").update({ is_cover: false }).eq("listing_id", listingId);
     await supabase.from("listing_photos").update({ is_cover: true }).eq("id", photo.id);
-    setPhotos((prev) => {
-      const next = prev.map((p) => ({ ...p, is_cover: p.id === photo.id }));
-      onPhotosChange?.(next);
-      return next;
-    });
+    const next = photos.map((p) => ({ ...p, is_cover: p.id === photo.id }));
+    setPhotos(next);
+    onPhotosChange?.(next);
   }
 
   return (
@@ -138,13 +138,13 @@ export function PhotoUpload({
                 className="object-cover"
                 sizes="200px"
               />
-              {photo.is_cover && (
+              {showCoverSelection && photo.is_cover && (
                 <span className="absolute top-2 left-2 bg-gold text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Star className="h-3 w-3" /> Cover
                 </span>
               )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                {!photo.is_cover && (
+                {showCoverSelection && !photo.is_cover && (
                   <button
                     type="button"
                     onClick={() => setCover(photo)}

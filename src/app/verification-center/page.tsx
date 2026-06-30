@@ -18,6 +18,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { getProfileVerificationStatusLabel } from "@/lib/verification-labels";
+import { getHostListingId, hostListingManagePath } from "@/lib/host-listing-limit";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
@@ -102,6 +103,7 @@ export default function VerificationCenterPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
 
   async function loadStatus() {
@@ -109,13 +111,14 @@ export default function VerificationCenterPage() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push("/auth/sign-in");
+      setIsLoading(false);
+      router.push("/auth/sign-in?redirect=/verification-center");
       return;
     }
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("verification_status, phone, phone_verified_at, trust_score, role")
+      .select("verification_status, phone, phone_verified_at, trust_score, role, onboarding_complete")
       .eq("id", user.id)
       .single();
 
@@ -124,6 +127,7 @@ export default function VerificationCenterPage() {
       setPhone(profile.phone ?? "");
       setTrustScore(profile.trust_score ?? 0);
       setUserRole(profile.role);
+      setOnboardingComplete(profile.onboarding_complete ?? false);
       if (profile.phone_verified_at) {
         setDocuments((prev) => ({ ...prev, phone_verification: "verified" }));
       }
@@ -143,6 +147,7 @@ export default function VerificationCenterPage() {
     }
 
     setIsLoading(false);
+    router.refresh();
   }
 
   useEffect(() => {
@@ -190,6 +195,12 @@ export default function VerificationCenterPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    if (userRole === "host") {
+      const existingListingId = await getHostListingId(supabase, user.id);
+      window.location.assign(hostListingManagePath(existingListingId));
+      return;
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -207,13 +218,7 @@ export default function VerificationCenterPage() {
     }
 
     trackEvent(AnalyticsEvents.VERIFICATION_COMPLETION);
-
-    if (userRole === "host") {
-      router.push("/host/listings/new");
-      return;
-    }
-
-    router.push("/search");
+    window.location.assign("/search");
   }
 
   function handleDocumentSubmitted(type: DocumentType) {
@@ -244,6 +249,10 @@ export default function VerificationCenterPage() {
   const hasRejectedDocs = verificationSteps.some(
     (s) => documents[s.type] === "rejected"
   );
+
+  const canContinueOnboarding = !onboardingComplete;
+  const isHost = userRole === "host";
+  const showContinueButton = isHost || canContinueOnboarding || requiredComplete;
 
   if (isLoading) {
     return (
@@ -344,13 +353,17 @@ export default function VerificationCenterPage() {
 
         <div className="space-y-4">
           <TrustScorePanel score={trustScore} compact showBreakdownLink />
-          {userRole === "traveler" && (
+          {userRole && (
             <Card variant="outline" padding="md" className="space-y-3">
               <p className="text-sm font-medium text-forest">Next step</p>
               <p className="text-sm text-charcoal-light">
-                {requiredComplete
-                  ? "Find a host family that fits your journey."
-                  : "Finish phone, ID, and selfie verification above to unlock Search Families."}
+                {isHost
+                  ? "Create your family listing. You can finish verification items anytime."
+                  : canContinueOnboarding
+                    ? "Continue to search families. You can finish remaining verification items anytime."
+                    : requiredComplete
+                      ? "Find a host family that fits your journey."
+                      : "Finish phone, ID, and selfie verification above to unlock Search Families."}
               </p>
             </Card>
           )}
@@ -360,7 +373,7 @@ export default function VerificationCenterPage() {
         </div>
       </div>
 
-      {requiredComplete && (
+      {showContinueButton && (
         <div className="mt-8 text-center">
           <Button
             variant="primary"
@@ -368,12 +381,18 @@ export default function VerificationCenterPage() {
             onClick={handleCompleteOnboarding}
             isLoading={isFinishing}
           >
-            {userRole === "host" ? "Next — Create Your Listing" : "Next — Search Families"}
+            {isHost
+              ? "Continue — Create Your Listing"
+              : canContinueOnboarding && !requiredComplete
+                ? "Continue — Search Families"
+                : "Next — Search Families"}
           </Button>
           <p className="mt-3 text-sm text-charcoal-light">
-            {userRole === "host"
-              ? "Set up your family listing so travelers can find you."
-              : "Browse verified host families and send your first stay request. Your documents stay in review."}
+            {isHost
+              ? "Verification is separate from onboarding — complete your listing now and return here anytime."
+              : canContinueOnboarding && !requiredComplete
+                ? "You can complete ID and selfie verification later from this page or your Trust Dashboard."
+                : "Browse verified host families and send your first stay request. Your documents stay in review."}
           </p>
         </div>
       )}

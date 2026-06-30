@@ -31,6 +31,52 @@ export function findStayDateConflict(
   return null;
 }
 
+/** A night is blocked when it falls in [start_date, end_date). */
+export function isBlockedNight(dateIso: string, blockedRanges: BlockedDateRange[]): boolean {
+  return blockedRanges.some(
+    (range) => dateIso >= range.start_date && dateIso < range.end_date
+  );
+}
+
+export function isStayCheckInDisabled(
+  dateIso: string,
+  minDate: string,
+  blockedRanges: BlockedDateRange[]
+): boolean {
+  return dateIso < minDate || isBlockedNight(dateIso, blockedRanges);
+}
+
+export function isStayCheckOutDisabled(
+  dateIso: string,
+  checkIn: string,
+  blockedRanges: BlockedDateRange[]
+): boolean {
+  if (!checkIn || dateIso <= checkIn) return true;
+  return Boolean(findStayDateConflict(checkIn, dateIso, blockedRanges));
+}
+
+export function parseIsoDate(iso: string): { year: number; month: number; day: number } {
+  const [year, month, day] = iso.split("-").map(Number);
+  return { year, month, day };
+}
+
+export function toIsoDate(year: number, month: number, day: number): string {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+export function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+export function monthStartIso(year: number, month: number): string {
+  return toIsoDate(year, month, 1);
+}
+
+export function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
+  const date = new Date(year, month - 1 + delta, 1);
+  return { year: date.getFullYear(), month: date.getMonth() + 1 };
+}
+
 export function getStayDateConflictMessage(conflict: BlockedDateRange): string {
   const range = formatDateRange(conflict.start_date, conflict.end_date);
   if (conflict.source === "host_unavailable") {

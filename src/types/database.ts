@@ -140,6 +140,7 @@ export interface TravelerProfile {
   dietary_preferences: string[] | null;
   accessibility_needs: string | null;
   preferred_destinations: string[] | null;
+  stay_motivation: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -152,6 +153,7 @@ export interface HostProfile {
   languages_spoken: string[] | null;
   max_guests: number;
   experience_description: string | null;
+  host_motivation: string | null;
   neighborhood: string | null;
   city: string | null;
   country: string | null;
@@ -381,6 +383,7 @@ export interface HostListing {
   title: string | null;
   family_story: string | null;
   stay_details: string | null;
+  intro_video_url: string | null;
   languages: string[] | null;
   country: string | null;
   city: string | null;
@@ -434,6 +437,8 @@ export interface PublicListing {
   title: string | null;
   family_story: string | null;
   stay_details: string | null;
+  intro_video_url: string | null;
+  host_motivation: string | null;
   languages: string[] | null;
   country: string | null;
   city: string | null;

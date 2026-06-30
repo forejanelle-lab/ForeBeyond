@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { updateStayRequestDatesByTraveler } from "@/lib/stay-request-dates";
 import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
 import { todayIso } from "@/lib/messaging";
-import { BlockedDatesNotice } from "@/components/stays/BlockedDatesNotice";
+import { StayDateRangePicker } from "@/components/stays/StayDateRangePicker";
 import {
   findStayDateConflict,
   getStayDateConflictMessage,
@@ -15,7 +15,6 @@ import {
 } from "@/lib/stay-availability";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
 import type { StayRequest } from "@/types/database";
 
 interface TravelerModifyStayDatesProps {
@@ -87,26 +86,12 @@ export function TravelerModifyStayDates({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <BlockedDatesNotice blockedRanges={blockedDateRanges} />
-        <Input
-          label="Check-in"
-          type="date"
-          min={minDate}
-          value={startDate}
-          onChange={(e) => {
-            const nextStart = e.target.value;
-            const nextEnd = endDate && nextStart >= endDate ? "" : endDate;
-            applyDateSelection(nextStart, nextEnd);
-          }}
-          required
-        />
-        <Input
-          label="Check-out"
-          type="date"
-          min={startDate || minDate}
-          value={endDate}
-          onChange={(e) => applyDateSelection(startDate, e.target.value)}
-          required
+        <StayDateRangePicker
+          minDate={minDate}
+          startDate={startDate}
+          endDate={endDate}
+          blockedRanges={blockedDateRanges}
+          onChange={applyDateSelection}
         />
 
         {error && (

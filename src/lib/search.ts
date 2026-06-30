@@ -99,7 +99,7 @@ export function getBudgetRange(value: string) {
 }
 
 export function formatBudget(nightlyRate: number | null | undefined) {
-  if (nightlyRate == null) return "Budget on request";
+  if (nightlyRate == null) return "Rate on request";
   return `${formatCurrency(nightlyRate)}/night`;
 }
 

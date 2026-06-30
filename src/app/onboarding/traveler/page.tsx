@@ -38,6 +38,7 @@ export default function TravelerOnboardingPage() {
   const [destinations, setDestinations] = useState("");
   const [dietary, setDietary] = useState("");
   const [accessibility, setAccessibility] = useState("");
+  const [stayMotivation, setStayMotivation] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -69,6 +70,7 @@ export default function TravelerOnboardingPage() {
         preferred_destinations: destinations.split(",").map((d) => d.trim()).filter(Boolean),
         dietary_preferences: dietary.split(",").map((d) => d.trim()).filter(Boolean),
         accessibility_needs: accessibility || null,
+        stay_motivation: stayMotivation.trim() || null,
       },
       { onConflict: "user_id" }
     );
@@ -84,7 +86,7 @@ export default function TravelerOnboardingPage() {
       .update({ onboarding_step: "verification" })
       .eq("id", user.id);
 
-    router.push("/verification-center");
+    window.location.assign("/verification-center");
   }
 
   return (
@@ -194,6 +196,13 @@ export default function TravelerOnboardingPage() {
               <h2 className="text-xl font-semibold text-forest mb-1">A few more details</h2>
               <p className="text-sm text-charcoal-light">Help hosts prepare for your visit</p>
             </div>
+            <Textarea
+              label="What are you hoping to get from this experience?"
+              value={stayMotivation}
+              onChange={(e) => setStayMotivation(e.target.value)}
+              placeholder="Why are you interested in staying with a host family? What do you want to learn, experience, or connect with?"
+              hint="Hosts review this when you request a stay"
+            />
             <Input
               label="Preferred Destinations"
               value={destinations}

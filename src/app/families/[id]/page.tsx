@@ -55,7 +55,10 @@ export default async function FamilyProfilePage({
   const typedListing = listing as PublicListing | null;
   let hostListing: HostListing;
   let hostFirstName: string | null = null;
+  let hostDisplayName: string | null = null;
+  let hostAvatarUrl: string | null = null;
   let hostMemberSince: string | null = null;
+  let hostMotivation: string | null = null;
   let trustScore = 0;
   let verificationStatus = "unverified";
   let isOwnListing = false;
@@ -76,20 +79,30 @@ export default async function FamilyProfilePage({
     isOwnListing = true;
     hostListing = own;
 
-    const { data: hostProfile } = await supabase
-      .from("profiles")
-      .select("full_name, trust_score, verification_status, created_at")
-      .eq("id", user.id)
-      .single();
+    const [{ data: hostProfile }, { data: hostProfileDetails }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("full_name, trust_score, verification_status, created_at, avatar_url")
+        .eq("id", user.id)
+        .single(),
+      supabase
+        .from("host_profiles")
+        .select("host_motivation")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
 
     const profile = hostProfile as Pick<
       Profile,
-      "full_name" | "trust_score" | "verification_status" | "created_at"
+      "full_name" | "trust_score" | "verification_status" | "created_at" | "avatar_url"
     > | null;
-    hostFirstName = formatMemberDisplayName(profile?.full_name, {
+    hostMotivation =
+      (hostProfileDetails as { host_motivation: string | null } | null)?.host_motivation ?? null;
+    hostDisplayName = formatMemberDisplayName(profile?.full_name, {
       fallback: "Host",
-      revealFullName: true,
     });
+    hostAvatarUrl = profile?.avatar_url ?? null;
+    hostFirstName = hostDisplayName;
     hostMemberSince = profile?.created_at ?? null;
     trustScore = profile?.trust_score ?? 0;
     verificationStatus = profile?.verification_status ?? "unverified";
@@ -100,6 +113,7 @@ export default async function FamilyProfilePage({
       title: typedListing.title,
       family_story: typedListing.family_story,
       stay_details: typedListing.stay_details,
+      intro_video_url: typedListing.intro_video_url,
       languages: typedListing.languages,
       country: typedListing.country,
       city: typedListing.city,
@@ -120,19 +134,24 @@ export default async function FamilyProfilePage({
     };
     const { data: hostProfile } = await supabase
       .from("profiles")
-      .select("full_name, created_at")
+      .select("full_name, created_at, avatar_url")
       .eq("id", typedListing.host_id)
       .single();
 
-    hostFirstName = formatMemberDisplayName(
-      (hostProfile as Pick<Profile, "full_name" | "created_at"> | null)?.full_name ??
-        typedListing.host_first_name,
+    const hostProfileData = hostProfile as Pick<
+      Profile,
+      "full_name" | "created_at" | "avatar_url"
+    > | null;
+    hostDisplayName = formatMemberDisplayName(
+      hostProfileData?.full_name ?? typedListing.host_first_name,
       { fallback: "Host" }
     );
-    hostMemberSince =
-      (hostProfile as Pick<Profile, "full_name" | "created_at"> | null)?.created_at ?? null;
+    hostAvatarUrl = hostProfileData?.avatar_url ?? null;
+    hostFirstName = hostDisplayName;
+    hostMemberSince = hostProfileData?.created_at ?? null;
     trustScore = typedListing.trust_score;
     verificationStatus = typedListing.verification_status;
+    hostMotivation = typedListing.host_motivation;
     isOwnListing = user?.id === typedListing.host_id;
   }
 
@@ -259,6 +278,9 @@ export default async function FamilyProfilePage({
         canMessageHost={canMessageHost}
         messageConversationId={messageConversationId}
         messageLockReason={messageLockReason}
+        hostMotivation={hostMotivation}
+        hostAvatarUrl={hostAvatarUrl}
+        hostDisplayName={hostDisplayName}
       />
     </>
   );

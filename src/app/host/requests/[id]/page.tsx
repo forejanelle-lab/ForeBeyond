@@ -16,6 +16,7 @@ import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { guestProfilePath } from "@/lib/host-guest-access";
 import { StayRequestStatusBadge } from "@/components/stays/StayRequestStatusBadge";
 import { ReviewList } from "@/components/reviews/ReviewList";
+import { TravelerOnboardingDetails } from "@/components/profile/TravelerOnboardingDetails";
 import {
   formatBookingReference,
   formatDateRange,
@@ -27,7 +28,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
-import type { Profile, HostListing, PublicReview, Review, StayRequest, StayRequestPhoto, Trip } from "@/types/database";
+import type { Profile, HostListing, PublicReview, Review, StayRequest, StayRequestPhoto, TravelerProfile, Trip } from "@/types/database";
 
 export const metadata = { title: "Review Request" };
 
@@ -62,7 +63,7 @@ export default async function HostRequestDetailPage({
 
   const typedRequest = request as StayRequest;
 
-  const [{ data: listing }, { data: traveler }, { data: travelerReviews }, { data: requestPhotos }, { data: trip }] =
+  const [{ data: listing }, { data: traveler }, { data: travelerReviews }, { data: requestPhotos }, { data: trip }, { data: travelerOnboarding }] =
     await Promise.all([
       typedRequest.listing_id
         ? supabase
@@ -88,6 +89,11 @@ export default async function HostRequestDetailPage({
         .eq("stay_request_id", id)
         .order("sort_order", { ascending: true }),
       supabase.from("trips").select("*").eq("stay_request_id", id).maybeSingle(),
+      supabase
+        .from("traveler_profiles")
+        .select("interests, travel_style, dietary_preferences, accessibility_needs, stay_motivation")
+        .eq("user_id", typedRequest.traveler_id)
+        .maybeSingle(),
     ]);
 
   const typedTrip = trip as Trip | null;
@@ -130,11 +136,18 @@ export default async function HostRequestDetailPage({
     fallback: "Traveler",
     stayStatus: typedRequest.status,
   });
-  const { intro: travelerIntro } = parseStayRequestMessage(typedRequest.message);
+  const { intro: travelerIntro, motivation: stayMotivation } = parseStayRequestMessage(
+    typedRequest.message
+  );
   const listingData = listing as (Pick<HostListing, "title"> & ListingPricing) | null;
   const listingPricing = pickListingPricing(listingData ?? {});
   const reviews = (travelerReviews as PublicReview[]) ?? [];
   const guestPhotos = (requestPhotos as StayRequestPhoto[]) ?? [];
+  const onboardingForHost =
+    (travelerOnboarding as Pick<
+      TravelerProfile,
+      "interests" | "travel_style" | "dietary_preferences" | "accessibility_needs" | "stay_motivation"
+    > | null) ?? null;
   const canCompleteTrip =
     typedTrip != null &&
     typedTrip.status !== "completed" &&
@@ -182,6 +195,14 @@ export default async function HostRequestDetailPage({
             <p className="text-charcoal-light whitespace-pre-wrap">
               {travelerIntro || "No introduction provided."}
             </p>
+            {stayMotivation && (
+              <div className="mt-4 pt-4 border-t border-sage-dark/30">
+                <p className="text-sm font-medium text-forest mb-1">
+                  What they&apos;re hoping for
+                </p>
+                <p className="text-sm text-charcoal-light whitespace-pre-wrap">{stayMotivation}</p>
+              </div>
+            )}
             {travelerProfile?.bio && (
               <p className="text-sm text-charcoal-light mt-4 pt-4 border-t border-sage-dark/30">
                 <strong className="text-forest">Bio:</strong> {travelerProfile.bio}
@@ -193,6 +214,11 @@ export default async function HostRequestDetailPage({
               </p>
             )}
           </Card>
+
+          <TravelerOnboardingDetails
+            profile={onboardingForHost}
+            title="Guest preferences from onboarding"
+          />
 
           <Card variant="outline" padding="md" className="space-y-3">
             <p className="flex items-center gap-2 text-sm">
