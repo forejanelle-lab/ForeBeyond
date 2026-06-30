@@ -9,8 +9,13 @@ import { getMessagesInboxSubtitle, formatMessagingDisplayName } from "@/lib/mess
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import type { AppNotification, Conversation, Profile, PublicListing, StayRequestStatus } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Messages" };
+export const metadata = privatePageMetadata({
+  title: "Messages",
+  description: "Your conversations with hosts and travelers on Fore Beyond.",
+  path: "/messages",
+});
 
 export default async function MessagesInboxPage() {
   const supabase = await createClient();

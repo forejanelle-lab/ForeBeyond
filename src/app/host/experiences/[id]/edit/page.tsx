@@ -3,8 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { ExperienceWizard } from "@/components/experiences/ExperienceWizard";
 import { Container } from "@/components/ui/Container";
 import type { ExperiencePhoto, HostExperience, Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Edit Experience" };
+export const metadata = privatePageMetadata({
+  title: "Edit Experience",
+  description: "Edit your local experience on Fore Beyond.",
+  path: "/host/experiences",
+});
 
 export default async function EditExperiencePage({
   params,

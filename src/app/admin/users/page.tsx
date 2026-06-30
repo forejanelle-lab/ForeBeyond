@@ -3,8 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminUsersPanel } from "@/components/admin/AdminUsersPanel";
 import type { Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Admin — Users" };
+export const metadata = privatePageMetadata({
+  title: "Admin — Users",
+  description: "Manage platform users in Fore Beyond admin.",
+  path: "/admin/users",
+});
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();

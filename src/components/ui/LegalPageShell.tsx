@@ -12,15 +12,11 @@ function formatUpdatedDate() {
   return new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
-const legalContentClassName = [
-  "space-y-8",
-  "[&_section]:space-y-4",
-  "[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-forest",
-  "[&_p]:text-base [&_p]:text-charcoal-light [&_p]:leading-relaxed",
-  "[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_ul]:text-charcoal-light",
-  "[&_a]:text-forest [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-forest-light",
-  "[&_strong]:font-semibold [&_strong]:text-forest",
-].join(" ");
+/** Shared classes for legal copy — use on elements when you need explicit utilities. */
+export const legalSectionClass = "space-y-4";
+export const legalHeadingClass = "text-xl font-semibold text-forest";
+export const legalParagraphClass = "text-base text-charcoal-light leading-relaxed";
+export const legalListClass = "list-disc pl-6 space-y-2 text-charcoal-light";
 
 export function LegalPageShell({ title, children }: LegalPageShellProps) {
   return (
@@ -32,7 +28,7 @@ export function LegalPageShell({ title, children }: LegalPageShellProps) {
             <h1 className="text-3xl md:text-4xl font-bold text-forest">{title}</h1>
             <p className="mt-2 text-sm text-charcoal-light">Last updated: {formatUpdatedDate()}</p>
           </header>
-          <article className={legalContentClassName}>{children}</article>
+          <article className="legal-content">{children}</article>
         </Card>
       </Container>
     </Section>

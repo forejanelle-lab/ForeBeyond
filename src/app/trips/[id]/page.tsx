@@ -19,8 +19,13 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import type { ListingContactDetails, Profile, PublicListing, Review, StayBooking, StayRequest, Trip } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Trip Details" };
+export const metadata = privatePageMetadata({
+  title: "Trip Details",
+  description: "Trip details, dates, and stay information on Fore Beyond.",
+  path: "/trips",
+});
 
 export default async function TripDetailPage({
   params,

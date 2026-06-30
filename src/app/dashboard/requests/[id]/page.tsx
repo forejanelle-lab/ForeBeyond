@@ -15,8 +15,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import type { ListingContactDetails, PublicListing, StayBooking, StayRequest } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Stay Request" };
+export const metadata = privatePageMetadata({
+  title: "Stay Request",
+  description: "View your stay request status on Fore Beyond.",
+  path: "/dashboard/requests",
+});
 
 export default async function TravelerRequestDetailPage({
   params,

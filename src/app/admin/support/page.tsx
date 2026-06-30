@@ -2,8 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSupportPanel } from "@/components/admin/AdminSupportPanel";
 import type { SupportRequest } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Admin — Support" };
+export const metadata = privatePageMetadata({
+  title: "Admin — Support",
+  description: "Support tickets in Fore Beyond admin.",
+  path: "/admin/support",
+});
 
 export default async function AdminSupportPage() {
   const supabase = await createClient();

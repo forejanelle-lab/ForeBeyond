@@ -1,7 +1,12 @@
 import { brand } from "@/lib/brand";
 import { LegalPageShell } from "@/components/ui/LegalPageShell";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Terms of Service" };
+export const metadata = createPageMetadata({
+  title: "Terms of Service",
+  description: "Terms of service for using the Fore Beyond cultural immersion platform.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

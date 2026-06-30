@@ -5,8 +5,13 @@ import { ProfileSettingsForm } from "@/components/profile/ProfileSettingsForm";
 import { Card } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import type { Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Settings" };
+export const metadata = privatePageMetadata({
+  title: "Settings",
+  description: "Manage your Fore Beyond account, privacy, and communication preferences.",
+  path: "/settings",
+});
 
 export default async function SettingsPage() {
   const supabase = await createClient();

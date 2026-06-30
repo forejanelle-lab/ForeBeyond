@@ -1,7 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Admin" };
+export const metadata = privatePageMetadata({
+  title: "Admin",
+  description: "Fore Beyond platform administration.",
+  path: "/admin",
+});
 
 export default async function AdminLayout({
   children,

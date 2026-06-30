@@ -2,8 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminVerificationPanel } from "@/components/admin/AdminVerificationPanel";
 import type { Profile, VerificationDocument } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Admin — Verifications" };
+export const metadata = privatePageMetadata({
+  title: "Admin — Verifications",
+  description: "Verification queue in Fore Beyond admin.",
+  path: "/admin/verifications",
+});
 
 export default async function AdminVerificationsPage() {
   const supabase = await createClient();

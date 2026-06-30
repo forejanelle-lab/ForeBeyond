@@ -15,8 +15,13 @@ import {
 } from "@/lib/search";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import type { ListingPhoto, PublicListing } from "@/types/database";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Search Families" };
+export const metadata = createPageMetadata({
+  title: "Search Families",
+  description: "Find verified host families and book authentic cultural stays around the world.",
+  path: "/search",
+});
 
 async function getCoverPhotos(listingIds: string[]) {
   if (listingIds.length === 0) return {};

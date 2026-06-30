@@ -7,10 +7,13 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = {
+export const metadata = privatePageMetadata({
   title: "Design System",
-};
+  description: "Fore Beyond internal design system reference.",
+  path: "/design-system",
+});
 
 const colorSwatches = [
   { name: "Forest Green", token: "forest", hex: colors.forest, usage: "Primary brand, headings, CTAs" },

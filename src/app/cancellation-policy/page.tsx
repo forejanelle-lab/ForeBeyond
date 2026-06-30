@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { LegalPageShell } from "@/components/ui/LegalPageShell";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Cancellation Policy" };
+export const metadata = createPageMetadata({
+  title: "Cancellation Policy",
+  description: "Fore Beyond cancellation policy, service fees, and refund terms.",
+  path: "/cancellation-policy",
+});
 
 export default function CancellationPolicyPage() {
   return (

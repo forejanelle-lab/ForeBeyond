@@ -3,8 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { ExperienceWizard } from "@/components/experiences/ExperienceWizard";
 import { Container } from "@/components/ui/Container";
 import type { Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Create Experience" };
+export const metadata = privatePageMetadata({
+  title: "Create Experience",
+  description: "Create a new local experience on Fore Beyond.",
+  path: "/host/experiences/new",
+});
 
 export default async function NewExperiencePage() {
   const supabase = await createClient();

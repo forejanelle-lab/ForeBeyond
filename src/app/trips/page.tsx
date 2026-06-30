@@ -12,8 +12,13 @@ import {
 } from "@/lib/stay-requests";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import type { ListingPhoto, Profile, PublicListing, StayBooking, StayRequest, Trip } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "My Trips" };
+export const metadata = privatePageMetadata({
+  title: "My Trips",
+  description: "View and manage your upcoming and past trips on Fore Beyond.",
+  path: "/trips",
+});
 
 async function getCoverPhotos(listingIds: string[]) {
   if (listingIds.length === 0) return {};

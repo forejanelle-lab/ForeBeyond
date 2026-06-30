@@ -4,8 +4,13 @@ import { getHostListingId } from "@/lib/host-listing-limit";
 import { ListingWizard } from "@/components/listings/ListingWizard";
 import { Container } from "@/components/ui/Container";
 import type { Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Create Listing" };
+export const metadata = privatePageMetadata({
+  title: "Create Listing",
+  description: "Create a new host listing on Fore Beyond.",
+  path: "/host/listings/new",
+});
 
 export default async function NewListingPage() {
   const supabase = await createClient();

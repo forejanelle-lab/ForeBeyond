@@ -6,8 +6,13 @@ import { getStayMessagingLockReason, isStayMessagingOpen, hostHasMessagedStayReq
 import { ChatThread } from "@/components/messaging/ChatThread";
 import { Container } from "@/components/ui/Container";
 import type { Conversation, StayRequest } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Conversation" };
+export const metadata = privatePageMetadata({
+  title: "Conversation",
+  description: "Message thread on Fore Beyond.",
+  path: "/messages",
+});
 
 export default async function ConversationPage({
   params,

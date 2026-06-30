@@ -6,8 +6,13 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import type { HostListing, ListingPhoto } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Manage Listings" };
+export const metadata = privatePageMetadata({
+  title: "Manage Listings",
+  description: "Create and manage your host listings on Fore Beyond.",
+  path: "/host/listings",
+});
 
 export default async function ManageListingsPage() {
   const supabase = await createClient();

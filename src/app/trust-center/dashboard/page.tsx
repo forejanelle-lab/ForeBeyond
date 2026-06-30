@@ -12,8 +12,13 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import type { Profile, TrustBadge, VerificationDocument, VerificationStatus } from "@/types/database";
 import type { TrustScoreBreakdown as Breakdown } from "@/lib/trust-score";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Trust Dashboard" };
+export const metadata = privatePageMetadata({
+  title: "Trust Dashboard",
+  description: "View your trust score, verification status, and badges on Fore Beyond.",
+  path: "/trust-center/dashboard",
+});
 
 export default async function TrustDashboardPage() {
   const supabase = await createClient();

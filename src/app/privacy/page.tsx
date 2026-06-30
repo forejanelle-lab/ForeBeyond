@@ -1,7 +1,12 @@
 import { brand } from "@/lib/brand";
 import { LegalPageShell } from "@/components/ui/LegalPageShell";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Privacy Policy" };
+export const metadata = createPageMetadata({
+  title: "Privacy Policy",
+  description: "How Fore Beyond collects, uses, and protects your personal information.",
+  path: "/privacy",
+});
 
 export default function PrivacyPolicyPage() {
   return (

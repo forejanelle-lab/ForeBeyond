@@ -1,8 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Admin Overview" };
+export const metadata = privatePageMetadata({
+  title: "Admin Overview",
+  description: "Fore Beyond platform administration.",
+  path: "/admin",
+});
 
 export default async function AdminOverviewPage() {
   const supabase = await createClient();

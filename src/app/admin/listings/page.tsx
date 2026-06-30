@@ -2,8 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminListingPanel } from "@/components/admin/AdminListingPanel";
 import type { HostListing, Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Admin — Listings" };
+export const metadata = privatePageMetadata({
+  title: "Admin — Listings",
+  description: "Manage platform listings in Fore Beyond admin.",
+  path: "/admin/listings",
+});
 
 export default async function AdminListingsPage() {
   const supabase = await createClient();

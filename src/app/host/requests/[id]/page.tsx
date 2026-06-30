@@ -29,8 +29,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import type { Profile, HostListing, PublicReview, Review, StayRequest, StayRequestPhoto, TravelerProfile, Trip } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Review Request" };
+export const metadata = privatePageMetadata({
+  title: "Review Request",
+  description: "Review a traveler stay request on Fore Beyond.",
+  path: "/host/requests",
+});
 
 export default async function HostRequestDetailPage({
   params,

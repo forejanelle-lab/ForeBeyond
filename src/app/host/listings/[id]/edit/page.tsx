@@ -3,8 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { ListingWizard } from "@/components/listings/ListingWizard";
 import { Container } from "@/components/ui/Container";
 import type { HostListing, ListingBlockedDate, ListingContactDetails, ListingPhoto, Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Edit Listing" };
+export const metadata = privatePageMetadata({
+  title: "Edit Listing",
+  description: "Edit your host listing on Fore Beyond.",
+  path: "/host/listings",
+});
 
 export default async function EditListingPage({
   params,

@@ -2,8 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminReportsPanel } from "@/components/admin/AdminReportsPanel";
 import type { ContentReport, Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Admin — Reports" };
+export const metadata = privatePageMetadata({
+  title: "Admin — Reports",
+  description: "Review user reports in Fore Beyond admin.",
+  path: "/admin/reports",
+});
 
 export default async function AdminReportsPage() {
   const supabase = await createClient();

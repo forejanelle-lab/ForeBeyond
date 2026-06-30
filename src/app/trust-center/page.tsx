@@ -15,10 +15,13 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: "Trust Center",
-};
+  description: "Learn how Fore Beyond verifies hosts and travelers for safe, authentic cultural travel.",
+  path: "/trust-center",
+});
 
 const trustLayers = [
   {

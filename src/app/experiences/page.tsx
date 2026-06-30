@@ -16,8 +16,13 @@ import {
   parseExperienceSearchParams,
 } from "@/lib/experience-search";
 import type { ExperiencePhoto, PublicExperience } from "@/types/database";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Experiences" };
+export const metadata = createPageMetadata({
+  title: "Experiences",
+  description: "Discover local experiences hosted by verified families — cooking, culture, and community.",
+  path: "/experiences",
+});
 
 async function getCoverPhotos(experienceIds: string[]) {
   if (experienceIds.length === 0) return {};

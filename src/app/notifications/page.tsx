@@ -7,8 +7,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import type { AppNotification } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Notifications" };
+export const metadata = privatePageMetadata({
+  title: "Notifications",
+  description: "Your notifications and updates on Fore Beyond.",
+  path: "/notifications",
+});
 
 export default async function NotificationsPage() {
   const supabase = await createClient();

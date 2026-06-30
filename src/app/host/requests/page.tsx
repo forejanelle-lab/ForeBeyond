@@ -5,8 +5,13 @@ import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { PageShell } from "@/components/layout/PageShell";
 import { HostRequestsList, type HostRequestRow } from "@/components/stays/HostRequestsList";
 import type { Profile, HostListing, StayRequest } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Requests" };
+export const metadata = privatePageMetadata({
+  title: "Requests",
+  description: "Review and manage stay requests from travelers.",
+  path: "/host/requests",
+});
 
 export default async function HostRequestsPage() {
   const supabase = await createClient();

@@ -8,6 +8,7 @@ import { getHostListingStats } from "@/lib/host-stats";
 import { getHostReviewEligibility } from "@/lib/listing-review-eligibility";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { hostHasMessagedStayRequest, isStayMessagingOpen } from "@/lib/messaging";
+import { createPageMetadata } from "@/lib/site-metadata";
 import type { HostListing, ListingPhoto, Profile, PublicListing, PublicReview, StayRequest, TrustBadge } from "@/types/database";
 
 export async function generateMetadata({
@@ -32,11 +33,28 @@ export async function generateMetadata({
         .eq("id", id)
         .eq("host_id", user.id)
         .single();
-      if (own) return { title: own.title ?? `Family in ${own.city}` };
+      if (own) {
+        const title = own.title ?? `Family in ${own.city}`;
+        return createPageMetadata({
+          title,
+          description: `Stay with ${title} in ${own.city}, ${own.country}. Book an authentic cultural immersion with Fore Beyond.`,
+          path: `/families/${id}`,
+        });
+      }
     }
-    return { title: "Family Not Found" };
+    return createPageMetadata({
+      title: "Family Not Found",
+      description: "This host family listing could not be found on Fore Beyond.",
+      path: `/families/${id}`,
+    });
   }
-  return { title: data.title ?? `Family in ${data.city}` };
+
+  const title = data.title ?? `Family in ${data.city}`;
+  return createPageMetadata({
+    title,
+    description: `Stay with ${title} in ${data.city}, ${data.country}. Book an authentic cultural immersion with Fore Beyond.`,
+    path: `/families/${id}`,
+  });
 }
 
 export default async function FamilyProfilePage({

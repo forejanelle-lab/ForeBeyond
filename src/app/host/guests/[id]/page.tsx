@@ -9,10 +9,15 @@ import {
   hostHasGuestRequest,
   pickGuestNameRevealStatus,
 } from "@/lib/host-guest-access";
+import { privatePageMetadata } from "@/lib/site-metadata";
 import type { Profile, PublicReview, StayRequest, TravelerProfile, TrustBadge } from "@/types/database";
 
 export async function generateMetadata() {
-  return { title: "Guest profile" };
+  return privatePageMetadata({
+    title: "Guest Profile",
+    description: "Traveler trust profile for host review on Fore Beyond.",
+    path: "/host/guests",
+  });
 }
 
 export default async function HostGuestProfilePage({

@@ -7,6 +7,7 @@ import {
   canViewExperience,
   fetchApprovedHostIdsForUser,
 } from "@/lib/experience-visibility";
+import { createPageMetadata } from "@/lib/site-metadata";
 import type { ExperiencePhoto, PublicExperience, PublicReview, TrustBadge } from "@/types/database";
 
 export async function generateMetadata({
@@ -22,8 +23,20 @@ export async function generateMetadata({
     .eq("id", id)
     .single();
 
-  if (!data) return { title: "Experience Not Found" };
-  return { title: data.title ?? `Experience in ${data.city}` };
+  if (!data) {
+    return createPageMetadata({
+      title: "Experience Not Found",
+      description: "This local experience could not be found on Fore Beyond.",
+      path: `/experiences/${id}`,
+    });
+  }
+
+  const title = data.title ?? `Experience in ${data.city}`;
+  return createPageMetadata({
+    title,
+    description: `Join ${title} in ${data.city}, ${data.country}. Authentic local experiences on Fore Beyond.`,
+    path: `/experiences/${id}`,
+  });
 }
 
 export default async function ExperienceDetailPage({

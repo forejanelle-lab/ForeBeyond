@@ -10,8 +10,13 @@ import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import type { ExperiencePhoto, PublicExperience } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Saved Experiences" };
+export const metadata = privatePageMetadata({
+  title: "Saved Experiences",
+  description: "Your saved local experiences on Fore Beyond.",
+  path: "/experiences/saved",
+});
 
 async function getCoverPhotos(experienceIds: string[]) {
   if (experienceIds.length === 0) return {};

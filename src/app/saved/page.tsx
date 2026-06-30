@@ -6,8 +6,13 @@ import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import type { ListingPhoto, PublicListing } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Saved Families" };
+export const metadata = privatePageMetadata({
+  title: "Saved Families",
+  description: "Your saved host families and listings on Fore Beyond.",
+  path: "/saved",
+});
 
 async function getCoverPhotos(listingIds: string[]) {
   if (listingIds.length === 0) return {};

@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Navigation } from "@/components/layout/Navigation";
 import { Footer } from "@/components/layout/Footer";
@@ -7,8 +6,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { SupabaseConfigNotice } from "@/components/layout/SupabaseConfigNotice";
-import { brand } from "@/lib/brand";
 import { isPlatformAdmin } from "@/lib/navigation-menu";
+import { rootMetadata } from "@/lib/site-metadata";
 import type { UserRole } from "@/types/database";
 import "./globals.css";
 
@@ -17,20 +16,7 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: `${brand.name} — ${brand.tagline}`,
-    template: `%s | ${brand.name}`,
-  },
-  description: brand.mission,
-  keywords: [
-    "cultural immersion",
-    "authentic travel",
-    "local families",
-    "trust-first travel",
-    "meaningful connections",
-  ],
-};
+export const metadata = rootMetadata;
 
 async function loadNavUser() {
   if (!isSupabaseConfigured()) return null;

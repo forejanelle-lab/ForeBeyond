@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminUserDetail } from "@/components/admin/AdminUserDetail";
+import { privatePageMetadata } from "@/lib/site-metadata";
 import type { HostListing, Profile, StayBooking, Trip, UserLoginEvent } from "@/types/database";
 
 export async function generateMetadata({
@@ -14,7 +15,12 @@ export async function generateMetadata({
   const { id } = await params;
   const supabase = await createClient();
   const { data } = await supabase.from("profiles").select("full_name").eq("id", id).single();
-  return { title: data?.full_name ? `Admin — ${data.full_name}` : "Admin — User" };
+  const title = data?.full_name ? `Admin — ${data.full_name}` : "Admin — User";
+  return privatePageMetadata({
+    title,
+    description: "User details in Fore Beyond admin.",
+    path: `/admin/users/${id}`,
+  });
 }
 
 export default async function AdminUserDetailPage({

@@ -2,8 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminTrustScorePanel } from "@/components/admin/AdminTrustScorePanel";
 import type { Profile } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Admin — Trust Scores" };
+export const metadata = privatePageMetadata({
+  title: "Admin — Trust Scores",
+  description: "Trust score management in Fore Beyond admin.",
+  path: "/admin/trust-scores",
+});
 
 export default async function AdminTrustScoresPage() {
   const supabase = await createClient();

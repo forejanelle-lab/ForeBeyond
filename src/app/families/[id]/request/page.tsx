@@ -10,6 +10,7 @@ import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
+import { privatePageMetadata } from "@/lib/site-metadata";
 import type { PublicListing } from "@/types/database";
 
 export async function generateMetadata({
@@ -24,7 +25,13 @@ export async function generateMetadata({
     .select("title")
     .eq("id", id)
     .single();
-  return { title: data?.title ? `Request Stay — ${data.title}` : "Request Stay" };
+
+  const listingTitle = data?.title ?? "host family";
+  return privatePageMetadata({
+    title: data?.title ? `Request Stay — ${data.title}` : "Request Stay",
+    description: `Request a stay with ${listingTitle} on Fore Beyond.`,
+    path: `/families/${id}/request`,
+  });
 }
 
 export default async function RequestStayPage({

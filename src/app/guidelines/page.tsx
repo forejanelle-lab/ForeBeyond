@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { LegalPageShell } from "@/components/ui/LegalPageShell";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Community Guidelines" };
+export const metadata = createPageMetadata({
+  title: "Community Guidelines",
+  description: "Community standards for respectful, authentic travel on Fore Beyond.",
+  path: "/guidelines",
+});
 
 export default function CommunityGuidelinesPage() {
   return (

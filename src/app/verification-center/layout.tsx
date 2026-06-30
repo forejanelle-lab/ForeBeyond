@@ -1,5 +1,12 @@
 import { sampleImages } from "@/lib/sample-images";
 import { PageHero } from "@/components/design/PageHero";
+import { privatePageMetadata } from "@/lib/site-metadata";
+
+export const metadata = privatePageMetadata({
+  title: "Verification Center",
+  description: "Complete identity and trust verifications on Fore Beyond.",
+  path: "/verification-center",
+});
 
 export default function VerificationCenterLayout({
   children,

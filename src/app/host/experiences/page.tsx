@@ -7,8 +7,13 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import type { ExperiencePhoto, HostExperience } from "@/types/database";
+import { privatePageMetadata } from "@/lib/site-metadata";
 
-export const metadata = { title: "Manage Experiences" };
+export const metadata = privatePageMetadata({
+  title: "Manage Experiences",
+  description: "Create and manage local experiences on Fore Beyond.",
+  path: "/host/experiences",
+});
 
 export default async function ManageExperiencesPage() {
   const supabase = await createClient();
