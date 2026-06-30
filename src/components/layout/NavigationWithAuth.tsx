@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isPlatformAdmin } from "@/lib/navigation-menu";
 import { Navigation } from "@/components/layout/Navigation";
@@ -39,7 +38,6 @@ async function fetchNavUser(userId: string, email: string): Promise<NavigationUs
 }
 
 export function NavigationWithAuth({ serverUser }: NavigationWithAuthProps) {
-  const router = useRouter();
   const [user, setUser] = useState<NavigationUser | null>(serverUser);
 
   useEffect(() => {
@@ -71,7 +69,6 @@ export function NavigationWithAuth({ serverUser }: NavigationWithAuthProps) {
       if (cancelled || !navUser) return;
 
       setUser(navUser);
-      router.refresh();
     }
 
     void syncFromClient();
@@ -86,7 +83,7 @@ export function NavigationWithAuth({ serverUser }: NavigationWithAuthProps) {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [router, serverUser]);
+  }, [serverUser]);
 
   return <Navigation user={user} />;
 }

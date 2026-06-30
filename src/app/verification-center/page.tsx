@@ -147,12 +147,11 @@ export default function VerificationCenterPage() {
     }
 
     setIsLoading(false);
-    router.refresh();
   }
 
   useEffect(() => {
-    loadStatus();
-  }, [router]);
+    void loadStatus();
+  }, []);
 
   async function handlePhoneVerify() {
     if (!phone.trim()) return;
