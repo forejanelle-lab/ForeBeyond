@@ -10,18 +10,16 @@ export default function CancellationPolicyPage() {
       <section className="space-y-4">
         <h2>Service fee</h2>
         <p>
-          {brand.name} only collects the Booking Protection Fee (service fee). Accommodation payment
-          is made directly between the traveler and the host.
+          {brand.name} only collects the Service Fee. Accommodation payment is made directly between
+          the traveler and the host.
         </p>
         <p>
-          The Booking Protection Fee is <strong>non-refundable</strong> once payment has been
-          completed. This fee covers identity verification, trust & safety, secure messaging, booking
-          management, customer support, and platform maintenance. These services begin immediately
-          after payment.
+          The Service Fee is <strong>non-refundable</strong> once payment has been completed. This
+          fee covers identity verification, trust & safety, secure messaging, booking management,
+          customer support, and platform maintenance. These services begin immediately after payment.
         </p>
         <p>
-          The Booking Protection Fee may be refunded only if the host or {brand.name} cancels the
-          booking.
+          The Service Fee may be refunded only if {brand.name} cancels the booking.
         </p>
       </section>
 
@@ -37,16 +35,16 @@ export default function CancellationPolicyPage() {
       <section className="space-y-4">
         <h2>Cancellations by travelers</h2>
         <p>
-          If you cancel a confirmed stay, the Booking Protection Fee is not refunded. Contact your
-          host promptly about any accommodation payment you have already made or scheduled.
+          If you cancel a confirmed stay, the Service Fee is not refunded. Contact your host promptly
+          about any accommodation payment you have already made or scheduled.
         </p>
       </section>
 
       <section className="space-y-4">
         <h2>Cancellations by hosts</h2>
         <p>
-          If a host cancels a confirmed stay, your Booking Protection Fee will be refunded. The host
-          is responsible for resolving any accommodation payment with you directly.
+          If a host cancels a confirmed stay, the Service Fee is not refunded. The host is responsible
+          for resolving any accommodation payment with you directly.
         </p>
       </section>
 
@@ -54,7 +52,7 @@ export default function CancellationPolicyPage() {
         <h2>Cancellations by {brand.name}</h2>
         <p>
           If {brand.name} cancels a booking for safety, policy, or platform integrity reasons, your
-          Booking Protection Fee will be refunded.
+          Service Fee will be refunded.
         </p>
       </section>
 

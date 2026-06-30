@@ -208,8 +208,8 @@ export function TravelerConfirmStay({ request, listingPricing, hostName }: Trave
                   </ul>
                 </div>
                 <p>
-                  These services begin immediately after payment, therefore the Service Fee is
-                  non-refundable.
+                  These services begin immediately after payment. The Service Fee is non-refundable
+                  except if Fore Beyond cancels the booking.
                 </p>
               </div>
 
@@ -236,8 +236,8 @@ export function TravelerConfirmStay({ request, listingPricing, hostName }: Trave
                     className="mt-0.5 h-4 w-4 shrink-0 rounded border-sage-dark text-forest focus:ring-forest"
                   />
                   <span className="text-sm text-charcoal-light">
-                    I understand the Fore Beyond Booking Protection Fee is non-refundable once paid,
-                    except if the host or Fore Beyond cancels the booking.
+                    I understand the Fore Beyond Service Fee is non-refundable once paid, except if
+                    Fore Beyond cancels the booking.
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer">
