@@ -77,7 +77,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-white/50">
+          <p className="text-sm text-white/50" suppressHydrationWarning>
             &copy; {new Date().getFullYear()} Fore Beyond. All rights reserved.
           </p>
           <p className="text-xs text-white/40 text-center sm:text-right max-w-md">

@@ -18,6 +18,7 @@ import {
 import { StayDateRangePicker } from "@/components/stays/StayDateRangePicker";
 import { StayRequestMediaUpload, type DraftStayRequestPhoto } from "@/components/stays/StayRequestMediaUpload";
 import { StayTravelerPricingBreakdown } from "@/components/stays/StayTravelerPricingBreakdown";
+import { useTodayIso } from "@/hooks/use-today-iso";
 import {
   findStayDateConflict,
   getStayDateConflictMessage,
@@ -53,10 +54,6 @@ interface RequestStayWizardProps {
   profileStayMotivation?: string | null;
 }
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function RequestStayWizard({
   listing,
   userId,
@@ -65,7 +62,7 @@ export function RequestStayWizard({
   profileStayMotivation = null,
 }: RequestStayWizardProps) {
   const router = useRouter();
-  const minDate = todayIso();
+  const minDate = useTodayIso();
   const [step, setStep] = useState(0);
   const [intro, setIntro] = useState(profileBio?.trim() ?? "");
   const [stayMotivation, setStayMotivation] = useState(profileStayMotivation?.trim() ?? "");
@@ -181,8 +178,8 @@ export function RequestStayWizard({
 
   function validateDates(): string | null {
     if (!startDate || !endDate) return "Please select check-in and check-out dates.";
-    if (startDate < minDate) return "Check-in cannot be in the past.";
-    if (endDate < minDate) return "Check-out cannot be in the past.";
+    if (minDate && startDate < minDate) return "Check-in cannot be in the past.";
+    if (minDate && endDate < minDate) return "Check-out cannot be in the past.";
     if (endDate <= startDate) return "Check-out must be after check-in.";
     const conflict = findStayDateConflict(startDate, endDate, blockedDateRanges);
     if (conflict) return getStayDateConflictMessage(conflict);

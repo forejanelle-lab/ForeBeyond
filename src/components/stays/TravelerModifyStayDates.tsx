@@ -6,7 +6,7 @@ import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { updateStayRequestDatesByTraveler } from "@/lib/stay-request-dates";
 import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
-import { todayIso } from "@/lib/messaging";
+import { useTodayIso } from "@/hooks/use-today-iso";
 import { StayDateRangePicker } from "@/components/stays/StayDateRangePicker";
 import {
   findStayDateConflict,
@@ -27,7 +27,7 @@ export function TravelerModifyStayDates({
   blockedDateRanges = [],
 }: TravelerModifyStayDatesProps) {
   const router = useRouter();
-  const minDate = todayIso();
+  const minDate = useTodayIso();
   const [startDate, setStartDate] = useState(request.start_date ?? "");
   const [endDate, setEndDate] = useState(request.end_date ?? "");
   const [error, setError] = useState("");

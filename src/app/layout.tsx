@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { NavigationWithAuth } from "@/components/layout/NavigationWithAuth";
+import { Navigation } from "@/components/layout/Navigation";
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
 import { Analytics } from "@vercel/analytics/next";
@@ -88,7 +88,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className={`${inter.className} min-h-screen flex flex-col antialiased bg-cream text-charcoal`}>
-        <NavigationWithAuth serverUser={navUser} />
+        <Navigation user={navUser} />
         <main className="flex-1">{children}</main>
         <Footer />
         <CookieConsent />

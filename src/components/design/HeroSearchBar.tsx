@@ -7,6 +7,7 @@ import {
   filterDestinationSuggestions,
   type DestinationSuggestion,
 } from "@/lib/destination-suggestions";
+import { useTodayIso } from "@/hooks/use-today-iso";
 
 const GUEST_OPTIONS = [
   { value: "1", label: "1 guest" },
@@ -52,7 +53,7 @@ export function HeroSearchBar({
   const [showGuests, setShowGuests] = useState(false);
 
   const suggestions = filterDestinationSuggestions(where);
-  const today = new Date().toISOString().split("T")[0];
+  const today = useTodayIso();
   const guestLabel = GUEST_OPTIONS.find((g) => g.value === guests)?.label ?? "1 guest";
 
   const dateLabel =
