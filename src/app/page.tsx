@@ -37,16 +37,24 @@ const trustPillars = [
 export default async function HomePage() {
   const popularDestinations = await getPopularDestinations();
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
   let isHostUser = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    isHostUser = (profile as Pick<Profile, "role"> | null)?.role === "host";
+  let isLoggedIn = false;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      isLoggedIn = true;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      isHostUser = (profile as Pick<Profile, "role"> | null)?.role === "host";
+    }
+  } catch (error) {
+    console.error("Homepage auth check failed:", error);
   }
 
   return (
@@ -74,7 +82,7 @@ export default async function HomePage() {
               disabled={isHostUser}
               disabledMessage="Please create a traveler account to search families."
             />
-            {!user && (
+            {!isLoggedIn && (
               <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
                 <span className="text-xs text-white/50 mr-1">Already a member?</span>
                 <Link

@@ -13,10 +13,16 @@ const MIN_LISTINGS = 10;
 
 /** Countries with more than {@link MIN_LISTINGS} published families. */
 export async function getPopularDestinations(): Promise<PopularDestination[]> {
-  const supabase = await createClient();
-  const { data: listings } = await supabase
-    .from("public_listings")
-    .select("country");
+  try {
+    const supabase = await createClient();
+    const { data: listings, error } = await supabase
+      .from("public_listings")
+      .select("country");
+
+    if (error) {
+      console.error("getPopularDestinations:", error.message);
+      return [];
+    }
 
   const countryCounts = new Map<string, { display: string; count: number }>();
   (listings ?? []).forEach((row) => {
@@ -41,4 +47,8 @@ export async function getPopularDestinations(): Promise<PopularDestination[]> {
       href: `/search?country=${encodeURIComponent(display)}`,
       count,
     }));
+  } catch (error) {
+    console.error("getPopularDestinations:", error);
+    return [];
+  }
 }

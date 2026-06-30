@@ -26,17 +26,21 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     const supabase = createClient();
 
     async function load() {
-      const [{ data }, count] = await Promise.all([
-        supabase
-          .from("notifications")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(8),
-        getUnreadNotificationCount(supabase, userId),
-      ]);
-      setNotifications((data as AppNotification[]) ?? []);
-      setUnreadCount(count);
+      try {
+        const [{ data }, count] = await Promise.all([
+          supabase
+            .from("notifications")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(8),
+          getUnreadNotificationCount(supabase, userId),
+        ]);
+        setNotifications((data as AppNotification[]) ?? []);
+        setUnreadCount(count);
+      } catch (error) {
+        console.error("NotificationBell load failed:", error);
+      }
     }
 
     load();

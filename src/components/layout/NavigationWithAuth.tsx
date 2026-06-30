@@ -45,38 +45,40 @@ export function NavigationWithAuth({ serverUser }: NavigationWithAuthProps) {
   }, [serverUser]);
 
   useEffect(() => {
-    const supabase = createClient();
-    let cancelled = false;
+    let supabase: ReturnType<typeof createClient> | null = null;
 
-    async function syncFromClient() {
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-
-      if (cancelled) return;
-
-      if (!authUser) {
-        setUser(null);
-        return;
-      }
-
-      if (serverUser?.id === authUser.id) {
-        setUser(serverUser);
-        return;
-      }
-
-      const navUser = await fetchNavUser(authUser.id, authUser.email ?? "");
-      if (cancelled || !navUser) return;
-
-      setUser(navUser);
+    try {
+      supabase = createClient();
+    } catch (error) {
+      console.error("Navigation auth client unavailable:", error);
+      return;
     }
 
-    void syncFromClient();
+    let cancelled = false;
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      void syncFromClient();
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (cancelled) return;
+
+      try {
+        if (event === "SIGNED_OUT" || !session?.user) {
+          setUser(null);
+          return;
+        }
+
+        if (serverUser?.id === session.user.id) {
+          setUser(serverUser);
+          return;
+        }
+
+        const navUser = await fetchNavUser(session.user.id, session.user.email ?? "");
+        if (!cancelled && navUser) {
+          setUser(navUser);
+        }
+      } catch (error) {
+        console.error("Navigation auth sync failed:", error);
+      }
     });
 
     return () => {
@@ -86,4 +88,4 @@ export function NavigationWithAuth({ serverUser }: NavigationWithAuthProps) {
   }, [serverUser]);
 
   return <Navigation user={user} />;
-}
+};

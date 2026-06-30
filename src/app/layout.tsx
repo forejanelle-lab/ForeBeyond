@@ -12,8 +12,6 @@ import { isPlatformAdmin } from "@/lib/navigation-menu";
 import type { UserRole } from "@/types/database";
 import "./globals.css";
 
-export const dynamic = "force-dynamic";
-
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -34,6 +32,42 @@ export const metadata: Metadata = {
   ],
 };
 
+async function loadNavUser() {
+  if (!isSupabaseConfigured()) return null;
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, is_admin, avatar_url, full_name")
+      .eq("id", user.id)
+      .single();
+
+    const role = profileError ? null : profile?.role ?? null;
+    const isAdmin = profileError
+      ? false
+      : isPlatformAdmin(user.email ?? "", profile?.is_admin ?? false);
+
+    return {
+      id: user.id,
+      email: user.email ?? "",
+      role: role as UserRole | null,
+      isAdmin,
+      avatarUrl: profileError ? null : profile?.avatar_url ?? null,
+      fullName: profileError ? null : profile?.full_name ?? null,
+    };
+  } catch (error) {
+    console.error("Layout nav user load failed:", error);
+    return null;
+  }
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -49,40 +83,7 @@ export default async function RootLayout({
     );
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let navUser: {
-    id: string;
-    email: string;
-    role?: UserRole | null;
-    isAdmin?: boolean;
-    avatarUrl?: string | null;
-    fullName?: string | null;
-  } | null = null;
-  if (user) {
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, is_admin, avatar_url, full_name")
-      .eq("id", user.id)
-      .single();
-
-    const role = profileError ? null : profile?.role ?? null;
-    const isAdmin = profileError
-      ? false
-      : isPlatformAdmin(user.email ?? "", profile?.is_admin ?? false);
-
-    navUser = {
-      id: user.id,
-      email: user.email ?? "",
-      role,
-      isAdmin,
-      avatarUrl: profileError ? null : profile?.avatar_url ?? null,
-      fullName: profileError ? null : profile?.full_name ?? null,
-    };
-  }
+  const navUser = await loadNavUser();
 
   return (
     <html lang="en" className={inter.variable}>
