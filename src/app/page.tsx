@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, CheckCircle2, Home, Plane } from "lucide-react";
+import { ArrowRight, CheckCircle2, Home, Plane, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { brand } from "@/lib/brand";
 import { getPopularDestinations } from "@/lib/destinations";
@@ -34,6 +34,9 @@ const trustPillars = [
   "Cultural sensitivity training",
 ];
 
+const homeSectionTitle = "!text-3xl md:!text-5xl lg:!text-[3.25rem]";
+const homeSectionDescription = "text-lg md:text-xl leading-relaxed";
+
 export default async function HomePage() {
   const popularDestinations = await getPopularDestinations();
 
@@ -61,22 +64,25 @@ export default async function HomePage() {
     <>
       <section className="relative min-h-[92vh] flex flex-col justify-end">
         <Image
-          src={sampleImages.heroFamily}
-          alt="Illustration of a brown host family welcoming a guest traveler to a warm home-cooked dinner"
+          src={sampleImages.homeHeroOutdoorMeal}
+          alt="Travelers and hosts laughing together while sharing a home-cooked meal"
           fill
-          className="object-cover"
+          className="object-cover object-center"
           priority
+          unoptimized
           sizes="100vw"
         />
-        <div className="absolute inset-0 hero-overlay pointer-events-none" />
+        <div className="absolute inset-0 hero-overlay-dark pointer-events-none" />
         <Container className="relative z-10 pb-20 md:pb-28 pt-32">
-          <p className="text-sm font-medium text-gold mb-3 tracking-wide uppercase">
-            {brand.name}
-          </p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight max-w-2xl text-balance">
-            Live like a local.<br />Belong anywhere.
+          <h1 className="hero-text-shadow text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight max-w-2xl text-balance">
+            Travel deeper.
+            <br />
+            Belong anywhere.
           </h1>
-          <p className="mt-3 text-white/80 text-sm italic">{brand.secondaryTagline}</p>
+          <p className="hero-text-shadow mt-5 text-base md:text-lg text-white/90 leading-relaxed max-w-xl">
+            Stay with verified local hosts, experience authentic cultures, and create meaningful
+            connections that last beyond your trip.
+          </p>
           <div className="mt-8 relative z-20">
             <HeroSearchBar
               disabled={isHostUser}
@@ -119,7 +125,7 @@ export default async function HomePage() {
             />
             <Link
               href="/search"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-forest hover:underline shrink-0"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-forest hover:text-forest-light hover:gap-2 transition-all shrink-0"
             >
               Explore all families
               <ArrowRight className="h-4 w-4" />
@@ -147,6 +153,8 @@ export default async function HomePage() {
             align="center"
             title="Not a vacation rental. A cultural bridge."
             description={brand.mission}
+            titleClassName={homeSectionTitle}
+            descriptionClassName={`${homeSectionDescription} max-w-3xl mx-auto`}
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
@@ -154,9 +162,9 @@ export default async function HomePage() {
               { title: "Authentic Experiences", desc: "Cooking, ceremonies, markets — beyond tourist attractions." },
               { title: "Trust-First Safety", desc: "Identity verification, reviews, and community standards." },
             ].map((item) => (
-              <Card key={item.title} variant="outline" padding="lg" className="hover:shadow-lg transition-shadow">
-                <h3 className="text-lg font-semibold text-forest mb-2">{item.title}</h3>
-                <p className="text-sm text-charcoal-light leading-relaxed">{item.desc}</p>
+              <Card key={item.title} variant="outline" padding="lg" className="hover-lift">
+                <h3 className="text-xl font-semibold text-forest mb-2">{item.title}</h3>
+                <p className="text-base text-charcoal-light leading-relaxed">{item.desc}</p>
               </Card>
             ))}
           </div>
@@ -165,15 +173,57 @@ export default async function HomePage() {
 
       <Section id="how-it-works" background="sage">
         <Container>
-          <SectionHeader align="center" title="How It Works" description="Your path from curious traveler to cultural insider." />
+          <SectionHeader
+            align="center"
+            title="How It Works"
+            description="Your path from curious traveler to cultural insider."
+            titleClassName={homeSectionTitle}
+            descriptionClassName={homeSectionDescription}
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
             {steps.map((item) => (
-              <div key={item.step} className="text-center">
-                <span className="text-4xl font-bold text-forest/15">{item.step}</span>
-                <h3 className="text-lg font-semibold text-forest mt-2 mb-2">{item.title}</h3>
-                <p className="text-sm text-charcoal-light leading-relaxed">{item.description}</p>
+              <div
+                key={item.step}
+                className="text-center rounded-2xl p-6 hover-lift hover:bg-white/60"
+              >
+                <span className="text-5xl font-bold text-forest/15">{item.step}</span>
+                <h3 className="text-xl font-semibold text-forest mt-2 mb-2">{item.title}</h3>
+                <p className="text-base text-charcoal-light leading-relaxed">{item.description}</p>
               </div>
             ))}
+          </div>
+        </Container>
+      </Section>
+
+      <Section background="white">
+        <Container>
+          <div className="rounded-3xl border border-sage-dark/15 bg-cream/40 shadow-xl overflow-hidden hover-lift">
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              <div className="relative min-h-[320px] lg:min-h-full">
+                <Image
+                  src={sampleImages.homeTestimonial}
+                  alt="Traveler exploring the streets of Morocco"
+                  fill
+                  className="object-cover transition-transform duration-700 hover:scale-105"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              </div>
+              <div className="flex flex-col justify-center p-10 md:p-14 lg:p-16">
+                <div className="flex gap-1 mb-6">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="h-5 w-5 fill-gold text-gold" />
+                  ))}
+                </div>
+                <blockquote className="text-2xl md:text-3xl font-semibold text-forest leading-snug text-balance">
+                  &ldquo;I didn&apos;t just visit Morocco — I became part of a family. Shared meals,
+                  late-night stories, and a warmth I&apos;ve never found in any hotel.&rdquo;
+                </blockquote>
+                <footer className="mt-8 pt-8 border-t border-sage-dark/20">
+                  <p className="text-lg font-semibold text-forest">Sarah</p>
+                  <p className="text-sm text-charcoal-light mt-1">Visited Morocco</p>
+                </footer>
+              </div>
+            </div>
           </div>
         </Container>
       </Section>
@@ -182,20 +232,30 @@ export default async function HomePage() {
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white">Built on trust, not transactions</h2>
-              <p className="mt-4 text-white/70 leading-relaxed">
+              <h2 className="text-4xl md:text-5xl lg:text-[3.25rem] font-bold text-white leading-tight">
+                Built on trust, not transactions
+              </h2>
+              <p className="mt-5 text-lg md:text-xl text-white/75 leading-relaxed">
                 Every member goes through rigorous verification. Meaningful connection requires genuine trust.
               </p>
-              <ButtonLink href="/trust-center" variant="gold" size="md" className="mt-6">
+              <ButtonLink
+                href="/trust-center"
+                variant="ghost"
+                size="md"
+                className="mt-6 border border-sage/50 bg-sage/20 !text-white backdrop-blur-sm hover:bg-sage/30 hover:!text-white focus-visible:ring-sage/40 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
                 Explore Trust Center
                 <ArrowRight className="h-4 w-4" />
               </ButtonLink>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {trustPillars.map((pillar) => (
-                <div key={pillar} className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3">
-                  <CheckCircle2 className="h-5 w-5 text-gold shrink-0" />
-                  <span className="text-sm text-white/90">{pillar}</span>
+                <div
+                  key={pillar}
+                  className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 hover-lift hover:bg-white/15"
+                >
+                  <CheckCircle2 className="h-5 w-5 text-gold-light shrink-0" />
+                  <span className="text-base text-white/90">{pillar}</span>
                 </div>
               ))}
             </div>
@@ -205,15 +265,46 @@ export default async function HomePage() {
 
       <Section background="cream">
         <Container>
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-forest">Ready to travel deeper?</h2>
-            <p className="mt-4 text-charcoal-light">{brand.tagline}</p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-              <ButtonLink href="/auth/sign-up" variant="primary" size="lg">
-                Join as Traveler
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto">
+            <div className="rounded-3xl overflow-hidden shadow-2xl bg-white hover-lift p-10 md:p-12 lg:p-14 text-center flex flex-col">
+              <h2 className="text-3xl md:text-4xl font-bold text-forest leading-tight text-balance">
+                Travel the world.
+                <br />
+                Live like a local.
+              </h2>
+              <p className="mt-6 text-base md:text-lg text-charcoal-light leading-relaxed flex-1">
+                Stay with verified local hosts, immerse yourself in authentic culture, and build
+                connections that last long after your trip ends.
+              </p>
+              <ButtonLink
+                href="/search"
+                variant="primary"
+                size="lg"
+                className="mt-10 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
+                Find Your Stay
+                <ArrowRight className="h-4 w-4" />
               </ButtonLink>
-              <ButtonLink href="/onboarding/host" variant="secondary" size="lg">
-                Join as Host
+            </div>
+
+            <div className="rounded-3xl overflow-hidden shadow-2xl bg-white hover-lift p-10 md:p-12 lg:p-14 text-center flex flex-col">
+              <h2 className="text-3xl md:text-4xl font-bold text-forest leading-tight text-balance">
+                Open your home.
+                <br />
+                Share your world.
+              </h2>
+              <p className="mt-6 text-base md:text-lg text-charcoal-light leading-relaxed flex-1">
+                Welcome travelers into your daily life — share your culture, your cooking, and your
+                neighborhood stories. Hosting on Fore Beyond is about connection, not commerce.
+              </p>
+              <ButtonLink
+                href="/onboarding/host"
+                variant="secondary"
+                size="lg"
+                className="mt-10 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
+                Become a Host
+                <ArrowRight className="h-4 w-4" />
               </ButtonLink>
             </div>
           </div>

@@ -2,30 +2,36 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, Clock, User } from "lucide-react";
 import { FamilyProfileContent } from "@/components/search/FamilyProfileContent";
+import { RequestStayButton } from "@/components/stays/RequestStayButton";
 import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
 import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
 import { ListingImage } from "@/components/listings/ListingImage";
-import { formatAverageRating } from "@/lib/reviews";
 import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
 import { formatStayRateLabel, pickListingPricing } from "@/lib/stay-requests";
 import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
 import type { HostListing, ListingPhoto, PublicListing, PublicReview, TrustBadge } from "@/types/database";
+import type { TrustScoreBreakdown } from "@/lib/trust-score";
 
 interface FamilyProfileViewProps {
   listing: HostListing | PublicListing;
   photos: ListingPhoto[];
   hostFirstName: string | null;
   trustScore: number;
+  trustScoreBreakdown?: TrustScoreBreakdown | null;
+  hostReviewCount?: number;
+  hostAvgRating?: string | null;
+  listingReviewCount?: number;
   verificationStatus: string;
   badges: TrustBadge[];
   reviews: PublicReview[];
   isSaved?: boolean;
   showSaveButton?: boolean;
   showBookingActions?: boolean;
+  canRequestStay?: boolean;
   userId?: string | null;
   bookingCount?: number;
   memberSince?: string | null;
@@ -50,11 +56,16 @@ export function FamilyProfileView({
   photos,
   hostFirstName,
   trustScore,
+  trustScoreBreakdown = null,
+  hostReviewCount = 0,
+  hostAvgRating = null,
+  listingReviewCount = 0,
   verificationStatus,
   reviews,
   isSaved = false,
   showSaveButton = true,
   showBookingActions = true,
+  canRequestStay = false,
   userId = null,
   bookingCount = 0,
   memberSince = null,
@@ -77,7 +88,6 @@ export function FamilyProfileView({
   const listingPricing = pickListingPricing(listing);
   const nightlyRateLabel = formatStayRateLabel(listingPricing, 1);
   const isVerified = verificationStatus === "verified";
-  const avgRating = formatAverageRating(reviews);
   const hostNameForDisplay = hostDisplayName ?? hostFirstName;
   const hostInitials = hostNameForDisplay
     ?.split(" ")
@@ -153,9 +163,12 @@ export function FamilyProfileView({
           <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
             <TrustScorePanel
               score={trustScore}
-              reviewCount={reviews.length}
-              avgRating={avgRating}
-              showBreakdownLink
+              reviewCount={hostReviewCount}
+              avgRating={hostAvgRating}
+              listingReviewCount={listingReviewCount}
+              listingId={listing.id}
+              hostName={hostNameForDisplay}
+              breakdown={trustScoreBreakdown}
             />
 
             <Card variant="outline" padding="md" className="space-y-3">
@@ -234,12 +247,10 @@ export function FamilyProfileView({
                   </p>
                   {userId ? (
                     <>
-                      <Link
-                        href={`/families/${listing.id}/request`}
-                        className="inline-flex items-center justify-center rounded-full bg-forest px-5 py-3 text-sm font-medium text-white hover:bg-forest-light transition-colors w-full"
-                      >
-                        Request to Stay
-                      </Link>
+                      <RequestStayButton
+                        listingId={listing.id}
+                        enabled={canRequestStay}
+                      />
                       {canMessageHost && messageConversationId ? (
                         <Link
                           href={`/messages/${messageConversationId}`}

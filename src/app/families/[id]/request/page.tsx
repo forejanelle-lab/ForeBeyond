@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { sampleImages } from "@/lib/sample-images";
 import { PageHero } from "@/components/design/PageHero";
@@ -8,10 +8,12 @@ import { getStayBlockedDates } from "@/lib/stay-availability";
 import { RequestStayWizard } from "@/components/stays/RequestStayWizard";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
+import { STAY_REQUEST_VERIFICATION_MESSAGE, canRequestStay, documentsMapFromRows } from "@/lib/traveler-verification";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { privatePageMetadata } from "@/lib/site-metadata";
-import type { PublicListing } from "@/types/database";
+import type { DocumentType, PublicListing, VerificationStatus } from "@/types/database";
 
 export async function generateMetadata({
   params,
@@ -64,6 +66,23 @@ export default async function RequestStayPage({
   const typedListing = listing as PublicListing;
   const blockedDateRanges = await getStayBlockedDates(supabase, id);
 
+  let travelerCanRequestStay = false;
+  if (user) {
+    const { data: verificationDocs } = await supabase
+      .from("verification_documents")
+      .select("document_type, status")
+      .eq("user_id", user.id)
+      .in("document_type", ["government_id", "selfie"]);
+
+    travelerCanRequestStay = canRequestStay(
+      documentsMapFromRows(
+        verificationDocs as
+          | { document_type: DocumentType; status: VerificationStatus }[]
+          | null
+      )
+    );
+  }
+
   return (
     <>
       <PageHero
@@ -87,16 +106,31 @@ export default async function RequestStayPage({
         <TrackPageEvent event={AnalyticsEvents.REQUEST_START} data={{ listing_id: id }} />
 
         <Card variant="elevated" padding="lg" className="max-w-2xl mx-auto">
-          <RequestStayWizard
-            listing={typedListing}
-            userId={user?.id ?? null}
-            blockedDateRanges={blockedDateRanges}
-            profileBio={(profile as { bio: string | null } | null)?.bio ?? null}
-            profileStayMotivation={
-              (travelerProfile as { stay_motivation: string | null } | null)?.stay_motivation ??
-              null
-            }
-          />
+          {travelerCanRequestStay ? (
+            <RequestStayWizard
+              listing={typedListing}
+              userId={user?.id ?? null}
+              blockedDateRanges={blockedDateRanges}
+              profileBio={(profile as { bio: string | null } | null)?.bio ?? null}
+              profileStayMotivation={
+                (travelerProfile as { stay_motivation: string | null } | null)?.stay_motivation ??
+                null
+              }
+            />
+          ) : (
+            <div className="text-center space-y-4 py-6">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sage/60 text-forest">
+                <Shield className="h-6 w-6" />
+              </div>
+              <h2 className="text-xl font-semibold text-forest">Verification required</h2>
+              <p className="text-sm text-charcoal-light max-w-md mx-auto">
+                {STAY_REQUEST_VERIFICATION_MESSAGE}
+              </p>
+              <ButtonLink href="/verification-center" variant="primary" size="md">
+                Go to Verification Center
+              </ButtonLink>
+            </div>
+          )}
           <p className="flex items-center justify-center gap-1.5 text-xs text-charcoal-light mt-6 pt-6 border-t border-sage-dark/20">
             <Lock className="h-3.5 w-3.5" />
             Your information is safe and private

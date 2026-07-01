@@ -2,6 +2,8 @@
 
 export const sampleImages = {
   heroFamily: "/hero-family-guest.png",
+  /** Homepage hero — family sharing a meal together (2048px, public/home-hero.jpg) */
+  homeHeroOutdoorMeal: "/home-hero.jpg",
   heroTravel:
     "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1920&q=80",
   familyKitchen:
@@ -35,6 +37,12 @@ export const sampleImages = {
     "https://images.unsplash.com/photo-1515378791034-0648a3ef77b2?w=800&q=80",
   trustCenter:
     "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1200&q=80",
+  /** Homepage testimonial — traveler in a Marrakech medina */
+  homeTestimonial:
+    "https://images.unsplash.com/photo-1769717476835-e1de627b16ea?w=900&q=85&auto=format&fit=crop",
+  /** Homepage host banner — welcoming host portrait */
+  homeHostPortrait:
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=1200&q=85&auto=format&fit=crop",
   messages:
     "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=80",
 } as const;

@@ -50,6 +50,9 @@ export function ProfileSettingsForm({
 
   const lockedRole = Boolean(initial.role);
   const displayRolePicker = showRolePicker && !lockedRole;
+  const requiresTravelerBio =
+    !initial.onboarding_complete &&
+    (initial.role === "traveler" || role === "traveler");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,6 +68,14 @@ export function ProfileSettingsForm({
       return;
     }
 
+    const isTravelerOnboarding =
+      effectiveRole === "traveler" && !initial.onboarding_complete;
+
+    if (isTravelerOnboarding && !bio.trim()) {
+      setError("Please tell us about yourself in your bio");
+      return;
+    }
+
     setError("");
     setSuccess("");
     setIsLoading(true);
@@ -72,7 +83,7 @@ export function ProfileSettingsForm({
     const supabase = createClient();
     const updates: Record<string, unknown> = {
       full_name: joinFullName(firstName, lastName),
-      bio,
+      bio: bio.trim() || null,
       location,
       phone,
     };
@@ -167,6 +178,8 @@ export function ProfileSettingsForm({
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           placeholder="Tell us about yourself..."
+          hint={requiresTravelerBio ? "Required — hosts review this when you request a stay" : undefined}
+          required={requiresTravelerBio}
         />
         <Input
           label="Location"

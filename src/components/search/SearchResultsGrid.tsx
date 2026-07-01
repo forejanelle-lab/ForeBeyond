@@ -1,4 +1,5 @@
 import { FamilySearchCard } from "@/components/search/FamilySearchCard";
+import { SearchResultsAudioScope } from "@/components/listings/IntroVideoAudioContext";
 import { Card } from "@/components/ui/Card";
 import type { PublicListing } from "@/types/database";
 
@@ -31,18 +32,20 @@ export function SearchResultsGrid({
   }
 
   return (
-    <div className={layout === "list" ? "space-y-4" : "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6"}>
-      {listings.map((listing) => (
-        <FamilySearchCard
-          key={listing.id}
-          listing={listing}
-          coverPhotoUrl={coverPhotos[listing.id] ?? null}
-          hostDisplayName={hostDisplayNames[listing.host_id] ?? listing.host_first_name}
-          isSaved={savedListingIds.includes(listing.id)}
-          showSaveButton={showSaveButton}
-          layout={layout}
-        />
-      ))}
-    </div>
+    <SearchResultsAudioScope>
+      <div className={layout === "list" ? "space-y-4" : "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6"}>
+        {listings.map((listing) => (
+          <FamilySearchCard
+            key={listing.id}
+            listing={listing}
+            coverPhotoUrl={coverPhotos[listing.id] ?? null}
+            hostDisplayName={hostDisplayNames[listing.host_id] ?? listing.host_first_name}
+            isSaved={savedListingIds.includes(listing.id)}
+            showSaveButton={showSaveButton}
+            layout={layout}
+          />
+        ))}
+      </div>
+    </SearchResultsAudioScope>
   );
 }

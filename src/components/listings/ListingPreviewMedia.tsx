@@ -1,10 +1,11 @@
 "use client";
 
 import type { PublicListing } from "@/types/database";
+import { HostIntroVideo } from "@/components/listings/HostIntroVideo";
 import { ListingImage } from "@/components/listings/ListingImage";
 
 interface ListingPreviewMediaProps {
-  listing: Pick<PublicListing, "country" | "city" | "title" | "intro_video_url">;
+  listing: Pick<PublicListing, "id" | "country" | "city" | "title" | "intro_video_url">;
   coverPhotoUrl?: string | null;
   fill?: boolean;
   className?: string;
@@ -22,14 +23,12 @@ export function ListingPreviewMedia({
 }: ListingPreviewMediaProps) {
   if (listing.intro_video_url) {
     return (
-      <video
+      <HostIntroVideo
         src={listing.intro_video_url}
-        muted
-        loop
-        playsInline
-        autoPlay
+        variant="preview"
+        listingId={listing.id}
         className={`absolute inset-0 h-full w-full ${className}`}
-        aria-label={listing.title ?? "Family intro video"}
+        ariaLabel={listing.title ?? "Family intro video"}
       />
     );
   }

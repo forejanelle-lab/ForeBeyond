@@ -52,6 +52,12 @@ export default function TravelerOnboardingPage() {
 
   async function handleComplete() {
     setError("");
+
+    if (!stayMotivation.trim()) {
+      setError("Please share why you're interested in staying with a host family.");
+      return;
+    }
+
     setIsLoading(true);
 
     const supabase = createClient();
@@ -70,7 +76,7 @@ export default function TravelerOnboardingPage() {
         preferred_destinations: destinations.split(",").map((d) => d.trim()).filter(Boolean),
         dietary_preferences: dietary.split(",").map((d) => d.trim()).filter(Boolean),
         accessibility_needs: accessibility || null,
-        stay_motivation: stayMotivation.trim() || null,
+        stay_motivation: stayMotivation.trim(),
       },
       { onConflict: "user_id" }
     );
@@ -201,7 +207,8 @@ export default function TravelerOnboardingPage() {
               value={stayMotivation}
               onChange={(e) => setStayMotivation(e.target.value)}
               placeholder="Why are you interested in staying with a host family? What do you want to learn, experience, or connect with?"
-              hint="Hosts review this when you request a stay"
+              hint="Required — hosts review this when you request a stay"
+              required
             />
             <Input
               label="Preferred Destinations"
@@ -237,6 +244,7 @@ export default function TravelerOnboardingPage() {
                 size="lg"
                 onClick={handleComplete}
                 isLoading={isLoading}
+                disabled={!stayMotivation.trim()}
                 className="flex-1"
               >
                 Continue to Verification

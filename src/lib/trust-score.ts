@@ -71,10 +71,43 @@ export const TRUST_SCORE_FACTORS: {
   },
 ];
 
+export type TrustScoreBreakdown = Partial<Record<TrustScoreFactor, number>>;
+
+const HOST_PUBLIC_FACTOR_DESCRIPTIONS: Record<TrustScoreFactor, string> = {
+  email_verified: "Host confirmed their email address",
+  phone_verified: "Host verified their phone number",
+  government_id: "Host submitted a verified government ID",
+  address_verification: "Host verified their home address",
+  video_verification: "Host completed video identity verification",
+  profile_completion: "Host profile completeness",
+  completed_trips: "Cultural stays completed as a host",
+  positive_reviews: "Positive reviews from travelers",
+};
+
+export function normalizeTrustScoreBreakdown(raw: unknown): TrustScoreBreakdown {
+  if (!raw) return {};
+  if (typeof raw === "string") {
+    try {
+      return normalizeTrustScoreBreakdown(JSON.parse(raw));
+    } catch {
+      return {};
+    }
+  }
+  if (typeof raw === "object" && raw !== null) {
+    return raw as TrustScoreBreakdown;
+  }
+  return {};
+}
+
 export function getTrustScoreFactorDescription(
   key: TrustScoreFactor,
-  role?: UserRole | null
+  role?: UserRole | null,
+  perspective: "self" | "host-public" = "self"
 ): string {
+  if (perspective === "host-public") {
+    return HOST_PUBLIC_FACTOR_DESCRIPTIONS[key];
+  }
+
   const factor = TRUST_SCORE_FACTORS.find((item) => item.key === key);
   if (!factor) return "";
 
@@ -85,8 +118,6 @@ export function getTrustScoreFactorDescription(
 
   return factor.description;
 }
-
-export type TrustScoreBreakdown = Partial<Record<TrustScoreFactor, number>>;
 
 export function getTrustLevel(score: number): {
   label: string;

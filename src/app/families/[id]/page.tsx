@@ -4,12 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 import { FamilyProfileView } from "@/components/search/FamilyProfileView";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
+import { formatAverageRating } from "@/lib/reviews";
 import { getHostListingStats } from "@/lib/host-stats";
 import { getHostReviewEligibility } from "@/lib/listing-review-eligibility";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { hostHasMessagedStayRequest, isStayMessagingOpen } from "@/lib/messaging";
 import { createPageMetadata } from "@/lib/site-metadata";
 import type { HostListing, ListingPhoto, Profile, PublicListing, PublicReview, StayRequest, TrustBadge } from "@/types/database";
+import { normalizeTrustScoreBreakdown, type TrustScoreBreakdown } from "@/lib/trust-score";
+import { canRequestStay, documentsMapFromRows } from "@/lib/traveler-verification";
+import type { DocumentType, VerificationStatus } from "@/types/database";
 
 export async function generateMetadata({
   params,
@@ -66,7 +70,7 @@ export default async function FamilyProfilePage({
   const supabase = await createClient();
 
   const [{ data: listing }, { data: { user } }] = await Promise.all([
-    supabase.from("public_listings").select("*").eq("id", id).single(),
+    supabase.from("public_listings").select("*, trust_score_breakdown").eq("id", id).single(),
     supabase.auth.getUser(),
   ]);
 
@@ -78,6 +82,7 @@ export default async function FamilyProfilePage({
   let hostMemberSince: string | null = null;
   let hostMotivation: string | null = null;
   let trustScore = 0;
+  let trustScoreBreakdown: TrustScoreBreakdown = {};
   let verificationStatus = "unverified";
   let isOwnListing = false;
 
@@ -100,7 +105,7 @@ export default async function FamilyProfilePage({
     const [{ data: hostProfile }, { data: hostProfileDetails }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("full_name, trust_score, verification_status, created_at, avatar_url")
+        .select("full_name, trust_score, trust_score_breakdown, verification_status, created_at, avatar_url")
         .eq("id", user.id)
         .single(),
       supabase
@@ -112,7 +117,7 @@ export default async function FamilyProfilePage({
 
     const profile = hostProfile as Pick<
       Profile,
-      "full_name" | "trust_score" | "verification_status" | "created_at" | "avatar_url"
+      "full_name" | "trust_score" | "trust_score_breakdown" | "verification_status" | "created_at" | "avatar_url"
     > | null;
     hostMotivation =
       (hostProfileDetails as { host_motivation: string | null } | null)?.host_motivation ?? null;
@@ -123,6 +128,7 @@ export default async function FamilyProfilePage({
     hostFirstName = hostDisplayName;
     hostMemberSince = profile?.created_at ?? null;
     trustScore = profile?.trust_score ?? 0;
+    trustScoreBreakdown = normalizeTrustScoreBreakdown(profile?.trust_score_breakdown);
     verificationStatus = profile?.verification_status ?? "unverified";
   } else {
     hostListing = {
@@ -168,6 +174,7 @@ export default async function FamilyProfilePage({
     hostFirstName = hostDisplayName;
     hostMemberSince = hostProfileData?.created_at ?? null;
     trustScore = typedListing.trust_score;
+    trustScoreBreakdown = normalizeTrustScoreBreakdown(typedListing.trust_score_breakdown);
     verificationStatus = typedListing.verification_status;
     hostMotivation = typedListing.host_motivation;
     isOwnListing = user?.id === typedListing.host_id;
@@ -175,7 +182,7 @@ export default async function FamilyProfilePage({
 
   const hostId = hostListing.host_id;
 
-  const [{ data: photos }, { data: badges }, { data: reviews }, savedResult] =
+  const [{ data: photos }, { data: badges }, { data: reviews }, { data: hostReviews }, savedResult] =
     await Promise.all([
       supabase
         .from("listing_photos")
@@ -193,6 +200,11 @@ export default async function FamilyProfilePage({
         .eq("reviewer_role", "traveler")
         .eq("listing_id", id)
         .order("created_at", { ascending: false }),
+      supabase
+        .from("public_reviews")
+        .select("rating, is_positive")
+        .eq("reviewee_id", hostId)
+        .eq("reviewer_role", "traveler"),
       user && !isOwnListing
         ? supabase
             .from("saved_listings")
@@ -253,6 +265,29 @@ export default async function FamilyProfilePage({
     }
   }
 
+  const hostReviewCount = (hostReviews as { rating: number }[] | null)?.length ?? 0;
+  const hostAvgRating = formatAverageRating(
+    (hostReviews as { rating: number }[] | null) ?? []
+  );
+  const listingReviewCount = (reviews as PublicReview[] | null)?.length ?? 0;
+
+  let travelerCanRequestStay = false;
+  if (user && !isOwnListing && user.id !== hostId) {
+    const { data: verificationDocs } = await supabase
+      .from("verification_documents")
+      .select("document_type, status")
+      .eq("user_id", user.id)
+      .in("document_type", ["government_id", "selfie"]);
+
+    travelerCanRequestStay = canRequestStay(
+      documentsMapFromRows(
+        verificationDocs as
+          | { document_type: DocumentType; status: VerificationStatus }[]
+          | null
+      )
+    );
+  }
+
   return (
     <>
       {isOwnListing && (
@@ -276,6 +311,10 @@ export default async function FamilyProfilePage({
         photos={(photos as ListingPhoto[]) ?? []}
         hostFirstName={hostFirstName}
         trustScore={trustScore}
+        trustScoreBreakdown={trustScoreBreakdown}
+        hostReviewCount={hostReviewCount}
+        hostAvgRating={hostAvgRating}
+        listingReviewCount={listingReviewCount}
         verificationStatus={verificationStatus}
         badges={(badges as TrustBadge[]) ?? []}
         reviews={(reviews as PublicReview[]) ?? []}
@@ -283,6 +322,7 @@ export default async function FamilyProfilePage({
         userId={user?.id ?? null}
         showSaveButton={!isOwnListing}
         showBookingActions={!isOwnListing}
+        canRequestStay={travelerCanRequestStay}
         bookingCount={hostStats.bookingCount}
         memberSince={hostMemberSince}
         avgResponseTimeMinutes={hostStats.avgResponseTimeMinutes}

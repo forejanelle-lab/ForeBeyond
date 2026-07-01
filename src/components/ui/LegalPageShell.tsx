@@ -26,7 +26,9 @@ export function LegalPageShell({ title, children }: LegalPageShellProps) {
           <header className="border-b border-sage-dark/30 pb-6 mb-8">
             <p className="text-xs font-medium uppercase tracking-wide text-gold mb-2">Legal</p>
             <h1 className="text-3xl md:text-4xl font-bold text-forest">{title}</h1>
-            <p className="mt-2 text-sm text-charcoal-light">Last updated: {formatUpdatedDate()}</p>
+            <p className="mt-2 text-sm text-charcoal-light" suppressHydrationWarning>
+              Last updated: {formatUpdatedDate()}
+            </p>
           </header>
           <article className="legal-content">{children}</article>
         </Card>

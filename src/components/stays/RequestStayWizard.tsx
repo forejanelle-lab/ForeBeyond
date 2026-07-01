@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Calendar, CreditCard, ImagePlus, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, ImagePlus, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
@@ -30,7 +30,8 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import type { PublicListing } from "@/types/database";
+import { canRequestStay, documentsMapFromRows } from "@/lib/traveler-verification";
+import type { DocumentType, PublicListing, VerificationStatus } from "@/types/database";
 
 interface RequestStayWizardProps {
   listing: Pick<
@@ -71,10 +72,6 @@ export function RequestStayWizard({
   const [guestCount, setGuestCount] = useState("1");
   const [mediaNote, setMediaNote] = useState("");
   const [draftPhotos, setDraftPhotos] = useState<DraftStayRequestPhoto[]>([]);
-  const [cardName, setCardName] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
@@ -84,7 +81,6 @@ export function RequestStayWizard({
     "Select Dates",
     "Photos & Video",
     "Review Pricing",
-    "Payment Info",
     "Submit Request",
   ];
 
@@ -112,6 +108,26 @@ export function RequestStayWizard({
 
     if (user.id === listing.host_id) {
       setError("You cannot request a stay at your own listing.");
+      setIsLoading(false);
+      return;
+    }
+
+    const { data: verificationDocs } = await supabase
+      .from("verification_documents")
+      .select("document_type, status")
+      .eq("user_id", user.id)
+      .in("document_type", ["government_id", "selfie"]);
+
+    if (
+      !canRequestStay(
+        documentsMapFromRows(
+          verificationDocs as
+            | { document_type: DocumentType; status: VerificationStatus }[]
+            | null
+        )
+      )
+    ) {
+      setError("Submit government ID and selfie verification before requesting a stay.");
       setIsLoading(false);
       return;
     }
@@ -220,12 +236,6 @@ export function RequestStayWizard({
         return;
       }
     }
-    if (step === 4) {
-      if (!cardName.trim() || !cardNumber.trim() || !cardExpiry.trim() || !cardCvc.trim()) {
-        setError("Please enter your card details. You won't be charged until both parties approve.");
-        return;
-      }
-    }
     setError("");
     setStep((s) => Math.min(s + 1, steps.length - 1));
   }
@@ -237,7 +247,7 @@ export function RequestStayWizard({
         <p className="font-medium text-forest">Your stay request is pending</p>
         <p className="text-sm text-charcoal-light mt-2">
           {listing.host_first_name ?? "The host"} will review your introduction and dates.
-          You won&apos;t be charged until you both approve the final stay.
+          If approved, you&apos;ll pay the Fore Beyond service fee via Stripe to confirm your stay.
         </p>
         <div className="flex flex-col gap-2 mt-4">
           <ButtonLink href={`/dashboard/requests/${submittedId}`} variant="primary" size="md" className="w-full">
@@ -410,56 +420,13 @@ export function RequestStayWizard({
             {guestCount} guest{guestCount !== "1" ? "s" : ""}
           </p>
           <p className="text-xs text-charcoal-light">
-            Stay payment is paid directly to your host. The service fee is non-refundable once both
-            parties accept the request.
+            Stay payment is paid directly to your host. The service fee is collected via Stripe when
+            you confirm after the host approves your request.
           </p>
         </div>
       )}
 
       {step === 4 && (
-        <div className="space-y-4">
-          <div className="flex items-start gap-2 text-sm text-charcoal-light bg-sage/30 rounded-xl p-4">
-            <CreditCard className="h-5 w-5 text-forest shrink-0 mt-0.5" />
-            <p>
-              Your card will <strong className="text-forest">not</strong> be charged until both you
-              and the host approve the final stay. The service fee is charged at confirmation and is
-              non-refundable once both parties accept.
-            </p>
-          </div>
-          <Input
-            label="Name on card"
-            value={cardName}
-            onChange={(e) => setCardName(e.target.value)}
-            placeholder="Jane Doe"
-            required
-          />
-          <Input
-            label="Card number"
-            value={cardNumber}
-            onChange={(e) => setCardNumber(e.target.value)}
-            placeholder="4242 4242 4242 4242"
-            required
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Expiry"
-              value={cardExpiry}
-              onChange={(e) => setCardExpiry(e.target.value)}
-              placeholder="MM/YY"
-              required
-            />
-            <Input
-              label="CVC"
-              value={cardCvc}
-              onChange={(e) => setCardCvc(e.target.value)}
-              placeholder="123"
-              required
-            />
-          </div>
-        </div>
-      )}
-
-      {step === 5 && (
         <div className="space-y-3 text-sm">
           <p className="font-medium text-forest">Review your request</p>
           <div className="rounded-xl bg-sage/40 p-4 space-y-2">
@@ -479,7 +446,8 @@ export function RequestStayWizard({
                   <strong>Remaining due to host:</strong> {formatCurrency(pricing.subtotal)}
                 </p>
                 <p>
-                  <strong>Service fee at confirmation:</strong> {formatCurrency(pricing.serviceFee)}
+                  <strong>Service fee at confirmation (Stripe):</strong>{" "}
+                  {formatCurrency(pricing.serviceFee)}
                 </p>
               </>
             )}

@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-  "https://fore-beyond.vercel.app";
+export const PRODUCTION_SITE_URL = "https://fore-beyond.vercel.app";
+
+function resolveSiteUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  if (configured) return configured;
+  return PRODUCTION_SITE_URL;
+}
+
+export const SITE_URL = resolveSiteUrl();
 
 export const SITE_NAME = "Fore Beyond";
 export const DEFAULT_TITLE = "Fore Beyond | Travel Deeper. Belong Anywhere.";

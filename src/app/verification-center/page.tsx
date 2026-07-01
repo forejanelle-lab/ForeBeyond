@@ -18,6 +18,9 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { getProfileVerificationStatusLabel } from "@/lib/verification-labels";
+import {
+  STAY_REQUEST_REQUIRED_DOCUMENTS,
+} from "@/lib/traveler-verification";
 import { getHostListingId, hostListingManagePath } from "@/lib/host-listing-limit";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -43,7 +46,7 @@ const verificationSteps: VerificationStep[] = [
     title: "Phone Verification",
     description: "Verify your phone number to build trust with hosts and travelers.",
     icon: Phone,
-    required: true,
+    required: false,
     points: 10,
   },
   {
@@ -234,16 +237,10 @@ export default function VerificationCenterPage() {
     loadStatus();
   }
 
-  const requiredComplete = verificationSteps
-    .filter((s) => s.required)
-    .every((s) => {
-      const docStatus = documents[s.type];
-      return (
-        docStatus &&
-        docStatus !== "unverified" &&
-        docStatus !== "rejected"
-      );
-    });
+  const stayRequestVerificationComplete = STAY_REQUEST_REQUIRED_DOCUMENTS.every((type) => {
+    const docStatus = documents[type];
+    return docStatus && docStatus !== "unverified" && docStatus !== "rejected";
+  });
 
   const hasRejectedDocs = verificationSteps.some(
     (s) => documents[s.type] === "rejected"
@@ -251,7 +248,7 @@ export default function VerificationCenterPage() {
 
   const canContinueOnboarding = !onboardingComplete;
   const isHost = userRole === "host";
-  const showContinueButton = isHost || canContinueOnboarding || requiredComplete;
+  const showContinueButton = isHost || canContinueOnboarding || stayRequestVerificationComplete;
 
   if (isLoading) {
     return (
@@ -359,10 +356,10 @@ export default function VerificationCenterPage() {
                 {isHost
                   ? "Create your family listing. You can finish verification items anytime."
                   : canContinueOnboarding
-                    ? "Continue to search families. You can finish remaining verification items anytime."
-                    : requiredComplete
-                      ? "Find a host family that fits your journey."
-                      : "Finish phone, ID, and selfie verification above to unlock Search Families."}
+                    ? "Browse host families anytime. Government ID and selfie verification are required before you request a stay."
+                    : stayRequestVerificationComplete
+                      ? "You're cleared to request stays with host families."
+                      : "Submit government ID and selfie verification above to request a stay."}
               </p>
             </Card>
           )}
@@ -382,16 +379,16 @@ export default function VerificationCenterPage() {
           >
             {isHost
               ? "Continue — Create Your Listing"
-              : canContinueOnboarding && !requiredComplete
+              : canContinueOnboarding && !stayRequestVerificationComplete
                 ? "Continue — Search Families"
                 : "Next — Search Families"}
           </Button>
           <p className="mt-3 text-sm text-charcoal-light">
             {isHost
               ? "Verification is separate from onboarding — complete your listing now and return here anytime."
-              : canContinueOnboarding && !requiredComplete
-                ? "You can complete ID and selfie verification later from this page or your Trust Dashboard."
-                : "Browse verified host families and send your first stay request. Your documents stay in review."}
+              : canContinueOnboarding && !stayRequestVerificationComplete
+                ? "You can browse Search Families now. Submit government ID and selfie verification before requesting a stay."
+                : "Browse verified host families and send your first stay request once ID and selfie verification are submitted."}
           </p>
         </div>
       )}

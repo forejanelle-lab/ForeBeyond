@@ -4,8 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, CreditCard, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { confirmStayByTraveler } from "@/lib/stay-approval";
 import {
   calculateStayWithServiceFee,
   formatCurrency,
@@ -13,6 +11,7 @@ import {
   type ListingPricing,
 } from "@/lib/stay-requests";
 import { StayTravelerPricingBreakdown } from "@/components/stays/StayTravelerPricingBreakdown";
+import { ServiceFeeStripeCheckout } from "@/components/stays/ServiceFeeStripePaymentForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { StayRequest } from "@/types/database";
@@ -44,7 +43,6 @@ const SERVICE_FEE_COVERAGE = [
 export function TravelerConfirmStay({ request, listingPricing, hostName }: TravelerConfirmStayProps) {
   const router = useRouter();
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [acknowledgments, setAcknowledgments] = useState({ ...INITIAL_ACKNOWLEDGMENTS });
@@ -52,9 +50,9 @@ export function TravelerConfirmStay({ request, listingPricing, hostName }: Trave
   const allAcknowledged = Object.values(acknowledgments).every(Boolean);
 
   function closeConfirmModal() {
-    if (isLoading) return;
     setShowConfirmModal(false);
     setAcknowledgments({ ...INITIAL_ACKNOWLEDGMENTS });
+    setError("");
   }
 
   function toggleAcknowledgment(key: AcknowledgmentKey) {
@@ -74,23 +72,8 @@ export function TravelerConfirmStay({ request, listingPricing, hostName }: Trave
   const disabledReason = getConfirmStayDisabledReason(request, listingPricing);
   const canConfirm = !disabledReason;
 
-  async function handleConfirm() {
-    setError("");
-    setIsLoading(true);
-    const supabase = createClient();
-    const { error: confirmError, tripId } = await confirmStayByTraveler(
-      supabase,
-      request,
-      listingPricing
-    );
-    if (confirmError) {
-      setError(confirmError);
-      setIsLoading(false);
-      setShowConfirmModal(false);
-      return;
-    }
+  function handlePaymentSuccess(tripId: string | null) {
     setConfirmed(true);
-    setIsLoading(false);
     setShowConfirmModal(false);
     if (tripId) router.push(`/trips/${tripId}`);
     else router.refresh();
@@ -110,7 +93,8 @@ export function TravelerConfirmStay({ request, listingPricing, hostName }: Trave
         <div>
           <p className="font-medium text-forest">{hostName} approved your stay</p>
           <p className="text-sm text-charcoal-light mt-1">
-            Review the details, then confirm to finalize your booking.
+            Review the details, then confirm and pay the service fee via Stripe to finalize your
+            booking.
           </p>
         </div>
 
@@ -281,29 +265,19 @@ export function TravelerConfirmStay({ request, listingPricing, hostName }: Trave
                   </span>
                 </label>
               </fieldset>
-            </div>
 
-            <div className="flex flex-col-reverse sm:flex-row gap-2 border-t border-sage-dark/20 p-6 pt-4">
-              <Button
-                variant="ghost"
-                size="md"
-                className="flex-1"
-                onClick={closeConfirmModal}
-                disabled={isLoading}
-              >
-                Go back
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                className="flex-1 justify-center"
-                onClick={handleConfirm}
-                isLoading={isLoading}
+              {error && (
+                <p className="mt-4 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">{error}</p>
+              )}
+
+              <ServiceFeeStripeCheckout
+                stayRequestId={request.id}
+                serviceFeeLabel={formatCurrency(pricing.serviceFee)}
                 disabled={!allAcknowledged}
-                title={!allAcknowledged ? "Please acknowledge all items before paying" : undefined}
-              >
-                Pay Service Fee
-              </Button>
+                onCancel={closeConfirmModal}
+                onSuccess={handlePaymentSuccess}
+                onError={setError}
+              />
             </div>
           </div>
         </div>

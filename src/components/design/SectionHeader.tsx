@@ -4,6 +4,8 @@ interface SectionHeaderProps {
   description?: string;
   align?: "left" | "center";
   className?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
 }
 
 export function SectionHeader({
@@ -12,6 +14,8 @@ export function SectionHeader({
   description,
   align = "left",
   className = "",
+  titleClassName = "",
+  descriptionClassName = "",
 }: SectionHeaderProps) {
   return (
     <div
@@ -22,9 +26,15 @@ export function SectionHeader({
           {eyebrow}
         </p>
       )}
-      <h2 className="text-2xl md:text-4xl font-bold text-forest text-balance">{title}</h2>
+      <h2
+        className={`text-2xl md:text-4xl font-bold text-forest text-balance ${titleClassName}`}
+      >
+        {title}
+      </h2>
       {description && (
-        <p className="mt-3 text-charcoal-light leading-relaxed">{description}</p>
+        <p className={`mt-3 text-charcoal-light leading-relaxed ${descriptionClassName}`}>
+          {description}
+        </p>
       )}
     </div>
   );

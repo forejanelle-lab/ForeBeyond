@@ -12,7 +12,7 @@ export const colors = {
   cream: "#F9F7F2",
   white: "#FFFFFF",
   charcoal: "#333333",
-  gold: "#D4AF37",
+  gold: "#C9A227",
 } as const;
 
 export const navigation = {

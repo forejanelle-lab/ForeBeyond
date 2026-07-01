@@ -61,8 +61,36 @@ export async function approveStayRequest(
 export async function confirmStayByTraveler(
   supabase: SupabaseClient,
   request: StayRequest,
-  pricing: ListingPricing
+  pricing: ListingPricing,
+  options?: { stripePaymentIntentId?: string }
 ) {
+  if (!options?.stripePaymentIntentId) {
+    return {
+      error: "Service fee payment is required before confirming this stay.",
+      tripId: null,
+    };
+  }
+
+  const { data: existingBooking } = await supabase
+    .from("stay_bookings")
+    .select("trip_id, stripe_payment_intent_id")
+    .eq("stripe_payment_intent_id", options.stripePaymentIntentId)
+    .maybeSingle();
+
+  if (existingBooking?.trip_id) {
+    return { error: null, tripId: existingBooking.trip_id };
+  }
+
+  const { data: existingRequestBooking } = await supabase
+    .from("stay_bookings")
+    .select("trip_id")
+    .eq("stay_request_id", request.id)
+    .maybeSingle();
+
+  if (existingRequestBooking?.trip_id) {
+    return { error: null, tripId: existingRequestBooking.trip_id };
+  }
+
   const conflictError = await assertNoApprovedStayConflict(supabase, request);
   if (conflictError) return { error: conflictError, tripId: null };
 
@@ -110,6 +138,7 @@ export async function confirmStayByTraveler(
     nightly_rate: nightlyRate,
     total_amount: totalAmount,
     payment_status: "paid",
+    stripe_payment_intent_id: options.stripePaymentIntentId,
   });
 
   if (bookingError) return { error: bookingError.message, tripId: trip.id };

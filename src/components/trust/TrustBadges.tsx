@@ -3,9 +3,8 @@ import { BADGE_LABELS } from "@/lib/trust-score";
 import { Badge } from "@/components/ui/Badge";
 import type { BadgeType, TrustBadge } from "@/types/database";
 
-const BADGE_ICONS: Record<BadgeType, typeof Shield> = {
+const BADGE_ICONS: Partial<Record<BadgeType, typeof Shield>> = {
   identity_verified: Shield,
-  background_checked: Shield,
   community_vouched: Users,
   experienced_host: Home,
   experienced_traveler: Compass,
@@ -21,9 +20,7 @@ interface TrustBadgesProps {
 }
 
 export function TrustBadges({ badges, emptyMessage = "No badges earned yet" }: TrustBadgesProps) {
-  const visibleBadges = badges.filter((badge) => badge.badge_type !== "background_checked");
-
-  if (visibleBadges.length === 0) {
+  if (badges.length === 0) {
     return (
       <p className="text-sm text-charcoal-light text-center py-6">{emptyMessage}</p>
     );
@@ -31,7 +28,7 @@ export function TrustBadges({ badges, emptyMessage = "No badges earned yet" }: T
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {visibleBadges.map((badge) => {
+      {badges.map((badge) => {
         const Icon = BADGE_ICONS[badge.badge_type] ?? BadgeCheck;
         return (
           <div

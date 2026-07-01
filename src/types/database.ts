@@ -65,13 +65,11 @@ export type DocumentType =
   | "government_id"
   | "selfie"
   | "address_proof"
-  | "background_check"
   | "phone_verification"
   | "video_verification";
 
 export type BadgeType =
   | "identity_verified"
-  | "background_checked"
   | "community_vouched"
   | "experienced_host"
   | "experienced_traveler"
@@ -218,6 +216,7 @@ export interface StayBooking {
   nightly_rate: number | null;
   total_amount: number | null;
   payment_status: BookingPaymentStatus;
+  stripe_payment_intent_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -455,6 +454,7 @@ export interface PublicListing {
   published_at: string | null;
   created_at: string;
   trust_score: number;
+  trust_score_breakdown: Record<string, number> | null;
   profile_completion: number;
   verification_status: VerificationStatus;
   host_first_name: string | null;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Globe, Utensils, Home, Sparkles, Shield } from "lucide-react";
+import { HostIntroVideo } from "@/components/listings/HostIntroVideo";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { ProfileTabs } from "@/components/design/ProfileTabs";
 import { ListingReviewAction } from "@/components/reviews/ListingReviewAction";
@@ -67,11 +68,16 @@ export function FamilyProfileContent({
             <section>
               <h2 className="text-xl font-semibold text-forest mb-3">Meet Your Host</h2>
               <div className="rounded-2xl overflow-hidden bg-black aspect-video">
-                <video
+                <HostIntroVideo
                   src={introVideoUrl}
-                  controls
-                  playsInline
-                  className="w-full h-full object-contain"
+                  variant="player"
+                  listingId={listing.id}
+                  className="h-full w-full object-contain"
+                  ariaLabel={
+                    hostName
+                      ? `Introduction video from ${hostName}`
+                      : "Host introduction video"
+                  }
                 />
               </div>
               {hostName && (

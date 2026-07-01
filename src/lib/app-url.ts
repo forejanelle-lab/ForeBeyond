@@ -1,5 +1,7 @@
 /** Canonical app origin for auth emails and redirects (never localhost in production). */
 
+import { PRODUCTION_SITE_URL } from "@/lib/site-metadata";
+
 function normalizeOrigin(url: string) {
   return url.replace(/\/$/, "");
 }
@@ -32,7 +34,7 @@ export function getAppUrl(requestOrigin?: string): string {
     return normalizeOrigin(requestOrigin);
   }
 
-  return "http://localhost:3000";
+  return PRODUCTION_SITE_URL;
 }
 
 export function getEmailVerificationRedirectUrl(requestOrigin?: string): string {

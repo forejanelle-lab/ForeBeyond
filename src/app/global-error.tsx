@@ -1,7 +1,5 @@
 "use client";
 
-import "./globals.css";
-
 export default function GlobalError({
   reset,
 }: {
@@ -10,20 +8,54 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-cream text-charcoal antialiased">
-        <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-24 text-center">
-          <p className="mb-3 text-sm font-medium uppercase tracking-wide text-gold">
+      <body
+        style={{
+          margin: 0,
+          minHeight: "100vh",
+          fontFamily: "system-ui, sans-serif",
+          background: "#f9f7f2",
+          color: "#333333",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 480,
+            margin: "0 auto",
+            padding: "4rem 1.5rem",
+            textAlign: "center",
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 0.75rem",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+              color: "#d4af37",
+            }}
+          >
             Something went wrong
           </p>
-          <h1 className="mb-3 text-2xl font-bold text-forest">Fore Beyond hit an error</h1>
-          <p className="mb-8 text-sm leading-relaxed text-charcoal-light">
-            Refresh the page to continue. If the problem persists, try opening the site in a private
-            window.
+          <h1 style={{ margin: "0 0 0.75rem", color: "#214e34", fontSize: "1.5rem" }}>
+            Fore Beyond hit an error
+          </h1>
+          <p style={{ margin: "0 0 2rem", color: "#555555", lineHeight: 1.6 }}>
+            Refresh the page to continue. If the problem persists, try opening the site in a
+            private window.
           </p>
           <button
             type="button"
             onClick={reset}
-            className="rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white hover:bg-forest-light"
+            style={{
+              border: "none",
+              borderRadius: 9999,
+              background: "#214e34",
+              color: "#fff",
+              padding: "0.65rem 1.25rem",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
           >
             Try again
           </button>
