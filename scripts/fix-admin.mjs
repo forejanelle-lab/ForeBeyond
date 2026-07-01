@@ -1,10 +1,11 @@
 /**
  * Ensure the platform admin account has is_admin=true and a confirmed auth user.
- * Email: PLATFORM_ADMIN_EMAIL or forejanelle@gmail.com
+ * Email: PLATFORM_ADMIN_EMAIL or forebeyond@gmail.com
  */
 import { createPgClient } from "./pg-connect.mjs";
 
-const DEFAULT_ADMIN_EMAIL = "forejanelle@gmail.com";
+const DEFAULT_ADMIN_EMAIL = "forebeyond@gmail.com";
+const LEGACY_ADMIN_EMAIL = "forejanelle@gmail.com";
 const ADMIN_PASSWORD = "ForeBeyond123!";
 const INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
 const ADMIN_ID = "a2200001-0000-4000-8000-000000000001";
@@ -13,11 +14,50 @@ function getAdminEmail() {
   return (process.env.PLATFORM_ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
 }
 
+async function migrateLegacyAdminEmail(client, adminEmail) {
+  if (adminEmail === LEGACY_ADMIN_EMAIL) return;
+
+  const { rows: legacyRows } = await client.query(
+    "SELECT id FROM auth.users WHERE lower(email) = $1 LIMIT 1",
+    [LEGACY_ADMIN_EMAIL]
+  );
+  if (!legacyRows[0]) return;
+
+  const { rows: currentRows } = await client.query(
+    "SELECT id FROM auth.users WHERE lower(email) = $1 LIMIT 1",
+    [adminEmail]
+  );
+  if (currentRows[0]) return;
+
+  const adminId = legacyRows[0].id;
+  console.log("Migrating platform admin email %s -> %s", LEGACY_ADMIN_EMAIL, adminEmail);
+
+  await client.query("UPDATE auth.users SET email = $2, updated_at = NOW() WHERE id = $1", [
+    adminId,
+    adminEmail,
+  ]);
+  await client.query("UPDATE profiles SET email = $2, updated_at = NOW() WHERE id = $1", [
+    adminId,
+    adminEmail,
+  ]);
+  await client.query(
+    `UPDATE auth.identities
+     SET identity_data = jsonb_set(
+       jsonb_set(identity_data, '{email}', to_jsonb($2::text)),
+       '{sub}', to_jsonb($1::text)
+     ),
+     updated_at = NOW()
+     WHERE user_id = $1 AND provider = 'email'`,
+    [adminId, adminEmail]
+  );
+}
+
 async function main() {
   const adminEmail = getAdminEmail();
   const client = await createPgClient();
 
   try {
+    await migrateLegacyAdminEmail(client, adminEmail);
     const { rows: authRows } = await client.query(
       "SELECT id, email FROM auth.users WHERE lower(email) = $1 LIMIT 1",
       [adminEmail]

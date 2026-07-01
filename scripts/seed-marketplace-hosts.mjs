@@ -1,6 +1,6 @@
 /**
  * Seed marketplace hosts with full profiles, listings, bookings, and reviews.
- * Preserves platform admin (forejanelle@gmail.com).
+ * Preserves platform admin (forebeyond@gmail.com).
  *
  * Totals: 33 hosts — PR 10, Spain 6, Alaska 2, Japan 8, Italy 4, Canada 3
  * Each host: varied completed stays/reviews (3–12) and trust scores >= 80

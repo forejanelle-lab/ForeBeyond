@@ -1,6 +1,6 @@
 import { createPgClient } from "./pg-connect.mjs";
 
-const DEFAULT_ADMIN_EMAIL = "forejanelle@gmail.com";
+const DEFAULT_ADMIN_EMAIL = "forebeyond@gmail.com";
 const ADMIN_PASSWORD = "ForeBeyond123!";
 const INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
 

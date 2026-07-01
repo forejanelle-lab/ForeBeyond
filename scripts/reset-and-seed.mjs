@@ -2,7 +2,7 @@ import { createPgClient } from "./pg-connect.mjs";
 
 const PASSWORD = "ForeBeyond123!";
 const INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
-const ADMIN_EMAIL = "forejanelle@gmail.com";
+const ADMIN_EMAIL = "forebeyond@gmail.com";
 
 const ADMIN = {
   id: "a2200001-0000-4000-8000-000000000001",

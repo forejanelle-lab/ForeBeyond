@@ -125,7 +125,7 @@ Each pull request gets a preview URL. Use the same Supabase project or a staging
 | Auth redirect loop | Verify Site URL and redirect URLs in Supabase |
 | `ENOTFOUND` on migrations | Use Session pooler URL (see ENVIRONMENT.md) |
 | Images 500 error | Confirm Supabase storage URLs in `next.config.ts` |
-| Admin 404 / no Admin nav | Run `npm run db:fix-admin`, sign in as `forejanelle@gmail.com`, and set `PLATFORM_ADMIN_EMAIL=forejanelle@gmail.com` in Vercel (optional if using default) |
+| Admin 404 / no Admin nav | Run `npm run db:fix-admin`, sign in as `forebeyond@gmail.com`, and set `PLATFORM_ADMIN_EMAIL=forebeyond@gmail.com` in Vercel (optional if using default) |
 | Analytics empty | Enable Web Analytics in Vercel; wait for traffic |
 
 ## CI Migration (Optional)
