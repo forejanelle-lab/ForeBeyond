@@ -25,9 +25,9 @@ export function Navigation({ user }: NavigationProps) {
   const showSupport = Boolean(user) && !showAdmin;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-sage-dark/20 bg-white">
-      <Container>
-        <nav className="flex h-16 items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 border-b border-sage-dark/20 bg-white overflow-visible">
+      <Container className="overflow-visible">
+        <nav className="flex h-16 items-center justify-between gap-4 overflow-visible">
           <Logo />
 
           <div className="flex items-center gap-1 shrink-0 ml-auto">

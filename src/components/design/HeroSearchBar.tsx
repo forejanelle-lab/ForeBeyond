@@ -124,12 +124,16 @@ export function HeroSearchBar({
     <div className="relative w-full max-w-4xl group">
       <div
         ref={rootRef}
-        className={`relative w-full rounded-2xl bg-white shadow-xl border border-sage-dark/20 p-2 md:p-3 transition-opacity ${
+        className={`relative w-full overflow-visible rounded-2xl bg-white shadow-xl border border-sage-dark/20 p-2 md:p-3 transition-opacity ${
           disabled ? "opacity-50 select-none [&_input]:pointer-events-none [&_button]:pointer-events-none" : ""
         }`}
       >
-        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_0.9fr_auto] gap-2 md:gap-0 md:divide-x divide-sage-dark/30">
-          <div className="relative px-2 md:px-0 border-b md:border-b-0 border-sage-dark/20 pb-2 md:pb-0">
+        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_0.9fr_auto] gap-2 md:gap-0 md:divide-x divide-sage-dark/30 overflow-visible">
+          <div
+            className={`relative px-2 md:px-0 border-b md:border-b-0 border-sage-dark/20 pb-2 md:pb-0 ${
+              showSuggestions ? "z-30" : ""
+            }`}
+          >
             <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sage/30 transition-colors">
               <MapPin className="h-5 w-5 text-forest shrink-0" />
               <div className="flex-1 min-w-0">
@@ -187,7 +191,11 @@ export function HeroSearchBar({
             )}
           </div>
 
-          <div className="relative px-2 md:px-0 border-b md:border-b-0 border-sage-dark/20 pb-2 md:pb-0">
+          <div
+            className={`relative px-2 md:px-0 border-b md:border-b-0 border-sage-dark/20 pb-2 md:pb-0 ${
+              showDates ? "z-30" : ""
+            }`}
+          >
             <button
               type="button"
               disabled={disabled}
@@ -252,7 +260,11 @@ export function HeroSearchBar({
             )}
           </div>
 
-          <div className="relative px-2 md:px-0 border-b md:border-b-0 border-sage-dark/20 pb-2 md:pb-0">
+          <div
+            className={`relative px-2 md:px-0 border-b md:border-b-0 border-sage-dark/20 pb-2 md:pb-0 ${
+              showGuests ? "z-30" : ""
+            }`}
+          >
             <button
               type="button"
               disabled={disabled}
