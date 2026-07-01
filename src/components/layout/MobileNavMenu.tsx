@@ -5,8 +5,10 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { HelpCircle, Menu, X } from "lucide-react";
 import { LogoutButton } from "@/components/layout/LogoutButton";
+import { ContactModal } from "@/components/support/ContactModal";
 import { SupportRequestModal } from "@/components/support/SupportRequestModal";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { isExternalNavHref, isMailtoNavHref } from "@/lib/nav-links";
 import type { NavItem } from "@/lib/navigation-menu";
 
 interface MobileNavMenuProps {
@@ -28,6 +30,7 @@ export function MobileNavMenu({
 }: MobileNavMenuProps) {
   const [open, setOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -63,17 +66,53 @@ export function MobileNavMenu({
         role="menu"
         className="fixed right-4 top-[calc(4rem+0.5rem)] z-[101] w-64 max-h-[min(80vh,calc(100dvh-5.5rem))] overflow-y-auto rounded-2xl bg-white shadow-xl border border-sage-dark/30 p-4 flex flex-col gap-1"
       >
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="px-3 py-2.5 text-sm font-medium text-charcoal hover:bg-sage/50 rounded-lg transition-colors"
-          >
-            {item.label}
-          </Link>
-        ))}
+        {items.map((item) => {
+          const itemClassName =
+            "px-3 py-2.5 text-sm font-medium text-charcoal hover:bg-sage/50 rounded-lg transition-colors";
+
+          if (isMailtoNavHref(item.href)) {
+            return (
+              <button
+                key={item.href}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  setContactOpen(true);
+                }}
+                className={`${itemClassName} w-full text-left`}
+              >
+                {item.label}
+              </button>
+            );
+          }
+
+          if (isExternalNavHref(item.href)) {
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className={`${itemClassName} block`}
+              >
+                {item.label}
+              </a>
+            );
+          }
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className={itemClassName}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
         {showSupport && userId && (
           <button
             type="button"
@@ -144,6 +183,14 @@ export function MobileNavMenu({
           email={userEmail}
         />
       )}
+
+      <ContactModal
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        userId={isLoggedIn ? userId : undefined}
+        fullName={userFullName}
+        email={userEmail}
+      />
     </div>
   );
 }

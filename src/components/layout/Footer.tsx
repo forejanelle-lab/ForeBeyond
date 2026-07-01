@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { footer, brand } from "@/lib/brand";
 import { Logo } from "@/components/design/Logo";
+import { ContactFooterLink } from "@/components/support/ContactFooterLink";
 import { Container } from "@/components/ui/Container";
+import { isMailtoNavHref } from "@/lib/nav-links";
 
 function FooterLink({
   href,
@@ -11,6 +13,10 @@ function FooterLink({
   label: string;
 }) {
   const className = "text-sm text-white/70 hover:text-white transition-colors";
+
+  if (href.startsWith("mailto:") && isMailtoNavHref(href)) {
+    return <ContactFooterLink label={label} className={className} />;
+  }
 
   if (href.startsWith("mailto:")) {
     return (

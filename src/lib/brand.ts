@@ -19,7 +19,7 @@ export const navigation = {
   main: [
     { label: "How It Works", href: "/#how-it-works" },
     { label: "About", href: "/#mission" },
-    { label: "Contact", href: "mailto:contact@forebeyond.com" },
+    { label: "Contact", href: "mailto:hello@forebeyond.com" },
   ],
   auth: [
     { label: "Sign In", href: "/auth/sign-in" },
@@ -36,7 +36,7 @@ export const footer = {
   company: [
     { label: "About", href: "/#mission" },
     { label: "Verification Center", href: "/verification-center" },
-    { label: "Contact", href: "mailto:contact@forebeyond.com" },
+    { label: "Contact", href: "mailto:hello@forebeyond.com" },
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy" },
