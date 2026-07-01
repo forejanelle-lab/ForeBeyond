@@ -3,7 +3,6 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { TravelerSignupLink } from "@/components/auth/TravelerSignupButton";
 import { createClient } from "@/lib/supabase/client";
 import { formatAuthError } from "@/lib/auth-errors";
 import { isEmailNotConfirmedError } from "@/lib/auth-verification";
@@ -120,9 +119,9 @@ function SignInForm() {
       <div className="mt-6 space-y-2 text-center text-sm text-charcoal-light">
         <div>
           Don&apos;t have an account?{" "}
-          <TravelerSignupLink className="text-forest font-medium hover:underline">
+          <Link href="/auth/sign-up" className="text-forest font-medium hover:underline">
             Create one
-          </TravelerSignupLink>
+          </Link>
         </div>
         <div>
           Need to verify your email?{" "}
