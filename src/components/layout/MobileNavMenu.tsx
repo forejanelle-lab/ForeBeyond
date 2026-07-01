@@ -7,7 +7,7 @@ import { HelpCircle, Menu, X } from "lucide-react";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 import { ContactModal } from "@/components/support/ContactModal";
 import { SupportRequestModal } from "@/components/support/SupportRequestModal";
-import { ButtonLink } from "@/components/ui/ButtonLink";
+import { TravelerSignupButton } from "@/components/auth/TravelerSignupButton";
 import { isExternalNavHref, isMailtoNavHref } from "@/lib/nav-links";
 import type { NavItem } from "@/lib/navigation-menu";
 
@@ -140,15 +140,9 @@ export function MobileNavMenu({
             >
               Sign In
             </Link>
-            <ButtonLink
-              href="/auth/sign-up"
-              variant="primary"
-              size="sm"
-              className="w-full mt-1"
-              onClick={() => setOpen(false)}
-            >
+            <TravelerSignupButton variant="primary" size="sm" className="w-full mt-1">
               Get Started
-            </ButtonLink>
+            </TravelerSignupButton>
           </>
         )}
       </div>

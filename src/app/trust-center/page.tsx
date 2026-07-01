@@ -12,6 +12,7 @@ import { sampleImages } from "@/lib/sample-images";
 import { createClient } from "@/lib/supabase/server";
 import { PageHero } from "@/components/design/PageHero";
 import { SectionHeader } from "@/components/design/SectionHeader";
+import { TravelerSignupButton } from "@/components/auth/TravelerSignupButton";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
@@ -149,9 +150,9 @@ export default async function TrustCenterPage() {
                 Go to Verification Center
               </ButtonLink>
               {!user && (
-                <ButtonLink href="/auth/sign-up" variant="outline" size="lg">
+                <TravelerSignupButton variant="outline" size="lg">
                   Join {brand.name}
-                </ButtonLink>
+                </TravelerSignupButton>
               )}
             </div>
           </Card>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Home, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { isTravelerSignupEnabled } from "@/lib/traveler-signup";
 import { AuthBrandHeader } from "@/components/auth/AuthBrandHeader";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -264,12 +265,14 @@ export default function HostOnboardingPage() {
         )}
       </Card>
 
-      <p className="mt-6 text-center text-sm text-charcoal-light">
-        Want to travel instead?{" "}
-        <Link href="/onboarding/traveler" className="text-forest font-medium hover:underline">
-          Switch to traveler onboarding
-        </Link>
-      </p>
+      {isTravelerSignupEnabled() && (
+        <p className="mt-6 text-center text-sm text-charcoal-light">
+          Want to travel instead?{" "}
+          <Link href="/onboarding/traveler" className="text-forest font-medium hover:underline">
+            Switch to traveler onboarding
+          </Link>
+        </p>
+      )}
     </Container>
   );
 }

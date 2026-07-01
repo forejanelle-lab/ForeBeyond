@@ -9,6 +9,10 @@ import { fetchEmailVerificationRedirectUrl } from "@/lib/auth-email-redirect";
 import { getPostLoginPath } from "@/lib/post-login";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { brand } from "@/lib/brand";
+import {
+  isTravelerSignupEnabled,
+  TRAVELER_SIGNUP_DISABLED_MESSAGE,
+} from "@/lib/traveler-signup";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
@@ -136,6 +140,12 @@ export default function SignUpPage() {
       subtitle={brand.tagline}
     >
       <Card variant="elevated" padding="lg" className="shadow-xl border border-sage-dark/30">
+        {!isTravelerSignupEnabled() && (
+          <p className="mb-5 text-sm text-charcoal-light bg-sage/40 rounded-xl px-4 py-3">
+            {TRAVELER_SIGNUP_DISABLED_MESSAGE} Hosts can still create an account and select{" "}
+            <strong className="text-forest">Host</strong> when completing their profile.
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input

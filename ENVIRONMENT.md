@@ -80,6 +80,22 @@ npm run db:discover
 
 ---
 
+## Transactional email (Resend)
+
+Required for the **contact form**, **Help & Support**, and **host notification emails**.
+
+| Variable | Required | Example |
+|----------|----------|---------|
+| `RESEND_API_KEY` | Yes | `re_...` from [resend.com/api-keys](https://resend.com/api-keys) |
+| `RESEND_FROM_EMAIL` | Yes | `Fore Beyond <hello@forebeyond.com>` (must be a **verified domain** in Resend) |
+| `CONTACT_INBOX_EMAIL` | No | `forebeyond@gmail.com` — where contact form messages are delivered |
+
+For testing before your domain is verified, Resend allows `Fore Beyond <onboarding@resend.dev>` as the from address.
+
+**Vercel:** Project → Settings → Environment Variables → Production. Redeploy after adding or changing these.
+
+---
+
 ## Vercel Analytics
 
 No environment variables required. Analytics activates automatically when:
@@ -153,6 +169,10 @@ When adding variables in Vercel, set scopes appropriately:
 | `NEXT_PUBLIC_SUPABASE_URL` | ✓ | ✓ | ✓ |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✓ | ✓ | ✓ |
 | `NEXT_PUBLIC_APP_URL` | ✓ | ✓ (preview URL) | optional |
+| `PLATFORM_ADMIN_EMAIL` | ✓ | optional | optional |
+| `RESEND_API_KEY` | ✓ | optional | optional |
+| `RESEND_FROM_EMAIL` | ✓ | optional | optional |
+| `CONTACT_INBOX_EMAIL` | optional | optional | optional |
 | `DATABASE_URL` | CI only | CI only | Local only |
 
 Use separate Supabase projects for production vs. staging when possible.

@@ -1,4 +1,6 @@
 import { privatePageMetadata } from "@/lib/site-metadata";
+import { redirect } from "next/navigation";
+import { isTravelerSignupEnabled } from "@/lib/traveler-signup";
 
 export const metadata = privatePageMetadata({
   title: "Traveler Onboarding",
@@ -11,5 +13,9 @@ export default function TravelerOnboardingLayout({
 }: {
   children: React.ReactNode;
 }) {
+  if (!isTravelerSignupEnabled()) {
+    redirect("/profile/complete");
+  }
+
   return children;
 }

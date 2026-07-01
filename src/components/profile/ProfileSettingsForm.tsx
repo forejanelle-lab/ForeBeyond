@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
+import { DisabledWithTooltip } from "@/components/ui/DisabledWithTooltip";
+import {
+  isTravelerSignupEnabled,
+  TRAVELER_SIGNUP_DISABLED_MESSAGE,
+} from "@/lib/traveler-signup";
 import type { UserRole } from "@/types/database";
 
 interface ProfileSettingsFormProps {
@@ -57,6 +62,11 @@ export function ProfileSettingsForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const effectiveRole = lockedRole ? initial.role : role;
+
+    if (effectiveRole === "traveler" && !isTravelerSignupEnabled()) {
+      setError(TRAVELER_SIGNUP_DISABLED_MESSAGE);
+      return;
+    }
 
     if (!effectiveRole) {
       setError("Please choose whether you are joining as a traveler or a host");
@@ -208,21 +218,44 @@ export function ProfileSettingsForm({
               I am joining as a...
             </label>
             <div className="space-y-3">
-              {roles.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => setRole(r.value)}
-                  className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
-                    role === r.value
-                      ? "border-forest bg-sage/30"
-                      : "border-sage-dark hover:border-forest/30"
-                  }`}
-                >
-                  <span className="font-medium text-forest">{r.label}</span>
-                  <p className="mt-1 text-sm text-charcoal-light">{r.description}</p>
-                </button>
-              ))}
+              {roles.map((r) => {
+                const travelerDisabled =
+                  r.value === "traveler" && !isTravelerSignupEnabled();
+
+                const button = (
+                  <button
+                    key={r.value}
+                    type="button"
+                    disabled={travelerDisabled}
+                    onClick={() => {
+                      if (!travelerDisabled) setRole(r.value);
+                    }}
+                    className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
+                      travelerDisabled
+                        ? "border-sage-dark/50 bg-sage/20 opacity-60 cursor-not-allowed"
+                        : role === r.value
+                          ? "border-forest bg-sage/30"
+                          : "border-sage-dark hover:border-forest/30"
+                    }`}
+                  >
+                    <span className="font-medium text-forest">{r.label}</span>
+                    <p className="mt-1 text-sm text-charcoal-light">{r.description}</p>
+                  </button>
+                );
+
+                if (!travelerDisabled) return button;
+
+                return (
+                  <DisabledWithTooltip
+                    key={r.value}
+                    message={TRAVELER_SIGNUP_DISABLED_MESSAGE}
+                    className="w-full"
+                    tooltipClassName="w-72"
+                  >
+                    {button}
+                  </DisabledWithTooltip>
+                );
+              })}
             </div>
           </div>
         )}
