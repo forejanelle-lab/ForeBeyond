@@ -1,4 +1,4 @@
-import type { DocumentType, VerificationStatus } from "@/types/database";
+import type { DocumentType, UserRole, VerificationStatus } from "@/types/database";
 
 export const STAY_REQUEST_REQUIRED_DOCUMENTS = [
   "government_id",
@@ -9,6 +9,38 @@ export type StayRequestRequiredDocument = (typeof STAY_REQUEST_REQUIRED_DOCUMENT
 
 export const STAY_REQUEST_VERIFICATION_MESSAGE =
   "Submit government ID and selfie verification in the Verification Center to request a stay.";
+
+export const TRAVELER_ACCOUNT_REQUIRED_MESSAGE =
+  "Please create a traveler account to request a stay.";
+
+export const TRAVELER_ACCOUNT_SEARCH_MESSAGE =
+  "Please create a traveler account to search families.";
+
+export interface RequestStayEligibility {
+  canRequest: boolean;
+  disabledReason: string;
+}
+
+export function getRequestStayEligibility(
+  role: UserRole | null | undefined,
+  documents: Partial<Record<DocumentType, VerificationStatus>>
+): RequestStayEligibility {
+  if (role === "host") {
+    return {
+      canRequest: false,
+      disabledReason: TRAVELER_ACCOUNT_REQUIRED_MESSAGE,
+    };
+  }
+
+  if (canRequestStay(documents)) {
+    return { canRequest: true, disabledReason: "" };
+  }
+
+  return {
+    canRequest: false,
+    disabledReason: STAY_REQUEST_VERIFICATION_MESSAGE,
+  };
+}
 
 export function isVerificationDocumentSubmitted(
   status: VerificationStatus | undefined

@@ -32,6 +32,7 @@ interface FamilyProfileViewProps {
   showSaveButton?: boolean;
   showBookingActions?: boolean;
   canRequestStay?: boolean;
+  requestStayDisabledReason?: string;
   userId?: string | null;
   bookingCount?: number;
   memberSince?: string | null;
@@ -66,6 +67,7 @@ export function FamilyProfileView({
   showSaveButton = true,
   showBookingActions = true,
   canRequestStay = false,
+  requestStayDisabledReason,
   userId = null,
   bookingCount = 0,
   memberSince = null,
@@ -250,6 +252,7 @@ export function FamilyProfileView({
                       <RequestStayButton
                         listingId={listing.id}
                         enabled={canRequestStay}
+                        disabledReason={requestStayDisabledReason}
                       />
                       {canMessageHost && messageConversationId ? (
                         <Link

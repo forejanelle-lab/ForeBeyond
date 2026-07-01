@@ -30,8 +30,12 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { canRequestStay, documentsMapFromRows } from "@/lib/traveler-verification";
-import type { DocumentType, PublicListing, VerificationStatus } from "@/types/database";
+import {
+  TRAVELER_ACCOUNT_REQUIRED_MESSAGE,
+  getRequestStayEligibility,
+  documentsMapFromRows,
+} from "@/lib/traveler-verification";
+import type { DocumentType, Profile, PublicListing, VerificationStatus } from "@/types/database";
 
 interface RequestStayWizardProps {
   listing: Pick<
@@ -112,22 +116,29 @@ export function RequestStayWizard({
       return;
     }
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
     const { data: verificationDocs } = await supabase
       .from("verification_documents")
       .select("document_type, status")
       .eq("user_id", user.id)
       .in("document_type", ["government_id", "selfie"]);
 
-    if (
-      !canRequestStay(
-        documentsMapFromRows(
-          verificationDocs as
-            | { document_type: DocumentType; status: VerificationStatus }[]
-            | null
-        )
+    const eligibility = getRequestStayEligibility(
+      (profile as Pick<Profile, "role"> | null)?.role ?? null,
+      documentsMapFromRows(
+        verificationDocs as
+          | { document_type: DocumentType; status: VerificationStatus }[]
+          | null
       )
-    ) {
-      setError("Submit government ID and selfie verification before requesting a stay.");
+    );
+
+    if (!eligibility.canRequest) {
+      setError(eligibility.disabledReason);
       setIsLoading(false);
       return;
     }

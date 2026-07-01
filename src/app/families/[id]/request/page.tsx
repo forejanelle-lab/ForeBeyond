@@ -8,12 +8,16 @@ import { getStayBlockedDates } from "@/lib/stay-availability";
 import { RequestStayWizard } from "@/components/stays/RequestStayWizard";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
-import { STAY_REQUEST_VERIFICATION_MESSAGE, canRequestStay, documentsMapFromRows } from "@/lib/traveler-verification";
+import {
+  TRAVELER_ACCOUNT_REQUIRED_MESSAGE,
+  getRequestStayEligibility,
+  documentsMapFromRows,
+} from "@/lib/traveler-verification";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { privatePageMetadata } from "@/lib/site-metadata";
-import type { DocumentType, PublicListing, VerificationStatus } from "@/types/database";
+import type { DocumentType, Profile, PublicListing, VerificationStatus } from "@/types/database";
 
 export async function generateMetadata({
   params,
@@ -50,7 +54,7 @@ export default async function RequestStayPage({
   ]);
 
   const { data: profile } = user
-    ? await supabase.from("profiles").select("bio").eq("id", user.id).maybeSingle()
+    ? await supabase.from("profiles").select("bio, role").eq("id", user.id).maybeSingle()
     : { data: null };
 
   const { data: travelerProfile } = user
@@ -67,6 +71,7 @@ export default async function RequestStayPage({
   const blockedDateRanges = await getStayBlockedDates(supabase, id);
 
   let travelerCanRequestStay = false;
+  let requestBlockedMessage = TRAVELER_ACCOUNT_REQUIRED_MESSAGE;
   if (user) {
     const { data: verificationDocs } = await supabase
       .from("verification_documents")
@@ -74,13 +79,16 @@ export default async function RequestStayPage({
       .eq("user_id", user.id)
       .in("document_type", ["government_id", "selfie"]);
 
-    travelerCanRequestStay = canRequestStay(
+    const eligibility = getRequestStayEligibility(
+      (profile as Pick<Profile, "role"> | null)?.role ?? null,
       documentsMapFromRows(
         verificationDocs as
           | { document_type: DocumentType; status: VerificationStatus }[]
           | null
       )
     );
+    travelerCanRequestStay = eligibility.canRequest;
+    requestBlockedMessage = eligibility.disabledReason;
   }
 
   return (
@@ -122,13 +130,23 @@ export default async function RequestStayPage({
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sage/60 text-forest">
                 <Shield className="h-6 w-6" />
               </div>
-              <h2 className="text-xl font-semibold text-forest">Verification required</h2>
+              <h2 className="text-xl font-semibold text-forest">
+                {(profile as Pick<Profile, "role"> | null)?.role === "host"
+                  ? "Traveler account required"
+                  : "Verification required"}
+              </h2>
               <p className="text-sm text-charcoal-light max-w-md mx-auto">
-                {STAY_REQUEST_VERIFICATION_MESSAGE}
+                {requestBlockedMessage}
               </p>
-              <ButtonLink href="/verification-center" variant="primary" size="md">
-                Go to Verification Center
-              </ButtonLink>
+              {(profile as Pick<Profile, "role"> | null)?.role === "host" ? (
+                <ButtonLink href="/" variant="primary" size="md">
+                  Back to homepage
+                </ButtonLink>
+              ) : (
+                <ButtonLink href="/verification-center" variant="primary" size="md">
+                  Go to Verification Center
+                </ButtonLink>
+              )}
             </div>
           )}
           <p className="flex items-center justify-center gap-1.5 text-xs text-charcoal-light mt-6 pt-6 border-t border-sage-dark/20">

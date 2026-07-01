@@ -2,6 +2,11 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "@/lib/env";
 import { getPostLoginPath } from "@/lib/post-login";
+import {
+  isProfileCompletionAllowlisted,
+  needsProfileCompletion,
+  PROFILE_COMPLETE_PATH,
+} from "@/lib/profile-completion";
 
 export async function updateSession(request: NextRequest) {
   const env = getSupabaseEnv();
@@ -68,13 +73,38 @@ export async function updateSession(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin, role")
+      .select("is_admin, role, onboarding_step")
       .eq("id", user.id)
       .single();
+
+    if (needsProfileCompletion(user.email ?? "", profile)) {
+      url.pathname = PROFILE_COMPLETE_PATH;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
 
     url.pathname = getPostLoginPath(user.email ?? "", profile, redirect);
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  if (
+    user &&
+    !isProfileCompletionAllowlisted(pathname) &&
+    pathname !== "/auth/callback"
+  ) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin, role, onboarding_step")
+      .eq("id", user.id)
+      .single();
+
+    if (needsProfileCompletion(user.email ?? "", profile)) {
+      const url = request.nextUrl.clone();
+      url.pathname = PROFILE_COMPLETE_PATH;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   const skipActivity =

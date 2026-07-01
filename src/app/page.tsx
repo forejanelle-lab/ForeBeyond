@@ -10,12 +10,14 @@ import { TrustIndicators } from "@/components/design/TrustIndicators";
 import { DestinationCard } from "@/components/design/DestinationCard";
 import { SectionHeader } from "@/components/design/SectionHeader";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { BecomeHostButton } from "@/components/home/BecomeHostButton";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
 
+import { TRAVELER_ACCOUNT_SEARCH_MESSAGE } from "@/lib/traveler-verification";
 import type { Profile } from "@/types/database";
 
 const steps = [
@@ -86,7 +88,7 @@ export default async function HomePage() {
           <div className="mt-8 relative z-20">
             <HeroSearchBar
               disabled={isHostUser}
-              disabledMessage="Please create a traveler account to search families."
+              disabledMessage={TRAVELER_ACCOUNT_SEARCH_MESSAGE}
             />
             {!isLoggedIn && (
               <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -297,15 +299,7 @@ export default async function HomePage() {
                 Welcome travelers into your daily life — share your culture, your cooking, and your
                 neighborhood stories. Hosting on Fore Beyond is about connection, not commerce.
               </p>
-              <ButtonLink
-                href="/onboarding/host"
-                variant="secondary"
-                size="lg"
-                className="mt-10 hover:shadow-lg hover:-translate-y-0.5 transition-all"
-              >
-                Become a Host
-                <ArrowRight className="h-4 w-4" />
-              </ButtonLink>
+              <BecomeHostButton isLoggedIn={isLoggedIn} />
             </div>
           </div>
         </Container>

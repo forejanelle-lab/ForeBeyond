@@ -7,6 +7,7 @@ import {
   filterDestinationSuggestions,
   type DestinationSuggestion,
 } from "@/lib/destination-suggestions";
+import { TRAVELER_ACCOUNT_SEARCH_MESSAGE } from "@/lib/traveler-verification";
 import { useTodayIso } from "@/hooks/use-today-iso";
 
 const GUEST_OPTIONS = [
@@ -33,7 +34,7 @@ interface HeroSearchBarProps {
 
 export function HeroSearchBar({
   disabled = false,
-  disabledMessage = "Please create a traveler account to search families.",
+  disabledMessage = TRAVELER_ACCOUNT_SEARCH_MESSAGE,
 }: HeroSearchBarProps) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -331,7 +332,7 @@ export function HeroSearchBar({
           />
           <div
             role="tooltip"
-            className="pointer-events-none absolute left-1/2 bottom-0 translate-y-full pt-3 -translate-x-1/2 w-[min(100%,20rem)] z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="pointer-events-none absolute left-1/2 top-full z-30 mt-3 w-[min(100%,20rem)] -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100"
           >
             <div className="rounded-xl bg-charcoal text-white text-sm px-4 py-3 text-center shadow-lg">
               {disabledMessage}

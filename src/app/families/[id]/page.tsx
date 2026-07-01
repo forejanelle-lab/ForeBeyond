@@ -10,10 +10,9 @@ import { getHostReviewEligibility } from "@/lib/listing-review-eligibility";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { hostHasMessagedStayRequest, isStayMessagingOpen } from "@/lib/messaging";
 import { createPageMetadata } from "@/lib/site-metadata";
-import type { HostListing, ListingPhoto, Profile, PublicListing, PublicReview, StayRequest, TrustBadge } from "@/types/database";
+import type { DocumentType, HostListing, ListingPhoto, Profile, PublicListing, PublicReview, StayRequest, TrustBadge, VerificationStatus } from "@/types/database";
 import { normalizeTrustScoreBreakdown, type TrustScoreBreakdown } from "@/lib/trust-score";
-import { canRequestStay, documentsMapFromRows } from "@/lib/traveler-verification";
-import type { DocumentType, VerificationStatus } from "@/types/database";
+import { getRequestStayEligibility, documentsMapFromRows } from "@/lib/traveler-verification";
 
 export async function generateMetadata({
   params,
@@ -272,20 +271,30 @@ export default async function FamilyProfilePage({
   const listingReviewCount = (reviews as PublicReview[] | null)?.length ?? 0;
 
   let travelerCanRequestStay = false;
+  let requestStayDisabledReason: string | undefined;
   if (user && !isOwnListing && user.id !== hostId) {
+    const { data: viewerProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
     const { data: verificationDocs } = await supabase
       .from("verification_documents")
       .select("document_type, status")
       .eq("user_id", user.id)
       .in("document_type", ["government_id", "selfie"]);
 
-    travelerCanRequestStay = canRequestStay(
+    const eligibility = getRequestStayEligibility(
+      (viewerProfile as Pick<Profile, "role"> | null)?.role ?? null,
       documentsMapFromRows(
         verificationDocs as
           | { document_type: DocumentType; status: VerificationStatus }[]
           | null
       )
     );
+    travelerCanRequestStay = eligibility.canRequest;
+    requestStayDisabledReason = eligibility.disabledReason;
   }
 
   return (
@@ -323,6 +332,7 @@ export default async function FamilyProfilePage({
         showSaveButton={!isOwnListing}
         showBookingActions={!isOwnListing}
         canRequestStay={travelerCanRequestStay}
+        requestStayDisabledReason={requestStayDisabledReason}
         bookingCount={hostStats.bookingCount}
         memberSince={hostMemberSince}
         avgResponseTimeMinutes={hostStats.avgResponseTimeMinutes}
