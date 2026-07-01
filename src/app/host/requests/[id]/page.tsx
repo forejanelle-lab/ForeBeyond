@@ -12,7 +12,7 @@ import { isTripPastEndDate } from "@/lib/reviews";
 import {
   ensureStayConversation,
 } from "@/lib/messaging";
-import { formatMemberDisplayName } from "@/lib/member-display-name";
+import { formatHostGuestDisplayName } from "@/lib/member-display-name";
 import { guestProfilePath } from "@/lib/host-guest-access";
 import { StayRequestStatusBadge } from "@/components/stays/StayRequestStatusBadge";
 import { ReviewList } from "@/components/reviews/ReviewList";
@@ -36,6 +36,8 @@ export const metadata = privatePageMetadata({
   description: "Review a traveler stay request on Fore Beyond.",
   path: "/host/requests",
 });
+
+export const dynamic = "force-dynamic";
 
 export default async function HostRequestDetailPage({
   params,
@@ -79,7 +81,7 @@ export default async function HostRequestDetailPage({
         : Promise.resolve({ data: null }),
       supabase
         .from("profiles")
-        .select("full_name, bio, location, avatar_url, trust_score, verification_status")
+        .select("full_name, email, bio, location, avatar_url, trust_score, verification_status")
         .eq("id", typedRequest.traveler_id)
         .single(),
       supabase
@@ -130,6 +132,7 @@ export default async function HostRequestDetailPage({
 
   const travelerProfile = traveler as {
     full_name: string | null;
+    email: string | null;
     bio: string | null;
     location: string | null;
     avatar_url: string | null;
@@ -137,10 +140,15 @@ export default async function HostRequestDetailPage({
     verification_status: string | null;
   } | null;
   const guestProfileHref = guestProfilePath(typedRequest.traveler_id, typedRequest.id);
-  const travelerDisplayName = formatMemberDisplayName(travelerProfile?.full_name, {
-    fallback: "Traveler",
-    stayStatus: typedRequest.status,
-  });
+  const travelerDisplayName = formatHostGuestDisplayName(
+    {
+      profileFullName: travelerProfile?.full_name,
+      requestDisplayName: typedRequest.traveler_display_name,
+      email: travelerProfile?.email,
+    },
+    typedRequest.status,
+    "Guest"
+  );
   const { intro: travelerIntro, motivation: stayMotivation } = parseStayRequestMessage(
     typedRequest.message
   );

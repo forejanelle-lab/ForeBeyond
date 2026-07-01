@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatAuthError } from "@/lib/auth-errors";
 import { fetchEmailVerificationRedirectUrl } from "@/lib/auth-email-redirect";
+import { getPostLoginPath } from "@/lib/post-login";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { brand } from "@/lib/brand";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import type { Profile } from "@/types/database";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -20,6 +22,36 @@ export default function SignUpPage() {
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  useEffect(() => {
+    async function redirectIfSignedIn() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setIsCheckingSession(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin, role, onboarding_step")
+        .eq("id", user.id)
+        .single();
+
+      window.location.assign(
+        getPostLoginPath(
+          user.email ?? "",
+          profile as Pick<Profile, "is_admin" | "role" | "onboarding_step"> | null
+        )
+      );
+    }
+
+    void redirectIfSignedIn();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,6 +60,26 @@ export default function SignUpPage() {
 
     try {
       const supabase = createClient();
+      const {
+        data: { user: existingUser },
+      } = await supabase.auth.getUser();
+
+      if (existingUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_admin, role, onboarding_step")
+          .eq("id", existingUser.id)
+          .single();
+
+        window.location.assign(
+          getPostLoginPath(
+            existingUser.email ?? "",
+            profile as Pick<Profile, "is_admin" | "role" | "onboarding_step"> | null
+          )
+        );
+        return;
+      }
+
       const emailRedirectTo = await fetchEmailVerificationRedirectUrl();
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
@@ -66,6 +118,16 @@ export default function SignUpPage() {
       setError(message);
       setIsLoading(false);
     }
+  }
+
+  if (isCheckingSession) {
+    return (
+      <AuthShell title={`Join ${brand.name}`} subtitle={brand.tagline}>
+        <Card variant="elevated" padding="lg" className="text-center text-charcoal-light">
+          Loading...
+        </Card>
+      </AuthShell>
+    );
   }
 
   return (

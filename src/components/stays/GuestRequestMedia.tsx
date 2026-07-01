@@ -56,6 +56,8 @@ export function GuestRequestMedia({
                 fill
                 className="object-cover"
                 sizes="80px"
+                unoptimized
+                key={avatarUrl}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-charcoal-light">
@@ -72,6 +74,8 @@ export function GuestRequestMedia({
                 fill
                 className="object-cover"
                 sizes="80px"
+                unoptimized
+                key={avatarUrl}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-charcoal-light">

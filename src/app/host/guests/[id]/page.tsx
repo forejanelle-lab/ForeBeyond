@@ -4,13 +4,15 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { GuestTrustProfile } from "@/components/stays/GuestTrustProfile";
 import { Container } from "@/components/ui/Container";
-import { formatMemberDisplayName } from "@/lib/member-display-name";
+import { formatHostGuestDisplayName } from "@/lib/member-display-name";
 import {
   hostHasGuestRequest,
   pickGuestNameRevealStatus,
 } from "@/lib/host-guest-access";
 import { privatePageMetadata } from "@/lib/site-metadata";
 import type { Profile, PublicReview, StayRequest, TravelerProfile, TrustBadge } from "@/types/database";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return privatePageMetadata({
@@ -56,13 +58,13 @@ export default async function HostGuestProfilePage({
       supabase
         .from("profiles")
         .select(
-          "full_name, bio, location, languages, avatar_url, trust_score, trust_score_breakdown, profile_completion, verification_status, role, created_at"
+          "full_name, email, bio, location, languages, avatar_url, trust_score, trust_score_breakdown, profile_completion, verification_status, role, created_at"
         )
         .eq("id", guestId)
         .single(),
       supabase
         .from("stay_requests")
-        .select("id, status")
+        .select("id, status, traveler_display_name")
         .eq("host_id", user.id)
         .eq("traveler_id", guestId)
         .order("created_at", { ascending: false }),
@@ -85,6 +87,7 @@ export default async function HostGuestProfilePage({
   const typedGuest = guestProfile as Pick<
     Profile,
     | "full_name"
+    | "email"
     | "bio"
     | "location"
     | "languages"
@@ -97,15 +100,21 @@ export default async function HostGuestProfilePage({
     | "created_at"
   >;
 
-  const requests = (guestRequests as Pick<StayRequest, "id" | "status">[]) ?? [];
+  const requests =
+    (guestRequests as Pick<StayRequest, "id" | "status" | "traveler_display_name">[]) ?? [];
   const contextRequest = requestId
     ? requests.find((r) => r.id === requestId) ?? null
     : requests[0] ?? null;
   const nameRevealStatus = contextRequest?.status ?? pickGuestNameRevealStatus(requests);
-  const displayName = formatMemberDisplayName(typedGuest.full_name, {
-    fallback: "Guest",
-    stayStatus: nameRevealStatus,
-  });
+  const displayName = formatHostGuestDisplayName(
+    {
+      profileFullName: typedGuest.full_name,
+      requestDisplayName: contextRequest?.traveler_display_name,
+      email: typedGuest.email,
+    },
+    nameRevealStatus,
+    "Guest"
+  );
 
   const backHref = contextRequest
     ? `/host/requests/${contextRequest.id}`

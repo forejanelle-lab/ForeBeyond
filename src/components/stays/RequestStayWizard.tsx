@@ -118,9 +118,18 @@ export function RequestStayWizard({
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, full_name")
       .eq("id", user.id)
       .maybeSingle();
+
+    const travelerDisplayName =
+      profile?.full_name?.trim() ||
+      [user.user_metadata?.first_name, user.user_metadata?.last_name]
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        .join(" ")
+        .trim() ||
+      user.email?.split("@")[0]?.trim() ||
+      null;
 
     const { data: verificationDocs } = await supabase
       .from("verification_documents")
@@ -168,6 +177,7 @@ export function RequestStayWizard({
         end_date: endDate,
         guest_count: guests,
         status: "pending",
+        traveler_display_name: travelerDisplayName,
       })
       .select("id")
       .single();

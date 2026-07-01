@@ -191,6 +191,7 @@ export interface StayRequest {
   start_date: string | null;
   end_date: string | null;
   guest_count: number;
+  traveler_display_name: string | null;
   created_at: string;
   updated_at: string;
 }

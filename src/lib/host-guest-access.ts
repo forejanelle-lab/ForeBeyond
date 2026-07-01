@@ -13,15 +13,17 @@ export async function hostHasGuestRequest(
   hostId: string,
   guestId: string
 ): Promise<boolean> {
-  const { data } = await supabase
-    .from("stay_requests")
-    .select("id")
-    .eq("host_id", hostId)
-    .eq("traveler_id", guestId)
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("host_has_stay_request_with_traveler", {
+    p_host_id: hostId,
+    p_traveler_id: guestId,
+  });
 
-  return !!data;
+  if (error) {
+    console.error("hostHasGuestRequest failed:", error.message);
+    return false;
+  }
+
+  return data === true;
 }
 
 export function pickGuestNameRevealStatus(

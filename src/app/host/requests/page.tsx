@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { calculateHostEarnings, LISTING_PRICING_SELECT, pickListingPricing, type ListingPricing } from "@/lib/stay-requests";
-import { formatMemberDisplayName } from "@/lib/member-display-name";
+import { formatHostGuestDisplayName } from "@/lib/member-display-name";
 import { PageShell } from "@/components/layout/PageShell";
 import { HostRequestsList, type HostRequestRow } from "@/components/stays/HostRequestsList";
 import type { Profile, HostListing, StayRequest } from "@/types/database";
@@ -43,7 +43,7 @@ export default async function HostRequestsPage() {
       ? supabase.from("host_listings").select(`id, title, ${LISTING_PRICING_SELECT}`).in("id", listingIds)
       : Promise.resolve({ data: [] }),
     travelerIds.length > 0
-      ? supabase.from("profiles").select("id, full_name").in("id", travelerIds)
+      ? supabase.from("profiles").select("id, full_name, email").in("id", travelerIds)
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -54,10 +54,9 @@ export default async function HostRequestsPage() {
     ])
   );
   const travelerMap = Object.fromEntries(
-    ((travelers as { id: string; full_name: string | null }[]) ?? []).map((t) => [
-      t.id,
-      t.full_name,
-    ])
+    ((travelers as { id: string; full_name: string | null; email: string | null }[]) ?? []).map(
+      (t) => [t.id, t]
+    )
   );
 
   const rows: HostRequestRow[] = typedRequests.map((request) => {
@@ -76,10 +75,15 @@ export default async function HostRequestsPage() {
     return {
       request,
       travelerId: request.traveler_id,
-      travelerName: formatMemberDisplayName(travelerMap[request.traveler_id], {
-        fallback: "Traveler",
-        stayStatus: request.status,
-      }),
+      travelerName: formatHostGuestDisplayName(
+        {
+          profileFullName: travelerMap[request.traveler_id]?.full_name,
+          requestDisplayName: request.traveler_display_name,
+          email: travelerMap[request.traveler_id]?.email,
+        },
+        request.status,
+        "Guest"
+      ),
       listingTitle: listing?.title?.trim() || "Untitled listing",
       listingPricing,
       incomeTotal,

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { brand } from "@/lib/brand";
 import { sampleImages } from "@/lib/sample-images";
+import { createClient } from "@/lib/supabase/server";
 import { PageHero } from "@/components/design/PageHero";
 import { SectionHeader } from "@/components/design/SectionHeader";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -71,7 +72,12 @@ const safetyCommitments = [
   "Emergency contact protocols for every stay",
 ];
 
-export default function TrustCenterPage() {
+export default async function TrustCenterPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <>
       <PageHero
@@ -142,9 +148,11 @@ export default function TrustCenterPage() {
               <ButtonLink href="/verification-center" variant="gold" size="lg">
                 Go to Verification Center
               </ButtonLink>
-              <ButtonLink href="/auth/sign-up" variant="outline" size="lg">
-                Join {brand.name}
-              </ButtonLink>
+              {!user && (
+                <ButtonLink href="/auth/sign-up" variant="outline" size="lg">
+                  Join {brand.name}
+                </ButtonLink>
+              )}
             </div>
           </Card>
         </Container>
