@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { getProfileVerificationStatusLabel } from "@/lib/verification-labels";
 import {
+  HOST_LISTING_VERIFICATION_MESSAGE,
   STAY_REQUEST_REQUIRED_DOCUMENTS,
 } from "@/lib/traveler-verification";
 import { getHostListingId, hostListingManagePath } from "@/lib/host-listing-limit";
@@ -198,6 +199,12 @@ export default function VerificationCenterPage() {
     if (!user) return;
 
     if (userRole === "host") {
+      if (!stayRequestVerificationComplete) {
+        setErrorMessage(HOST_LISTING_VERIFICATION_MESSAGE);
+        setIsFinishing(false);
+        return;
+      }
+
       const existingListingId = await getHostListingId(supabase, user.id);
       window.location.assign(hostListingManagePath(existingListingId));
       return;
@@ -354,7 +361,9 @@ export default function VerificationCenterPage() {
               <p className="text-sm font-medium text-forest">Next step</p>
               <p className="text-sm text-charcoal-light">
                 {isHost
-                  ? "Create your family listing. You can finish verification items anytime."
+                  ? stayRequestVerificationComplete
+                    ? "Create your family listing once your government ID and selfie are submitted."
+                    : "Submit government ID and selfie verification above before creating your listing."
                   : canContinueOnboarding
                     ? "Browse host families anytime. Government ID and selfie verification are required before you request a stay."
                     : stayRequestVerificationComplete
@@ -376,6 +385,12 @@ export default function VerificationCenterPage() {
             size="lg"
             onClick={handleCompleteOnboarding}
             isLoading={isFinishing}
+            disabled={isHost && !stayRequestVerificationComplete}
+            title={
+              isHost && !stayRequestVerificationComplete
+                ? HOST_LISTING_VERIFICATION_MESSAGE
+                : undefined
+            }
           >
             {isHost
               ? "Continue — Create Your Listing"
@@ -385,7 +400,9 @@ export default function VerificationCenterPage() {
           </Button>
           <p className="mt-3 text-sm text-charcoal-light">
             {isHost
-              ? "Verification is separate from onboarding — complete your listing now and return here anytime."
+              ? stayRequestVerificationComplete
+                ? "You're cleared to create your listing. Other verification items can be completed anytime."
+                : "Submit government ID and selfie verification above to unlock listing creation."
               : canContinueOnboarding && !stayRequestVerificationComplete
                 ? "You can browse Search Families now. Submit government ID and selfie verification before requesting a stay."
                 : "Browse verified host families and send your first stay request once ID and selfie verification are submitted."}

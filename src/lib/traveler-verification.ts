@@ -21,6 +21,33 @@ export interface RequestStayEligibility {
   disabledReason: string;
 }
 
+export const HOST_LISTING_VERIFICATION_MESSAGE =
+  "Submit government ID and selfie verification in the Verification Center to create a listing.";
+
+export interface HostListingEligibility {
+  canCreate: boolean;
+  disabledReason: string;
+}
+
+export function canCreateHostListing(
+  documents: Partial<Record<DocumentType, VerificationStatus>>
+): boolean {
+  return canRequestStay(documents);
+}
+
+export function getHostListingEligibility(
+  documents: Partial<Record<DocumentType, VerificationStatus>>
+): HostListingEligibility {
+  if (canCreateHostListing(documents)) {
+    return { canCreate: true, disabledReason: "" };
+  }
+
+  return {
+    canCreate: false,
+    disabledReason: HOST_LISTING_VERIFICATION_MESSAGE,
+  };
+}
+
 export function getRequestStayEligibility(
   role: UserRole | null | undefined,
   documents: Partial<Record<DocumentType, VerificationStatus>>

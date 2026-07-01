@@ -2,10 +2,14 @@ import { redirect } from "next/navigation";
 import { Plus, Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/listings/ListingCard";
-import { ButtonLink } from "@/components/ui/ButtonLink";
+import { CreateListingButton } from "@/components/listings/CreateListingButton";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
-import type { HostListing, ListingPhoto } from "@/types/database";
+import {
+  documentsMapFromRows,
+  getHostListingEligibility,
+} from "@/lib/traveler-verification";
+import type { DocumentType, HostListing, ListingPhoto, VerificationStatus } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
 
 export const metadata = privatePageMetadata({
@@ -18,6 +22,20 @@ export default async function ManageListingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/sign-in?redirect=/host/listings");
+
+  const { data: verificationDocs } = await supabase
+    .from("verification_documents")
+    .select("document_type, status")
+    .eq("user_id", user.id)
+    .in("document_type", ["government_id", "selfie"]);
+
+  const listingEligibility = getHostListingEligibility(
+    documentsMapFromRows(
+      verificationDocs as
+        | { document_type: DocumentType; status: VerificationStatus }[]
+        | null
+    )
+  );
 
   const { data: listings } = await supabase
     .from("host_listings")
@@ -71,20 +89,28 @@ export default async function ManageListingsPage() {
           </p>
         </div>
         {typedListings.length === 0 && (
-          <ButtonLink href="/host/listings/new" variant="primary" size="md">
+          <CreateListingButton
+            enabled={listingEligibility.canCreate}
+            disabledReason={listingEligibility.disabledReason}
+            size="md"
+          >
             <Plus className="h-4 w-4" />
             New Listing
-          </ButtonLink>
+          </CreateListingButton>
         )}
       </div>
 
       {typedListings.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-sage-dark/40 bg-sage/20">
           <p className="text-charcoal-light mb-4">You haven&apos;t created a listing yet.</p>
-          <ButtonLink href="/host/listings/new" variant="primary" size="lg">
+          <CreateListingButton
+            enabled={listingEligibility.canCreate}
+            disabledReason={listingEligibility.disabledReason}
+            size="lg"
+          >
             <Plus className="h-4 w-4" />
             Create Your First Listing
-          </ButtonLink>
+          </CreateListingButton>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -29,6 +29,7 @@ export function HeaderProfileAvatar({ avatarUrl, fullName }: HeaderProfileAvatar
           height={36}
           className="h-full w-full object-cover"
           unoptimized
+          key={avatarUrl}
         />
       ) : initials ? (
         <span className="text-xs font-semibold text-forest">{initials}</span>
