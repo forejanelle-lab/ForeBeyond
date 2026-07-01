@@ -13,7 +13,6 @@ import { HostIncomeBreakdown } from "@/components/stays/HostIncomeBreakdown";
 import { HostWithdrawStayModal } from "@/components/stays/HostWithdrawStayModal";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import type { ListingPricing } from "@/lib/stay-requests";
 import type { StayRequest } from "@/types/database";
@@ -30,7 +29,6 @@ export function HostRequestActions({
   guestName = "Guest",
 }: HostRequestActionsProps) {
   const router = useRouter();
-  const [response, setResponse] = useState(request.host_response ?? "");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -39,12 +37,6 @@ export function HostRequestActions({
     return (
       <Card variant="outline" padding="md" className="space-y-4">
         <p className="text-sm text-charcoal-light">This request was declined.</p>
-        {request.host_response && (
-          <div className="rounded-xl bg-sage/40 p-3 text-sm">
-            <p className="font-medium text-forest mb-1">Your response</p>
-            <p className="text-charcoal-light whitespace-pre-wrap">{request.host_response}</p>
-          </div>
-        )}
         <Button
           variant="secondary"
           size="md"
@@ -132,12 +124,6 @@ export function HostRequestActions({
             <p className="text-charcoal-light whitespace-pre-wrap">{request.withdrawal_reason}</p>
           </div>
         )}
-        {request.host_response && (
-          <div className="mt-3 rounded-xl bg-sage/40 p-3 text-sm">
-            <p className="font-medium text-forest mb-1">Your response</p>
-            <p className="text-charcoal-light whitespace-pre-wrap">{request.host_response}</p>
-          </div>
-        )}
       </Card>
     );
   }
@@ -146,11 +132,7 @@ export function HostRequestActions({
     setError("");
     setIsLoading("approve");
     const supabase = createClient();
-    const { error: approveError } = await approveStayRequest(
-      supabase,
-      request,
-      response
-    );
+    const { error: approveError } = await approveStayRequest(supabase, request);
     if (approveError) setError(approveError);
     else router.refresh();
     setIsLoading(null);
@@ -163,8 +145,7 @@ export function HostRequestActions({
     const { error: declineError } = await declineStayRequest(
       supabase,
       request.id,
-      request.host_id,
-      response
+      request.host_id
     );
     if (declineError) setError(declineError);
     else router.refresh();
@@ -182,13 +163,6 @@ export function HostRequestActions({
       </div>
 
       <HostIncomeBreakdown request={request} pricing={listingPricing} />
-
-      <Textarea
-        label="Note to traveler (optional)"
-        value={response}
-        onChange={(e) => setResponse(e.target.value)}
-        placeholder="Welcome message or questions — included when you approve or decline"
-      />
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">{error}</p>
