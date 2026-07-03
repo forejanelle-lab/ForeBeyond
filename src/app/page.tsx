@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, CheckCircle2, Home, Plane, Star } from "lucide-react";
+import { ArrowRight, CheckCircle2, Home, Plane } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { brand } from "@/lib/brand";
 import { getPopularDestinations } from "@/lib/destinations";
@@ -193,39 +193,6 @@ export default async function HomePage() {
                 <p className="text-base text-charcoal-light leading-relaxed">{item.description}</p>
               </div>
             ))}
-          </div>
-        </Container>
-      </Section>
-
-      <Section background="white">
-        <Container>
-          <div className="rounded-3xl border border-sage-dark/15 bg-cream/40 shadow-xl overflow-hidden hover-lift">
-            <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="relative min-h-[320px] lg:min-h-full">
-                <Image
-                  src={sampleImages.homeTestimonial}
-                  alt="Traveler exploring the streets of Morocco"
-                  fill
-                  className="object-cover transition-transform duration-700 hover:scale-105"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
-              </div>
-              <div className="flex flex-col justify-center p-10 md:p-14 lg:p-16">
-                <div className="flex gap-1 mb-6">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-gold text-gold" />
-                  ))}
-                </div>
-                <blockquote className="text-2xl md:text-3xl font-semibold text-forest leading-snug text-balance">
-                  &ldquo;I didn&apos;t just visit Morocco — I became part of a family. Shared meals,
-                  late-night stories, and a warmth I&apos;ve never found in any hotel.&rdquo;
-                </blockquote>
-                <footer className="mt-8 pt-8 border-t border-sage-dark/20">
-                  <p className="text-lg font-semibold text-forest">Sarah</p>
-                  <p className="text-sm text-charcoal-light mt-1">Visited Morocco</p>
-                </footer>
-              </div>
-            </div>
           </div>
         </Container>
       </Section>
