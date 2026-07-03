@@ -11,20 +11,33 @@ interface LogoProps {
   className?: string;
 }
 
+function logoImageClass(variant: "default" | "light", showText: boolean) {
+  const fit = showText ? "object-contain" : "object-cover";
+  const blend =
+    variant === "light"
+      ? "mix-blend-screen"
+      : "invert mix-blend-multiply";
+
+  return `${fit} object-left ${blend}`;
+}
+
 export function LogoMark({
   size = 40,
+  light = false,
 }: {
   size?: number;
   light?: boolean;
   idSuffix?: string;
 }) {
+  const variant = light ? "light" : "default";
+
   return (
     <Image
       src={LOGO_SRC}
       alt=""
       width={size}
       height={size}
-      className="object-cover object-left mix-blend-screen"
+      className={logoImageClass(variant, false)}
       style={{ width: size, height: size }}
       unoptimized
       aria-hidden
@@ -33,7 +46,7 @@ export function LogoMark({
 }
 
 export function Logo({
-  variant: _variant = "default",
+  variant = "default",
   size = "md",
   showText = true,
   className = "",
@@ -49,11 +62,7 @@ export function Logo({
           alt="Fore Beyond"
           width={width}
           height={height}
-          className={
-            showText
-              ? "object-contain object-left mix-blend-screen"
-              : "object-cover object-left mix-blend-screen"
-          }
+          className={logoImageClass(variant, showText)}
           style={{ width, height }}
           priority
           unoptimized
