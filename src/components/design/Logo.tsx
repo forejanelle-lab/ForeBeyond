@@ -4,9 +4,16 @@ import Link from "next/link";
 const LOGO_SRC = "/logo-fore-beyond.png";
 const LOGO_ASPECT = 612 / 408;
 
+const LOGO_HEIGHTS = {
+  sm: 56,
+  md: 72,
+  lg: 96,
+  xl: 120,
+} as const;
+
 interface LogoProps {
   variant?: "default" | "light";
-  size?: "sm" | "md";
+  size?: keyof typeof LOGO_HEIGHTS;
   showText?: boolean;
   className?: string;
 }
@@ -51,7 +58,7 @@ export function Logo({
   showText = true,
   className = "",
 }: LogoProps) {
-  const height = size === "sm" ? 34 : 42;
+  const height = LOGO_HEIGHTS[size];
   const width = showText ? Math.round(height * LOGO_ASPECT) : height;
 
   return (

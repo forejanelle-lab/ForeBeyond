@@ -27,8 +27,8 @@ export function Navigation({ user }: NavigationProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-sage-dark/20 bg-white overflow-visible">
       <Container className="overflow-visible">
-        <nav className="flex h-16 items-center justify-between gap-4 overflow-visible">
-          <Logo />
+        <nav className="flex h-14 items-center justify-between gap-4 overflow-visible">
+          <Logo size="xl" className="-my-8" />
 
           <div className="flex items-center gap-1 shrink-0 ml-auto">
             {user && <NotificationBell userId={user.id} />}
