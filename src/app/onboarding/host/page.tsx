@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Home, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { isTravelerSignupEnabled } from "@/lib/traveler-signup";
+import { completeHostOnboarding } from "@/lib/host-onboarding";
 import { AuthBrandHeader } from "@/components/auth/AuthBrandHeader";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -60,36 +61,29 @@ export default function HostOnboardingPage() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("host_profiles").upsert(
-      {
-        user_id: user.id,
-        cultural_offerings: offerings,
-        household_description: household,
-        experience_description: experience,
-        city,
-        country,
-        neighborhood,
-        max_guests: parseInt(maxGuests, 10) || 1,
-        languages_spoken: languages.split(",").map((l) => l.trim()).filter(Boolean),
-        host_motivation: hostMotivation.trim() || null,
-      },
-      { onConflict: "user_id" }
-    );
-
-    if (insertError) {
-      setError(insertError.message);
+    if (!city.trim() || !country.trim()) {
+      setError("City and country are required");
       setIsLoading(false);
       return;
     }
 
-    await supabase
-      .from("profiles")
-      .update({
-        role: "host",
-        onboarding_step: "complete",
-        onboarding_complete: true,
-      })
-      .eq("id", user.id);
+    const { error: completionError } = await completeHostOnboarding(supabase, user.id, {
+      cultural_offerings: offerings,
+      household_description: household,
+      experience_description: experience,
+      city: city.trim(),
+      country: country.trim(),
+      neighborhood: neighborhood.trim(),
+      max_guests: parseInt(maxGuests, 10) || 1,
+      languages_spoken: languages.split(",").map((l) => l.trim()).filter(Boolean),
+      host_motivation: hostMotivation.trim() || null,
+    });
+
+    if (completionError) {
+      setError(completionError);
+      setIsLoading(false);
+      return;
+    }
 
     window.location.assign("/verification-center");
   }

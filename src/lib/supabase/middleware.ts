@@ -7,6 +7,7 @@ import {
   needsProfileCompletion,
   PROFILE_COMPLETE_PATH,
 } from "@/lib/profile-completion";
+import { isHostOnboardingAllowlisted, needsHostOnboarding, HOST_ONBOARDING_PATH } from "@/lib/host-onboarding";
 
 export async function updateSession(request: NextRequest) {
   const env = getSupabaseEnv();
@@ -78,12 +79,18 @@ export async function updateSession(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin, role, onboarding_step")
+      .select("is_admin, role, onboarding_step, onboarding_complete")
       .eq("id", user.id)
       .single();
 
     if (needsProfileCompletion(user.email ?? "", profile)) {
       url.pathname = PROFILE_COMPLETE_PATH;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    if (needsHostOnboarding(profile) && !isHostOnboardingAllowlisted(pathname)) {
+      url.pathname = HOST_ONBOARDING_PATH;
       url.search = "";
       return NextResponse.redirect(url);
     }
@@ -100,13 +107,20 @@ export async function updateSession(request: NextRequest) {
   ) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin, role, onboarding_step")
+      .select("is_admin, role, onboarding_step, onboarding_complete")
       .eq("id", user.id)
       .single();
 
     if (needsProfileCompletion(user.email ?? "", profile)) {
       const url = request.nextUrl.clone();
       url.pathname = PROFILE_COMPLETE_PATH;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    if (needsHostOnboarding(profile) && !isHostOnboardingAllowlisted(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = HOST_ONBOARDING_PATH;
       url.search = "";
       return NextResponse.redirect(url);
     }
