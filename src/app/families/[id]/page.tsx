@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { FamilyProfileView } from "@/components/search/FamilyProfileView";
+import { ListingAccessGate } from "@/components/listings/ListingAccessGate";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
 import { createPageMetadata } from "@/lib/site-metadata";
@@ -13,6 +14,7 @@ import { getHostListingStats } from "@/lib/host-stats";
 import { getHostReviewEligibility } from "@/lib/listing-review-eligibility";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { hostHasMessagedStayRequest, isStayMessagingOpen } from "@/lib/messaging";
+import { resolveListingForProfilePage } from "@/lib/listing-profile-load";
 import type { DocumentType, HostListing, ListingPhoto, Profile, PublicListing, PublicReview, StayRequest, TrustBadge, VerificationStatus } from "@/types/database";
 import { normalizeTrustScoreBreakdown, type TrustScoreBreakdown } from "@/lib/trust-score";
 import { getRequestStayEligibility, documentsMapFromRows } from "@/lib/traveler-verification";
@@ -24,11 +26,7 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("public_listings")
-    .select("title, city, country, family_story, budget_per_night, pricing_currency")
-    .eq("id", id)
-    .single();
+  const data = await resolveListingForProfilePage(supabase, id);
 
   if (!data) {
     const { data: { user } } = await supabase.auth.getUser();
@@ -82,12 +80,10 @@ export default async function FamilyProfilePage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: listing }, { data: { user } }] = await Promise.all([
-    supabase.from("public_listings").select("*, trust_score_breakdown").eq("id", id).single(),
+  const [{ data: { user } }, typedListing] = await Promise.all([
     supabase.auth.getUser(),
+    resolveListingForProfilePage(supabase, id),
   ]);
-
-  const typedListing = listing as PublicListing | null;
   let hostListing: HostListing;
   let hostFirstName: string | null = null;
   let hostDisplayName: string | null = null;
@@ -100,7 +96,9 @@ export default async function FamilyProfilePage({
   let isOwnListing = false;
 
   if (!typedListing) {
-    if (!user) notFound();
+    if (!user) {
+      return <ListingAccessGate listingId={id} />;
+    }
 
     const { data: ownListing } = await supabase
       .from("host_listings")
