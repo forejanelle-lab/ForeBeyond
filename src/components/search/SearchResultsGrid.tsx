@@ -10,7 +10,6 @@ interface SearchResultsGridProps {
   savedListingIds?: string[];
   showSaveButton?: boolean;
   layout?: "grid" | "list";
-  isLoggedIn?: boolean;
 }
 
 export function SearchResultsGrid({
@@ -20,7 +19,6 @@ export function SearchResultsGrid({
   savedListingIds = [],
   showSaveButton = true,
   layout = "list",
-  isLoggedIn = false,
 }: SearchResultsGridProps) {
   if (listings.length === 0) {
     return (
@@ -45,7 +43,6 @@ export function SearchResultsGrid({
             isSaved={savedListingIds.includes(listing.id)}
             showSaveButton={showSaveButton}
             layout={layout}
-            isLoggedIn={isLoggedIn}
           />
         ))}
       </div>

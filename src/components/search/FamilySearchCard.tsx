@@ -19,7 +19,6 @@ interface FamilySearchCardProps {
   isSaved?: boolean;
   showSaveButton?: boolean;
   layout?: "grid" | "list";
-  isLoggedIn?: boolean;
 }
 
 export function FamilySearchCard({
@@ -29,12 +28,11 @@ export function FamilySearchCard({
   isSaved = false,
   showSaveButton = true,
   layout = "grid",
-  isLoggedIn = false,
 }: FamilySearchCardProps) {
   const router = useRouter();
   const [saved, setSaved] = useState(isSaved);
   const [isSaving, setIsSaving] = useState(false);
-  const listingHref = isLoggedIn ? hostListingPath(listing.id) : hostListingSignInPath(listing.id);
+  const listingHref = hostListingPath(listing.id);
 
   async function toggleSave(e: React.MouseEvent) {
     e.preventDefault();

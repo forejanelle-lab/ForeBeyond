@@ -1,8 +1,8 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { FamilyProfileView } from "@/components/search/FamilyProfileView";
-import { hostListingSignInPath } from "@/lib/listing-access";
+import { ListingAuthGate } from "@/components/listings/ListingAuthGate";
 import { LISTING_IMAGE_FALLBACK } from "@/lib/listing-images";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
@@ -86,10 +86,6 @@ export default async function FamilyProfilePage({
     resolveListingForProfilePage(supabase, id),
   ]);
 
-  if (!user) {
-    redirect(hostListingSignInPath(id));
-  }
-
   let hostListing: HostListing;
   let hostFirstName: string | null = null;
   let hostDisplayName: string | null = null;
@@ -102,6 +98,8 @@ export default async function FamilyProfilePage({
   let isOwnListing = false;
 
   if (!typedListing) {
+    if (!user) notFound();
+
     const { data: ownListing } = await supabase
       .from("host_listings")
       .select("*")
@@ -312,6 +310,46 @@ export default async function FamilyProfilePage({
     requestStayDisabledReason = eligibility.disabledReason;
   }
 
+  const showAuthGate = !user && Boolean(typedListing);
+
+  const profileView = (
+    <FamilyProfileView
+      listing={hostListing}
+      photos={(photos as ListingPhoto[]) ?? []}
+      hostFirstName={hostFirstName}
+      trustScore={trustScore}
+      trustScoreBreakdown={trustScoreBreakdown}
+      hostReviewCount={hostReviewCount}
+      hostAvgRating={hostAvgRating}
+      listingReviewCount={listingReviewCount}
+      verificationStatus={verificationStatus}
+      badges={(badges as TrustBadge[]) ?? []}
+      reviews={(reviews as PublicReview[]) ?? []}
+      isSaved={Boolean(savedResult.data)}
+      userId={user?.id ?? null}
+      showSaveButton={!isOwnListing}
+      showBookingActions={!isOwnListing}
+      canRequestStay={travelerCanRequestStay}
+      requestStayDisabledReason={requestStayDisabledReason}
+      bookingCount={hostStats.bookingCount}
+      memberSince={hostMemberSince}
+      avgResponseTimeMinutes={hostStats.avgResponseTimeMinutes}
+      totalStayRequests={hostStats.totalRequests}
+      respondedStayRequests={hostStats.respondedRequests}
+      canLeaveReview={reviewEligibility.canReview}
+      canEditReview={reviewEligibility.canEdit}
+      reviewExisting={reviewEligibility.existingReview}
+      reviewTarget={reviewEligibility.target}
+      hostId={hostListing.host_id}
+      canMessageHost={canMessageHost}
+      messageConversationId={messageConversationId}
+      messageLockReason={messageLockReason}
+      hostMotivation={hostMotivation}
+      hostAvatarUrl={hostAvatarUrl}
+      hostDisplayName={hostDisplayName}
+    />
+  );
+
   return (
     <>
       {typedListing && (
@@ -351,41 +389,11 @@ export default async function FamilyProfilePage({
           country: hostListing.country ?? "",
         }}
       />
-      <FamilyProfileView
-        listing={hostListing}
-        photos={(photos as ListingPhoto[]) ?? []}
-        hostFirstName={hostFirstName}
-        trustScore={trustScore}
-        trustScoreBreakdown={trustScoreBreakdown}
-        hostReviewCount={hostReviewCount}
-        hostAvgRating={hostAvgRating}
-        listingReviewCount={listingReviewCount}
-        verificationStatus={verificationStatus}
-        badges={(badges as TrustBadge[]) ?? []}
-        reviews={(reviews as PublicReview[]) ?? []}
-        isSaved={Boolean(savedResult.data)}
-        userId={user?.id ?? null}
-        showSaveButton={!isOwnListing}
-        showBookingActions={!isOwnListing}
-        canRequestStay={travelerCanRequestStay}
-        requestStayDisabledReason={requestStayDisabledReason}
-        bookingCount={hostStats.bookingCount}
-        memberSince={hostMemberSince}
-        avgResponseTimeMinutes={hostStats.avgResponseTimeMinutes}
-        totalStayRequests={hostStats.totalRequests}
-        respondedStayRequests={hostStats.respondedRequests}
-        canLeaveReview={reviewEligibility.canReview}
-        canEditReview={reviewEligibility.canEdit}
-        reviewExisting={reviewEligibility.existingReview}
-        reviewTarget={reviewEligibility.target}
-        hostId={hostListing.host_id}
-        canMessageHost={canMessageHost}
-        messageConversationId={messageConversationId}
-        messageLockReason={messageLockReason}
-        hostMotivation={hostMotivation}
-        hostAvatarUrl={hostAvatarUrl}
-        hostDisplayName={hostDisplayName}
-      />
+      {showAuthGate ? (
+        <ListingAuthGate listingId={id}>{profileView}</ListingAuthGate>
+      ) : (
+        profileView
+      )}
     </>
   );
 }
