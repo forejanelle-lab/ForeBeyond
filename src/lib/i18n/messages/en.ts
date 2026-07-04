@@ -53,7 +53,7 @@ const en = {
     heroTitleLine1: "Travel deeper.",
     heroTitleLine2: "Belong anywhere.",
     heroSubtitle:
-      "Cultural immersion travel with verified local hosts — authentic travel experiences, homestay stays, and meaningful connection. Travel like a local, not a tourist.",
+      "Cultural immersion travel with verified local hosts and travelers — authentic experiences, homestay stays, and meaningful connection. Explore like a local or welcome the world into your home.",
     alreadyMember: "Already a member?",
     travelerLogin: "Traveler login",
     hostLogin: "Host login",
@@ -63,10 +63,10 @@ const en = {
     allDestinations: "All destinations",
     missionTitle: "Not a vacation rental. A cultural bridge.",
     missionDesc:
-      "Fore Beyond is a trust-first platform for cultural exchange travel — connecting travelers with verified local hosts for homestay experiences rooted in authenticity, not transactions.",
-    pillarHostsTitle: "Verified Local Hosts",
+      "Fore Beyond is a trust-first platform for cultural exchange — connecting verified local hosts and travelers for homestay experiences rooted in authenticity, not transactions.",
+    pillarHostsTitle: "Verified Hosts & Travelers",
     pillarHostsDesc:
-      "Identity-verified families who welcome travelers for genuine cultural immersion and exchange.",
+      "Identity-verified hosts and travelers who welcome genuine cultural immersion and exchange.",
     pillarExperiencesTitle: "Authentic Travel Experiences",
     pillarExperiencesDesc:
       "Home cooking, local customs, and daily life — immersive travel experiences beyond guidebooks.",
@@ -75,15 +75,17 @@ const en = {
       "Verification, reviews, and community standards — an alternative to hotels built on human connection.",
     howItWorksTitle: "How It Works",
     howItWorksDesc:
-      "Your path from curious traveler to cultural insider — homestay experiences with verified local hosts.",
+      "Whether you're traveling or hosting — your path to authentic cultural connection with verified local hosts and travelers.",
     step1Title: "Create Your Profile",
-    step1Desc: "Tell us about your interests and what you hope to discover.",
+    step1Desc: "Share your interests and what you hope to discover as a traveler, or what you want to offer as a host.",
     step2Title: "Get Verified",
-    step2Desc: "Complete trust verification so families know you're genuine.",
+    step2Desc: "Complete trust verification so hosts and travelers know you're genuine.",
     step3Title: "Find Your Match",
-    step3Desc: "Browse verified host families and cultural experiences worldwide.",
+    step3Desc:
+      "Browse verified host families and experiences, or review stay requests from travelers looking for the right cultural fit.",
     step4Title: "Immerse & Connect",
-    step4Desc: "Live with a local family and create memories that last a lifetime.",
+    step4Desc:
+      "Live with a local family as a traveler, or open your home and share your culture as a host — create memories that last.",
     trustTitle: "Built on trust, not transactions",
     trustDesc:
       "Every member goes through rigorous verification. Meaningful connection requires genuine trust.",

@@ -106,7 +106,8 @@ export function isListingPricingTierEnabled(
   maxCapacity: number | null,
   tier: ListingPricingTier
 ): boolean {
-  if (maxCapacity == null) return true;
+  if (tier === "standard") return true;
+  if (maxCapacity == null) return false;
   return minGuestsForListingPricingTier(tier) <= maxCapacity;
 }
 

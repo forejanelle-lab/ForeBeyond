@@ -74,8 +74,8 @@ export function TranslatableText({ text, className = "", targetLang }: Translata
   const displayText = showTranslation && translated ? translated : text;
 
   return (
-    <div className={className}>
-      <p>{displayText}</p>
+    <div className="min-w-0">
+      <span className={`block whitespace-pre-wrap break-words ${className}`.trim()}>{displayText}</span>
       {offerTranslation && (
         <div className="mt-1.5">
           <button
@@ -91,7 +91,7 @@ export function TranslatableText({ text, className = "", targetLang }: Translata
             )}
             {showTranslation ? t("translate.showOriginal") : t("translate.translateTo", { language: targetLabel })}
           </button>
-          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+          {error && <span className="block text-xs text-red-600 mt-1">{error}</span>}
         </div>
       )}
     </div>

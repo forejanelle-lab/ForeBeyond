@@ -510,7 +510,7 @@ export function ListingWizard({
 
   return (
     <div>
-      <div className="flex justify-center gap-2 mb-8">
+      <div className="flex flex-wrap justify-center gap-x-2 gap-y-2 mb-8">
         {steps.map((label, i) => (
           <div key={label} className="flex items-center gap-2">
             <div

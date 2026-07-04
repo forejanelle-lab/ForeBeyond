@@ -25,7 +25,7 @@ import type { Profile } from "@/types/database";
 export const metadata = createPageMetadata({
   title: "Cultural Immersion Travel with Verified Local Hosts",
   description:
-    "Fore Beyond connects travelers with verified local hosts for cultural immersion travel and authentic homestay experiences. Travel like a local — meaningful travel beyond hotels and tourism.",
+    "Fore Beyond connects verified local hosts and travelers for cultural immersion travel and authentic homestay experiences. Travel like a local or share your home — meaningful travel beyond hotels and tourism.",
   path: "/",
 });
 
@@ -107,8 +107,16 @@ export default async function HomePage() {
               disabledMessage={TRAVELER_ACCOUNT_SEARCH_MESSAGE}
             />
             {!isLoggedIn && (
-              <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="text-xs text-white/50 mr-1">{t("home.alreadyMember")}</span>
+              <div className="mt-5 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+                <Link
+                  href="/auth/sign-up"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-forest hover:bg-white/90 transition-colors shadow-md"
+                >
+                  {t("auth.createAccount")}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <span className="text-xs text-white/50 mr-1">{t("home.alreadyMember")}</span>
                 <Link
                   href="/auth/sign-in?redirect=/trips"
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-sm text-white/80 hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors backdrop-blur-sm"
@@ -123,6 +131,7 @@ export default async function HomePage() {
                   <Home className="h-3.5 w-3.5 opacity-80" />
                   {t("home.hostLogin")}
                 </Link>
+                </div>
               </div>
             )}
           </div>

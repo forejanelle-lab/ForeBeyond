@@ -352,10 +352,7 @@ export function ChatThread({
                     (isOwn ? (
                       <p className="whitespace-pre-wrap break-words">{msg.body}</p>
                     ) : (
-                      <TranslatableText
-                        text={msg.body}
-                        className="whitespace-pre-wrap break-words [&>p]:whitespace-pre-wrap [&>p]:break-words"
-                      />
+                      <TranslatableText text={msg.body} />
                     ))}
                 </div>
                 <div
