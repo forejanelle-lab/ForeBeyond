@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Home, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -10,6 +10,8 @@ import {
   LISTING_ACTIVITIES,
   LISTING_HOUSE_RULES,
   defaultFamilyListingTitle,
+  isListingPricingTierEnabled,
+  parseListingMaxCapacity,
 } from "@/lib/listings";
 import {
   ONE_LISTING_PER_HOST_MESSAGE,
@@ -42,6 +44,8 @@ interface ListingWizardProps {
   existingPhotos?: ListingPhoto[];
   contactDetails?: Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
   existingBlockedDates?: ListingBlockedDate[];
+  initialLanguagesSpoken?: string[] | null;
+  initialMaxCapacity?: number | null;
   mode?: "create" | "edit";
 }
 
@@ -65,13 +69,24 @@ function hasContactDetails(email: string, address: string) {
 }
 
 function hasRequiredPricing(
+  maxCapacity: number | null,
   base: string,
   tier3: string,
   tier4: string,
   tier5: string,
   tier6Plus: string
 ) {
-  return [base, tier3, tier4, tier5, tier6Plus].every((value) => parsePrice(value) != null);
+  const tiers: Array<{ tier: "standard" | "3" | "4" | "5" | "6_plus"; value: string }> = [
+    { tier: "standard", value: base },
+    { tier: "3", value: tier3 },
+    { tier: "4", value: tier4 },
+    { tier: "5", value: tier5 },
+    { tier: "6_plus", value: tier6Plus },
+  ];
+
+  return tiers.every(
+    ({ tier, value }) => !isListingPricingTierEnabled(maxCapacity, tier) || parsePrice(value) != null
+  );
 }
 
 function priceFieldValue(value: number | null | undefined) {
@@ -85,6 +100,10 @@ function parsePrice(value: string): number | null {
   return Math.round(parsed * 100) / 100;
 }
 
+function formatLanguagesField(languages: string[] | null | undefined): string {
+  return languages?.filter(Boolean).join(", ") ?? "";
+}
+
 export function ListingWizard({
   userId,
   hostName,
@@ -92,6 +111,8 @@ export function ListingWizard({
   existingPhotos = [],
   contactDetails = null,
   existingBlockedDates = [],
+  initialLanguagesSpoken = null,
+  initialMaxCapacity = null,
 }: ListingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -103,7 +124,10 @@ export function ListingWizard({
   const [stayDetails, setStayDetails] = useState(listing?.stay_details ?? "");
   const [country, setCountry] = useState(listing?.country ?? "");
   const [city, setCity] = useState(listing?.city ?? "");
-  const [languages, setLanguages] = useState(listing?.languages?.join(", ") ?? "");
+  const [languages, setLanguages] = useState(
+    formatLanguagesField(listing?.languages) ||
+      formatLanguagesField(initialLanguagesSpoken)
+  );
   const [meals, setMeals] = useState<string[]>(listing?.meals ?? []);
   const [amenities, setAmenities] = useState<string[]>(listing?.amenities ?? []);
   const [activities, setActivities] = useState<string[]>(listing?.family_activities ?? []);
@@ -115,9 +139,11 @@ export function ListingWizard({
   const [budget6PlusGuests, setBudget6PlusGuests] = useState(
     priceFieldValue(listing?.budget_per_night_6_plus_guests)
   );
-  const [maxCapacity, setMaxCapacity] = useState(
-    listing?.max_capacity != null ? String(listing.max_capacity) : ""
-  );
+  const [maxCapacity, setMaxCapacity] = useState(() => {
+    if (listing?.max_capacity != null) return String(listing.max_capacity);
+    if (initialMaxCapacity != null && initialMaxCapacity > 0) return String(initialMaxCapacity);
+    return "";
+  });
   const [contactEmail, setContactEmail] = useState(contactDetails?.contact_email ?? "");
   const [contactAddress, setContactAddress] = useState(contactDetails?.contact_address ?? "");
   const [photos, setPhotos] = useState<ListingPhoto[]>(existingPhotos);
@@ -140,10 +166,39 @@ export function ListingWizard({
   const rateStep = hostCurrency === "JPY" || hostCurrency === "KRW" ? "1" : "0.01";
   const ratePlaceholder =
     hostCurrency === "JPY" || hostCurrency === "KRW" ? "12000" : "85.00";
+  const parsedMaxCapacity = useMemo(() => parseListingMaxCapacity(maxCapacity), [maxCapacity]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const max = parseListingMaxCapacity(maxCapacity);
+    if (max == null) return;
+    if (max < 3) setBudget3Guests("");
+    if (max < 4) setBudget4Guests("");
+    if (max < 5) setBudget5Guests("");
+    if (max < 6) setBudget6PlusGuests("");
+  }, [maxCapacity]);
+
+  useEffect(() => {
+    if (!introVideoUrl || !listingId) return;
+    if (!photos.some((photo) => photo.is_cover)) return;
+
+    const supabase = createClient();
+    void supabase.from("listing_photos").update({ is_cover: false }).eq("listing_id", listingId);
+    setPhotos((prev) => prev.map((photo) => ({ ...photo, is_cover: false })));
+  }, [introVideoUrl, listingId, photos]);
+
   const steps = ["Family Story", "Details", "Blocked Dates", "Photos", "Publish"];
+
+  async function handleIntroVideoChange(url: string | null) {
+    setIntroVideoUrl(url);
+
+    if (!url || !listingId) return;
+
+    const supabase = createClient();
+    await supabase.from("listing_photos").update({ is_cover: false }).eq("listing_id", listingId);
+    setPhotos((prev) => prev.map((photo) => ({ ...photo, is_cover: false })));
+  }
 
   async function ensureListingDraft(): Promise<string | null> {
     if (listingId) return listingId;
@@ -244,12 +299,20 @@ export function ListingWizard({
       family_activities: activities,
       house_rules: houseRules,
       budget_per_night: parsePrice(budgetPerNight),
-      budget_per_night_3_guests: parsePrice(budget3Guests),
-      budget_per_night_4_guests: parsePrice(budget4Guests),
-      budget_per_night_5_guests: parsePrice(budget5Guests),
-      budget_per_night_6_plus_guests: parsePrice(budget6PlusGuests),
+      budget_per_night_3_guests: isListingPricingTierEnabled(parsedMaxCapacity, "3")
+        ? parsePrice(budget3Guests)
+        : null,
+      budget_per_night_4_guests: isListingPricingTierEnabled(parsedMaxCapacity, "4")
+        ? parsePrice(budget4Guests)
+        : null,
+      budget_per_night_5_guests: isListingPricingTierEnabled(parsedMaxCapacity, "5")
+        ? parsePrice(budget5Guests)
+        : null,
+      budget_per_night_6_plus_guests: isListingPricingTierEnabled(parsedMaxCapacity, "6_plus")
+        ? parsePrice(budget6PlusGuests)
+        : null,
       pricing_currency: hostCurrency,
-      max_capacity: maxCapacity.trim() ? Math.max(1, parseInt(maxCapacity, 10) || 1) : null,
+      max_capacity: parsedMaxCapacity,
       ...(publishStatus !== undefined && {
         status: publishStatus,
         published_at: publishStatus === "published" ? new Date().toISOString() : null,
@@ -351,11 +414,22 @@ export function ListingWizard({
       setError("City and country are required");
       return;
     }
+    if (step === 0 && parsedMaxCapacity == null) {
+      setError("Please set the maximum number of guests you can host");
+      return;
+    }
     if (
       step === 0 &&
-      !hasRequiredPricing(budgetPerNight, budget3Guests, budget4Guests, budget5Guests, budget6PlusGuests)
+      !hasRequiredPricing(
+        parsedMaxCapacity,
+        budgetPerNight,
+        budget3Guests,
+        budget4Guests,
+        budget5Guests,
+        budget6PlusGuests
+      )
     ) {
-      setError("Please set a nightly rate for each guest-count tier");
+      setError("Please set a nightly rate for each guest-count tier that applies to your max capacity");
       return;
     }
     setError("");
@@ -400,8 +474,22 @@ export function ListingWizard({
       return;
     }
 
-    if (!hasRequiredPricing(budgetPerNight, budget3Guests, budget4Guests, budget5Guests, budget6PlusGuests)) {
-      setError("Please set a nightly rate for each guest-count tier");
+    if (parsedMaxCapacity == null) {
+      setError("Please set the maximum number of guests you can host");
+      return;
+    }
+
+    if (
+      !hasRequiredPricing(
+        parsedMaxCapacity,
+        budgetPerNight,
+        budget3Guests,
+        budget4Guests,
+        budget5Guests,
+        budget6PlusGuests
+      )
+    ) {
+      setError("Please set a nightly rate for each guest-count tier that applies to your max capacity");
       return;
     }
 
@@ -461,8 +549,8 @@ export function ListingWizard({
               required
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label="City" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kyoto" required />
-              <Input label="Country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Japan" required />
+              <Input label="City" value={city} onChange={(e) => setCity(e.target.value)} required />
+              <Input label="Country" value={country} onChange={(e) => setCountry(e.target.value)} required />
             </div>
             <Input
               label="Languages spoken"
@@ -482,6 +570,16 @@ export function ListingWizard({
                 </p>
               </div>
               <Input
+                label="Max guests you can host"
+                type="number"
+                min="1"
+                max="20"
+                value={maxCapacity}
+                onChange={(e) => setMaxCapacity(e.target.value)}
+                hint="Sets which guest-count pricing tiers apply to your listing"
+                required
+              />
+              <Input
                 label={`Base nightly rate (${hostCurrency})`}
                 type="number"
                 min="0"
@@ -489,6 +587,7 @@ export function ListingWizard({
                 value={budgetPerNight}
                 onChange={(e) => setBudgetPerNight(e.target.value)}
                 placeholder={ratePlaceholder}
+                hint="Applies to 1–2 guests"
                 required
               />
               <Input
@@ -499,7 +598,15 @@ export function ListingWizard({
                 value={budget3Guests}
                 onChange={(e) => setBudget3Guests(e.target.value)}
                 placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "15000" : "120.00"}
-                required
+                disabled={!isListingPricingTierEnabled(parsedMaxCapacity, "3")}
+                hint={
+                  !isListingPricingTierEnabled(parsedMaxCapacity, "3")
+                    ? parsedMaxCapacity != null
+                      ? `Unavailable — your max capacity is ${parsedMaxCapacity} guest${parsedMaxCapacity === 1 ? "" : "s"}`
+                      : undefined
+                    : undefined
+                }
+                required={isListingPricingTierEnabled(parsedMaxCapacity, "3")}
               />
               <Input
                 label={`4 guests: nightly rate (${hostCurrency})`}
@@ -509,7 +616,15 @@ export function ListingWizard({
                 value={budget4Guests}
                 onChange={(e) => setBudget4Guests(e.target.value)}
                 placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "18000" : "150.00"}
-                required
+                disabled={!isListingPricingTierEnabled(parsedMaxCapacity, "4")}
+                hint={
+                  !isListingPricingTierEnabled(parsedMaxCapacity, "4")
+                    ? parsedMaxCapacity != null
+                      ? `Unavailable — your max capacity is ${parsedMaxCapacity} guest${parsedMaxCapacity === 1 ? "" : "s"}`
+                      : undefined
+                    : undefined
+                }
+                required={isListingPricingTierEnabled(parsedMaxCapacity, "4")}
               />
               <Input
                 label={`5 guests: nightly rate (${hostCurrency})`}
@@ -519,7 +634,15 @@ export function ListingWizard({
                 value={budget5Guests}
                 onChange={(e) => setBudget5Guests(e.target.value)}
                 placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "20000" : "175.00"}
-                required
+                disabled={!isListingPricingTierEnabled(parsedMaxCapacity, "5")}
+                hint={
+                  !isListingPricingTierEnabled(parsedMaxCapacity, "5")
+                    ? parsedMaxCapacity != null
+                      ? `Unavailable — your max capacity is ${parsedMaxCapacity} guest${parsedMaxCapacity === 1 ? "" : "s"}`
+                      : undefined
+                    : undefined
+                }
+                required={isListingPricingTierEnabled(parsedMaxCapacity, "5")}
               />
               <Input
                 label={`6+ guests: nightly rate (${hostCurrency})`}
@@ -529,8 +652,15 @@ export function ListingWizard({
                 value={budget6PlusGuests}
                 onChange={(e) => setBudget6PlusGuests(e.target.value)}
                 placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "24000" : "200.00"}
-                hint="Applies to groups of 6 or more guests"
-                required
+                disabled={!isListingPricingTierEnabled(parsedMaxCapacity, "6_plus")}
+                hint={
+                  !isListingPricingTierEnabled(parsedMaxCapacity, "6_plus")
+                    ? parsedMaxCapacity != null
+                      ? `Unavailable — your max capacity is ${parsedMaxCapacity} guest${parsedMaxCapacity === 1 ? "" : "s"}`
+                      : "Applies to groups of 6 or more guests"
+                    : "Applies to groups of 6 or more guests"
+                }
+                required={isListingPricingTierEnabled(parsedMaxCapacity, "6_plus")}
               />
             </div>
           </div>
@@ -548,16 +678,6 @@ export function ListingWizard({
               onChange={(e) => setStayDetails(e.target.value)}
               placeholder="Parking instructions, check-in times, accessibility notes, neighborhood tips..."
               hint="Any additional details you want your guests to know about the stay"
-            />
-            <Input
-              label="Max capacity (guests)"
-              type="number"
-              min="1"
-              max="20"
-              value={maxCapacity}
-              onChange={(e) => setMaxCapacity(e.target.value)}
-              placeholder="6"
-              hint="Maximum number of guests you can host at one time"
             />
             {[
               { label: "Meals", items: LISTING_MEALS, selected: meals, set: setMeals, toggle: toggleMeal },
@@ -628,7 +748,8 @@ export function ListingWizard({
             <div>
               <h2 className="text-xl font-semibold text-forest">Photos &amp; intro video</h2>
               <p className="text-sm text-charcoal-light mt-1">
-                Show your home, family, and cultural experiences.
+                Your intro video becomes the listing cover in search and on your profile. Add home
+                photos so travelers can see where they will stay.
               </p>
             </div>
             {listingId ? (
@@ -637,15 +758,28 @@ export function ListingWizard({
                   listingId={listingId}
                   userId={userId}
                   videoUrl={introVideoUrl}
-                  onVideoChange={setIntroVideoUrl}
+                  onVideoChange={handleIntroVideoChange}
                 />
-                <PhotoUpload
-                  listingId={listingId}
-                  userId={userId}
-                  existingPhotos={photos}
-                  onPhotosChange={setPhotos}
-                  showCoverSelection={!introVideoUrl}
-                />
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-forest">Home photos</h3>
+                    <p className="text-sm text-charcoal-light mt-1">
+                      Include pictures of your home and where the guest would be staying — for example
+                      the guest bedroom or sleeping area, bathroom they will use, and shared spaces
+                      such as the kitchen, dining area, or living room. These help travelers understand
+                      what their stay will look and feel like.
+                    </p>
+                  </div>
+                  <PhotoUpload
+                    listingId={listingId}
+                    userId={userId}
+                    existingPhotos={photos}
+                    onPhotosChange={setPhotos}
+                    showCoverSelection={!introVideoUrl}
+                    uploadLabel="Upload home photos"
+                    uploadHint="JPEG, PNG, or WebP up to 5MB each — include the guest room and shared spaces"
+                  />
+                </div>
               </>
             ) : (
               <p className="text-sm text-charcoal-light">Preparing uploads...</p>
@@ -662,7 +796,7 @@ export function ListingWizard({
             <div className="rounded-xl bg-sage/40 p-4 space-y-2 text-sm">
               <p><strong className="text-forest">Title:</strong> {title.trim() || defaultFamilyListingTitle(hostName)}</p>
               <p><strong className="text-forest">Location:</strong> {[city, country].filter(Boolean).join(", ")}</p>
-              <p><strong className="text-forest">Intro video:</strong> {introVideoUrl ? "Uploaded" : "Not set"}</p>
+              <p><strong className="text-forest">Intro video:</strong> {introVideoUrl ? "Uploaded (used as listing cover)" : "Not set"}</p>
               <p><strong className="text-forest">Photos:</strong> {photos.length} uploaded</p>
               {!introVideoUrl && (
                 <p>

@@ -137,8 +137,8 @@ export function IntroVideoUpload({
       <div className="rounded-xl border border-gold/40 bg-gold/5 p-4">
         <p className="text-sm text-charcoal-light">
           <strong className="text-forest">Highly recommended:</strong> A short intro video helps
-          travelers connect with your family before they book. If you skip the video, select a cover
-          photo below for search results.
+          travelers connect with your family before they book. When uploaded, it automatically
+          becomes your listing cover in search and on your profile — no separate cover photo needed.
         </p>
       </div>
 

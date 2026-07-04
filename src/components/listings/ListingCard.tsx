@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { MapPin, Edit } from "lucide-react";
 import { ListingDeleteButton } from "@/components/listings/ListingDeleteButton";
+import { ListingPreviewMedia } from "@/components/listings/ListingPreviewMedia";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { LISTING_STATUS_LABELS } from "@/lib/listings";
@@ -15,16 +15,16 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, coverPhoto, hostId }: ListingCardProps) {
   const status = LISTING_STATUS_LABELS[listing.status];
+  const hasMedia = Boolean(listing.intro_video_url || coverPhoto);
 
   return (
     <Card variant="outline" padding="sm" className="overflow-hidden group hover:shadow-md transition-shadow">
       <Link href={`/families/${listing.id}`} className="block">
         <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-sage mb-4">
-          {coverPhoto ? (
-            <Image
-              src={coverPhoto.file_url}
-              alt={listing.title ?? "Listing"}
-              fill
+          {hasMedia ? (
+            <ListingPreviewMedia
+              listing={listing}
+              coverPhotoUrl={coverPhoto?.file_url ?? null}
               className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
               sizes="400px"
             />

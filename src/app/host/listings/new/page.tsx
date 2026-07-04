@@ -12,7 +12,7 @@ import {
   canCreateHostListing,
   documentsMapFromRows,
 } from "@/lib/traveler-verification";
-import type { DocumentType, Profile, VerificationStatus } from "@/types/database";
+import type { DocumentType, HostProfile, Profile, VerificationStatus } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
 
 export const metadata = privatePageMetadata({
@@ -26,13 +26,13 @@ export default async function NewListingPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/sign-in?redirect=/host/listings/new");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { data: hostProfile }] = await Promise.all([
+    supabase.from("profiles").select("full_name, role").eq("id", user.id).single(),
+    supabase.from("host_profiles").select("languages_spoken, max_guests").eq("user_id", user.id).maybeSingle(),
+  ]);
 
   const typedProfile = profile as Pick<Profile, "full_name" | "role"> | null;
+  const typedHostProfile = hostProfile as Pick<HostProfile, "languages_spoken" | "max_guests"> | null;
 
   if (typedProfile?.role !== "host") {
     redirect("/profile/complete");
@@ -88,6 +88,8 @@ export default async function NewListingPage() {
       <ListingWizard
         userId={user.id}
         hostName={typedProfile?.full_name}
+        initialLanguagesSpoken={typedHostProfile?.languages_spoken ?? null}
+        initialMaxCapacity={typedHostProfile?.max_guests ?? null}
         mode="create"
       />
     </Container>

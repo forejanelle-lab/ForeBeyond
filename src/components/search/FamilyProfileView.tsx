@@ -1,16 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, Clock, User } from "lucide-react";
+import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, Clock, User, Users } from "lucide-react";
 import { FamilyProfileContent } from "@/components/search/FamilyProfileContent";
 import { RequestStayButton } from "@/components/stays/RequestStayButton";
 import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
 import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
-import { ListingImage } from "@/components/listings/ListingImage";
+import { ListingPreviewMedia } from "@/components/listings/ListingPreviewMedia";
 import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
 import { DisplayStayRateFromPricing } from "@/components/i18n/DisplayMoney";
 import { pickListingPricing } from "@/lib/stay-requests";
+import { formatListingMaxCapacityLabel } from "@/lib/listings";
 import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
@@ -92,9 +93,6 @@ export function FamilyProfileView({
   const isVerified = verificationStatus === "verified";
   const locationLabel = [listing.city, listing.country].filter(Boolean).join(", ");
   const hostNameForDisplay = hostDisplayName ?? hostFirstName;
-  const listingPhotoAlt = listing.title
-    ? `${listing.title} — verified homestay${locationLabel ? ` in ${locationLabel}` : ""}`
-    : `Verified host family homestay${locationLabel ? ` in ${locationLabel}` : ""}`;
   const hostInitials = hostNameForDisplay
     ?.split(" ")
     .map((part) => part[0])
@@ -105,11 +103,9 @@ export function FamilyProfileView({
   return (
     <>
       <section className="relative h-64 md:h-[28rem] bg-sage">
-        <ListingImage
-          src={coverPhoto?.file_url}
-          country={listing.country}
-          city={listing.city}
-          alt={listingPhotoAlt}
+        <ListingPreviewMedia
+          listing={listing}
+          coverPhotoUrl={coverPhoto?.file_url}
           fill
           className="object-cover"
           priority
@@ -252,6 +248,12 @@ export function FamilyProfileView({
             <Card variant="outline" padding="md" className="space-y-4">
               {showBookingActions ? (
                 <>
+                  {listing.max_capacity != null && listing.max_capacity > 0 && (
+                    <p className="text-sm text-charcoal-light text-center flex items-center justify-center gap-1.5">
+                      <Users className="h-4 w-4 shrink-0 text-forest" />
+                      Hosts up to {formatListingMaxCapacityLabel(listing.max_capacity)}
+                    </p>
+                  )}
                   <p className="text-sm text-charcoal-light text-center">
                     Interested in staying with {hostFirstName ?? "this family"}?
                   </p>

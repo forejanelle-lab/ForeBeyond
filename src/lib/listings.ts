@@ -67,3 +67,54 @@ export function generateListingTitle(city: string, country: string, hostName?: s
   if (hostName) return `${hostName}'s Family in ${location}`;
   return location ? `Family Home in ${location}` : "Untitled Listing";
 }
+
+export type ListingPricingTier = "standard" | "3" | "4" | "5" | "6_plus";
+
+export function parseListingMaxCapacity(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = parseInt(trimmed, 10);
+  if (Number.isNaN(parsed) || parsed < 1) return null;
+  return Math.min(parsed, 20);
+}
+
+export function resolveListingMaxCapacity(
+  value: string | number | null | undefined,
+  fallback = 8
+): number {
+  if (typeof value === "number" && value > 0) return Math.min(value, 20);
+  const parsed = parseListingMaxCapacity(String(value ?? ""));
+  return parsed ?? fallback;
+}
+
+export function minGuestsForListingPricingTier(tier: ListingPricingTier): number {
+  switch (tier) {
+    case "standard":
+      return 1;
+    case "3":
+      return 3;
+    case "4":
+      return 4;
+    case "5":
+      return 5;
+    case "6_plus":
+      return 6;
+  }
+}
+
+export function isListingPricingTierEnabled(
+  maxCapacity: number | null,
+  tier: ListingPricingTier
+): boolean {
+  if (maxCapacity == null) return true;
+  return minGuestsForListingPricingTier(tier) <= maxCapacity;
+}
+
+export function maxCapacityExceededMessage(maxCapacity: number): string {
+  const label = maxCapacity === 1 ? "1 guest" : `${maxCapacity} guests`;
+  return `This host can accommodate up to ${label}. Please reduce your guest count.`;
+}
+
+export function formatListingMaxCapacityLabel(maxCapacity: number): string {
+  return maxCapacity === 1 ? "1 guest" : `${maxCapacity} guests`;
+}

@@ -13,6 +13,8 @@ interface PhotoUploadProps {
   existingPhotos?: ListingPhoto[];
   onPhotosChange?: (photos: ListingPhoto[]) => void;
   showCoverSelection?: boolean;
+  uploadLabel?: string;
+  uploadHint?: string;
 }
 
 export function PhotoUpload({
@@ -21,6 +23,8 @@ export function PhotoUpload({
   existingPhotos = [],
   onPhotosChange,
   showCoverSelection = true,
+  uploadLabel = "Upload family photos",
+  uploadHint = "JPEG, PNG, WebP up to 5MB each",
 }: PhotoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<ListingPhoto[]>(existingPhotos);
@@ -107,8 +111,8 @@ export function PhotoUpload({
         onClick={() => inputRef.current?.click()}
       >
         <Upload className="h-8 w-8 text-forest mx-auto mb-2" />
-        <p className="text-sm font-medium text-forest">Upload family photos</p>
-        <p className="text-xs text-charcoal-light mt-1">JPEG, PNG, WebP up to 5MB each</p>
+        <p className="text-sm font-medium text-forest">{uploadLabel}</p>
+        <p className="text-xs text-charcoal-light mt-1">{uploadHint}</p>
         <input
           ref={inputRef}
           type="file"

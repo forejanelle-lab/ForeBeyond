@@ -8,7 +8,13 @@ import posthog from "posthog-js";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
 import {
+  formatListingMaxCapacityLabel,
+  maxCapacityExceededMessage,
+  resolveListingMaxCapacity,
+} from "@/lib/listings";
+import {
   calculateStayWithServiceFee,
+  exceedsListingMaxCapacity,
   formatDateRange,
   formatStayRequestMessage,
   missingPricingMessage,
@@ -96,7 +102,36 @@ export function RequestStayWizard({
 
   const listingPricing = useMemo(() => pickListingPricing(listing), [listing]);
   const sourceCurrency = resolveListingPricingCurrency(listingPricing);
-  const maxGuests = listing.max_capacity && listing.max_capacity > 0 ? listing.max_capacity : 8;
+  const maxGuests = resolveListingMaxCapacity(listing.max_capacity);
+  const hasHostMaxCapacity =
+    listing.max_capacity != null && listing.max_capacity > 0;
+
+  function applyGuestCount(value: string) {
+    if (value.trim() === "") {
+      setGuestCount("");
+      return;
+    }
+
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed)) {
+      setGuestCount(value);
+      return;
+    }
+
+    const clamped = Math.min(Math.max(1, parsed), maxGuests);
+    setGuestCount(String(clamped));
+  }
+
+  function validateGuestCount(): string | null {
+    const guests = parseInt(guestCount, 10);
+    if (!guestCount.trim() || Number.isNaN(guests) || guests < 1) {
+      return "Please enter the number of guests.";
+    }
+    if (exceedsListingMaxCapacity(guests, listing.max_capacity)) {
+      return maxCapacityExceededMessage(maxGuests);
+    }
+    return null;
+  }
 
   const pricing = useMemo(() => {
     if (!startDate || !endDate || endDate <= startDate) return null;
@@ -165,6 +200,13 @@ export function RequestStayWizard({
     }
 
     const guests = parseInt(guestCount, 10) || 1;
+    const guestError = validateGuestCount();
+    if (guestError) {
+      setError(guestError);
+      setIsLoading(false);
+      return;
+    }
+
     const conflict = findStayDateConflict(startDate, endDate, blockedDateRanges);
     if (conflict) {
       setError(getStayDateConflictMessage(conflict));
@@ -267,6 +309,11 @@ export function RequestStayWizard({
       const dateError = validateDates();
       if (dateError) {
         setError(dateError);
+        return;
+      }
+      const guestError = validateGuestCount();
+      if (guestError) {
+        setError(guestError);
         return;
       }
       const guests = parseInt(guestCount, 10) || 1;
@@ -386,8 +433,12 @@ export function RequestStayWizard({
             min="1"
             max={String(maxGuests)}
             value={guestCount}
-            onChange={(e) => setGuestCount(e.target.value)}
-            hint={listing.max_capacity ? `This family hosts up to ${listing.max_capacity} guests` : undefined}
+            onChange={(e) => applyGuestCount(e.target.value)}
+            hint={
+              hasHostMaxCapacity
+                ? `This family can host up to ${formatListingMaxCapacityLabel(maxGuests)}. You cannot request more than their maximum.`
+                : undefined
+            }
             required
           />
           {pricing ? (

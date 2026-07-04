@@ -281,6 +281,14 @@ export function missingPricingMessage(guestCount: number): string {
   return `This host has not set a nightly rate for ${guests} guests yet.`;
 }
 
+export function exceedsListingMaxCapacity(
+  guestCount: number,
+  maxCapacity: number | null | undefined
+): boolean {
+  if (maxCapacity == null || maxCapacity <= 0) return false;
+  return Math.max(guestCount, 1) > maxCapacity;
+}
+
 export function getConfirmStayDisabledReason(
   request: {
     start_date: string | null;
