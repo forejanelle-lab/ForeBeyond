@@ -49,7 +49,7 @@ export function ListingImage({
       onError={handleError}
       className={
         useLogo
-          ? `${props.className ?? ""} object-contain bg-sage p-6`.trim()
+          ? `${props.className ?? ""} object-cover bg-black`.trim()
           : props.className
       }
     />

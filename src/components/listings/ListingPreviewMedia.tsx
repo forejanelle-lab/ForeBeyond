@@ -23,7 +23,7 @@ export function ListingPreviewMedia({
   sizes,
   priority,
 }: ListingPreviewMediaProps) {
-  if (listing.intro_video_url) {
+  if (isUsableListingImageUrl(listing.intro_video_url)) {
     return (
       <HostIntroVideo
         src={listing.intro_video_url}
@@ -36,7 +36,12 @@ export function ListingPreviewMedia({
   }
 
   if (!isUsableListingImageUrl(coverPhotoUrl)) {
-    return <ListingCoverFallback />;
+    return (
+      <ListingCoverFallback
+        sizes={sizes}
+        priority={priority}
+      />
+    );
   }
 
   return (

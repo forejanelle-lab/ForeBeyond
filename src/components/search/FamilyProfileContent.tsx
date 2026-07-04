@@ -151,8 +151,8 @@ export function FamilyProfileContent({
               ))}
             </div>
           ) : (
-            <div className="relative aspect-[16/10] max-w-lg rounded-xl overflow-hidden bg-sage">
-              <ListingCoverFallback />
+            <div className="relative aspect-[16/10] max-w-lg rounded-xl overflow-hidden bg-black">
+              <ListingCoverFallback sizes="512px" />
             </div>
           )}
         </div>

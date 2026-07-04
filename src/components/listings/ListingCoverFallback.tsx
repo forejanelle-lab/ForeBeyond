@@ -3,20 +3,24 @@ import { LISTING_IMAGE_FALLBACK } from "@/lib/listing-images";
 
 interface ListingCoverFallbackProps {
   className?: string;
+  sizes?: string;
+  priority?: boolean;
 }
 
-export function ListingCoverFallback({ className = "" }: ListingCoverFallbackProps) {
+export function ListingCoverFallback({
+  className = "",
+  sizes = "(max-width: 768px) 100vw, 400px",
+  priority,
+}: ListingCoverFallbackProps) {
   return (
-    <div
-      className={`absolute inset-0 flex items-center justify-center bg-sage ${className}`}
-      aria-hidden
-    >
+    <div className={`absolute inset-0 bg-black ${className}`} aria-hidden>
       <Image
         src={LISTING_IMAGE_FALLBACK}
         alt=""
-        width={180}
-        height={120}
-        className="w-[42%] max-w-[180px] h-auto object-contain opacity-90"
+        fill
+        priority={priority}
+        className="object-cover"
+        sizes={sizes}
       />
     </div>
   );

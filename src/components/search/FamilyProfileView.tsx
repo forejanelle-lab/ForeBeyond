@@ -102,7 +102,7 @@ export function FamilyProfileView({
 
   return (
     <>
-      <section className="relative h-64 md:h-[28rem] bg-sage">
+      <section className="relative h-64 md:h-[28rem] bg-black">
         <ListingPreviewMedia
           listing={listing}
           coverPhotoUrl={coverPhoto?.file_url}

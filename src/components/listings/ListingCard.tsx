@@ -19,7 +19,7 @@ export function ListingCard({ listing, coverPhoto, hostId }: ListingCardProps) {
   return (
     <Card variant="outline" padding="sm" className="overflow-hidden group hover:shadow-md transition-shadow">
       <Link href={`/families/${listing.id}`} className="block">
-        <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-sage mb-4">
+        <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-black mb-4">
           <ListingPreviewMedia
             listing={listing}
             coverPhotoUrl={coverPhoto?.file_url ?? null}

@@ -73,7 +73,7 @@ export function FamilySearchCard({
         layout === "list"
           ? "h-36 w-full rounded-xl sm:h-40 sm:w-44 md:h-44 md:w-52"
           : "mb-4 aspect-[16/10] w-full rounded-xl"
-      }`}
+      } bg-black`}
     >
       <ListingPreviewMedia
         listing={listing}
