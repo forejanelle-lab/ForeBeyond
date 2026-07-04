@@ -18,13 +18,36 @@ export function looksLikeEnglish(text: string): boolean {
   if (trimmed.length < 12) return true;
   if (NON_LATIN_SCRIPT.test(trimmed)) return false;
   if (!ENGLISH_HINT.test(trimmed)) return false;
+
   const latinLetters = (trimmed.match(/[a-zA-Z]/g) ?? []).length;
-  return latinLetters / trimmed.length > 0.85;
+  const allLetters = (trimmed.match(/\p{L}/gu) ?? []).length;
+  if (allLetters === 0) return false;
+
+  return latinLetters / allLetters > 0.85;
 }
 
-export function shouldOfferTranslation(text: string | null | undefined): boolean {
+export function shouldOfferTranslation(
+  text: string | null | undefined,
+  targetLang: string = "en"
+): boolean {
   if (!text?.trim()) return false;
-  return !looksLikeEnglish(text);
+
+  const target = normalizeLangCode(targetLang);
+  const source = detectSourceLanguage(text);
+
+  if (source) {
+    return normalizeLangCode(source) !== target;
+  }
+
+  if (target === "en") {
+    return !looksLikeEnglish(text);
+  }
+
+  // Non-English target: offer for English or unknown Latin script text.
+  if (looksLikeEnglish(text)) return true;
+  if (NON_LATIN_SCRIPT.test(text)) return true;
+
+  return true;
 }
 
 /**

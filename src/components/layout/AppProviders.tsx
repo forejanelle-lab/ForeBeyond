@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import type { ReactNode } from "react";
-import { LocaleProvider, useLocale } from "@/components/i18n/LocaleProvider";
-import { CurrencyProvider, useCurrency } from "@/components/i18n/CurrencyProvider";
+import { LocaleProvider } from "@/components/i18n/LocaleProvider";
+import { CurrencyProvider } from "@/components/i18n/CurrencyProvider";
 import type { Messages } from "@/lib/i18n/messages";
 import type { SupportedLanguageCode } from "@/lib/languages";
 
@@ -15,17 +14,6 @@ interface AppProvidersProps {
   initialExchangeRates?: Record<string, number> | null;
 }
 
-function LanguageSync() {
-  const { locale } = useLocale();
-  const { setPreferredLanguage } = useCurrency();
-
-  useEffect(() => {
-    setPreferredLanguage(locale);
-  }, [locale, setPreferredLanguage]);
-
-  return null;
-}
-
 export function AppProviders({
   children,
   locale,
@@ -35,12 +23,7 @@ export function AppProviders({
 }: AppProvidersProps) {
   return (
     <LocaleProvider locale={locale} messages={messages}>
-      <CurrencyProvider
-        initialCurrency={initialCurrency}
-        initialLanguage={locale}
-        initialExchangeRates={initialExchangeRates}
-      >
-        <LanguageSync />
+      <CurrencyProvider initialCurrency={initialCurrency} initialExchangeRates={initialExchangeRates}>
         {children}
       </CurrencyProvider>
     </LocaleProvider>

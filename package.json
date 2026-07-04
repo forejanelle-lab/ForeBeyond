@@ -10,6 +10,7 @@
     "lint": "next lint",
     "test:currency": "node scripts/verify-currency-safety.mjs",
     "test:translate": "node scripts/verify-translate.mjs",
+    "test:language-detect": "node scripts/verify-language-detect.mjs",
     "db:migrate": "node scripts/run-migrations.mjs",
     "db:fix-signup": "node scripts/run-sql.mjs supabase/migrations/003_fix_signup_trigger.sql",
     "db:phase2": "node scripts/run-sql.mjs supabase/setup-phase2.sql",

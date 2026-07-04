@@ -3,32 +3,34 @@
 import { useState } from "react";
 import { Languages, Loader2 } from "lucide-react";
 import { shouldOfferTranslation } from "@/lib/language-detect";
-import { DEFAULT_LANGUAGE, getLanguageLabel, normalizeLanguageCode } from "@/lib/languages";
-import { useCurrencyOptional } from "@/components/i18n/CurrencyProvider";
+import {
+  DEFAULT_LANGUAGE,
+  getTranslationLanguageLabel,
+  parseLanguageCode,
+} from "@/lib/languages";
 import { useLocaleOptional } from "@/components/i18n/LocaleProvider";
+import { useBrowserLanguage } from "@/hooks/use-browser-language";
 
 interface TranslatableTextProps {
   text: string;
   className?: string;
-  /** Override target language (defaults to user preferred language or English) */
+  /** Override target language (defaults to browser language) */
   targetLang?: string;
 }
 
 export function TranslatableText({ text, className = "", targetLang }: TranslatableTextProps) {
-  const currency = useCurrencyOptional();
   const locale = useLocaleOptional();
+  const browserLanguage = useBrowserLanguage();
   const t = locale?.t ?? ((key: string) => key);
-  const resolvedTarget = normalizeLanguageCode(
-    targetLang ?? locale?.locale ?? currency?.preferredLanguage ?? DEFAULT_LANGUAGE
-  );
-  const targetLabel = getLanguageLabel(resolvedTarget);
+  const resolvedTarget = parseLanguageCode(targetLang ?? browserLanguage ?? DEFAULT_LANGUAGE);
+  const targetLabel = getTranslationLanguageLabel(resolvedTarget);
 
   const [showTranslation, setShowTranslation] = useState(false);
   const [translated, setTranslated] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const offerTranslation = shouldOfferTranslation(text);
+  const offerTranslation = shouldOfferTranslation(text, resolvedTarget);
 
   async function handleTranslate() {
     if (showTranslation) {

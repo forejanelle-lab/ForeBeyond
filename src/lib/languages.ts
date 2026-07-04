@@ -34,3 +34,20 @@ export function getLanguageShortLabel(code: string): string {
   const base = normalizeLanguageCode(code);
   return SUPPORTED_LANGUAGES.find((lang) => lang.value === base)?.shortLabel ?? "EN";
 }
+
+/** Raw browser/API language code — not limited to site-supported locales. */
+export function parseLanguageCode(code: string | null | undefined): string {
+  const base = code?.trim().toLowerCase().split("-")[0];
+  return base && base.length >= 2 ? base : DEFAULT_LANGUAGE;
+}
+
+export function getTranslationLanguageLabel(code: string): string {
+  const known = SUPPORTED_LANGUAGES.find((lang) => lang.value === parseLanguageCode(code));
+  if (known) return known.label;
+
+  try {
+    return new Intl.DisplayNames(["en"], { type: "language" }).of(parseLanguageCode(code)) ?? code;
+  } catch {
+    return code;
+  }
+}

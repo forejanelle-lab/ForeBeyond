@@ -16,7 +16,7 @@ import {
   normalizeCurrencyCode,
   type SupportedCurrencyCode,
 } from "@/lib/currency";
-import { DEFAULT_LANGUAGE, normalizeLanguageCode } from "@/lib/languages";
+import { DEFAULT_LANGUAGE, normalizeLanguageCode, parseLanguageCode } from "@/lib/languages";
 
 interface CurrencyContextValue {
   displayCurrency: SupportedCurrencyCode;
@@ -48,7 +48,7 @@ const STORAGE_KEY = "forebeyond_display_currency";
 
 function readBrowserLanguage(): string {
   if (typeof navigator === "undefined") return DEFAULT_LANGUAGE;
-  return navigator.language || DEFAULT_LANGUAGE;
+  return parseLanguageCode(navigator.language);
 }
 
 interface CurrencyProviderProps {
@@ -91,7 +91,9 @@ export function CurrencyProvider({
   useEffect(() => {
     if (initialLanguage) {
       setPreferredLanguageState(normalizeLanguageCode(initialLanguage));
+      return;
     }
+    setPreferredLanguageState(normalizeLanguageCode(readBrowserLanguage()));
   }, [initialLanguage]);
 
   useEffect(() => {
