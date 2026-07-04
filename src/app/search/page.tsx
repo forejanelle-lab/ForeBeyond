@@ -134,6 +134,7 @@ async function SearchResults({
           hostDisplayNames={hostDisplayNameById}
           savedListingIds={savedListingIds}
           layout="list"
+          isLoggedIn={Boolean(user)}
         />
       </div>
     </div>

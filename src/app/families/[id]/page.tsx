@@ -1,11 +1,12 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { FamilyProfileView } from "@/components/search/FamilyProfileView";
-import { ListingAccessGate } from "@/components/listings/ListingAccessGate";
+import { hostListingSignInPath } from "@/lib/listing-access";
+import { LISTING_IMAGE_FALLBACK } from "@/lib/listing-images";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
-import { createPageMetadata } from "@/lib/site-metadata";
+import { createPageMetadata, privatePageMetadata } from "@/lib/site-metadata";
 import { getListingCoverPhotoUrl } from "@/lib/seo-cover-photos";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildListingJsonLd } from "@/lib/json-ld";
@@ -64,7 +65,7 @@ export async function generateMetadata({
     `Stay with ${title} in ${data.city}, ${data.country}. Book an authentic cultural immersion with Fore Beyond.`;
   const coverPhoto = await getListingCoverPhotoUrl(supabase, id);
 
-  return createPageMetadata({
+  return privatePageMetadata({
     title,
     description,
     path: `/families/${id}`,
@@ -84,6 +85,11 @@ export default async function FamilyProfilePage({
     supabase.auth.getUser(),
     resolveListingForProfilePage(supabase, id),
   ]);
+
+  if (!user) {
+    redirect(hostListingSignInPath(id));
+  }
+
   let hostListing: HostListing;
   let hostFirstName: string | null = null;
   let hostDisplayName: string | null = null;
@@ -96,10 +102,6 @@ export default async function FamilyProfilePage({
   let isOwnListing = false;
 
   if (!typedListing) {
-    if (!user) {
-      return <ListingAccessGate listingId={id} />;
-    }
-
     const { data: ownListing } = await supabase
       .from("host_listings")
       .select("*")
@@ -325,7 +327,7 @@ export default async function FamilyProfilePage({
             image:
               (photos as ListingPhoto[] | null)?.find((photo) => photo.is_cover)?.file_url ??
               (photos as ListingPhoto[] | null)?.[0]?.file_url ??
-              null,
+              LISTING_IMAGE_FALLBACK,
             price: typedListing.budget_per_night,
             priceCurrency: typedListing.pricing_currency ?? "USD",
             ratingValue: hostAvgRating,

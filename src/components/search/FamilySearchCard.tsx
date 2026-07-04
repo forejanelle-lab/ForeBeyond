@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, MapPin, Shield, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { hostListingPath, hostListingSignInPath } from "@/lib/listing-access";
 import { DisplayBudget } from "@/components/i18n/DisplayMoney";
 import { ListingPreviewMedia } from "@/components/listings/ListingPreviewMedia";
 import { Badge } from "@/components/ui/Badge";
@@ -18,6 +19,7 @@ interface FamilySearchCardProps {
   isSaved?: boolean;
   showSaveButton?: boolean;
   layout?: "grid" | "list";
+  isLoggedIn?: boolean;
 }
 
 export function FamilySearchCard({
@@ -27,10 +29,12 @@ export function FamilySearchCard({
   isSaved = false,
   showSaveButton = true,
   layout = "grid",
+  isLoggedIn = false,
 }: FamilySearchCardProps) {
   const router = useRouter();
   const [saved, setSaved] = useState(isSaved);
   const [isSaving, setIsSaving] = useState(false);
+  const listingHref = isLoggedIn ? hostListingPath(listing.id) : hostListingSignInPath(listing.id);
 
   async function toggleSave(e: React.MouseEvent) {
     e.preventDefault();
@@ -41,7 +45,7 @@ export function FamilySearchCard({
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push(`/auth/sign-in?redirect=/families/${listing.id}`);
+      router.push(hostListingSignInPath(listing.id));
       setIsSaving(false);
       return;
     }
@@ -169,7 +173,7 @@ export function FamilySearchCard({
   );
 
   return (
-    <Link href={`/families/${listing.id}`} className="block group">
+    <Link href={listingHref} className="block group">
       <Card
         variant="outline"
         padding="sm"

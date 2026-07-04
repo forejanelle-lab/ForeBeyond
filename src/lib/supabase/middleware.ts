@@ -53,7 +53,7 @@ export async function updateSession(request: NextRequest) {
 
   const authRoutes = ["/auth/sign-in", "/auth/sign-up", "/auth/check-email", "/auth/verify-email", "/auth/resend-verification", "/auth/forgot-password", "/auth/reset-password"];
   const authRoutesAllowedWhenLoggedIn = ["/auth/forgot-password", "/auth/reset-password"];
-  const protectedRoutes = ["/dashboard", "/verification-center", "/profile", "/settings", "/trust-center/dashboard", "/host", "/saved", "/experiences/saved", "/trips", "/messages", "/notifications", "/admin", "/onboarding"];
+  const protectedRoutes = ["/dashboard", "/verification-center", "/profile", "/settings", "/trust-center/dashboard", "/host", "/saved", "/experiences/saved", "/trips", "/messages", "/notifications", "/admin", "/onboarding", "/families"];
 
   if (pathname === "/auth/callback") {
     return supabaseResponse;

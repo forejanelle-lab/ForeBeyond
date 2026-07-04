@@ -22,10 +22,9 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient();
 
-  const [{ data: listings }, { data: experiences }] = await Promise.all([
-    supabase.from("public_listings").select("id, published_at, created_at"),
-    supabase.from("public_experiences").select("id, published_at, created_at"),
-  ]);
+  const { data: experiences } = await supabase
+    .from("public_experiences")
+    .select("id, published_at, created_at");
 
   const destinationRoutes: MetadataRoute.Sitemap = getDestinationCountries().flatMap((country) => [
     {
@@ -54,14 +53,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  const listingEntries: MetadataRoute.Sitemap =
-    listings?.map((listing) => ({
-      url: absoluteUrl(`/families/${listing.id}`),
-      lastModified: listing.published_at ?? listing.created_at ?? undefined,
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    })) ?? [];
-
   const experienceEntries: MetadataRoute.Sitemap =
     experiences?.map((experience) => ({
       url: absoluteUrl(`/experiences/${experience.id}`),
@@ -75,7 +66,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...destinationRoutes,
     ...guideRoutes,
     ...storyRoutes,
-    ...listingEntries,
     ...experienceEntries,
   ];
 }
