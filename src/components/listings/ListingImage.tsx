@@ -21,12 +21,14 @@ export function ListingImage({
   ...props
 }: ListingImageProps) {
   const resolved = resolveListingImage(src, country, city);
+  const isLogoFallback = resolved === LISTING_IMAGE_FALLBACK;
   const [imgSrc, setImgSrc] = useState(resolved);
-  const [useLogo, setUseLogo] = useState(false);
+  const [useLogo, setUseLogo] = useState(isLogoFallback);
 
   useEffect(() => {
-    setImgSrc(resolveListingImage(src, country, city));
-    setUseLogo(false);
+    const next = resolveListingImage(src, country, city);
+    setImgSrc(next);
+    setUseLogo(next === LISTING_IMAGE_FALLBACK);
   }, [src, country, city]);
 
   function handleError(event: React.SyntheticEvent<HTMLImageElement, Event>) {

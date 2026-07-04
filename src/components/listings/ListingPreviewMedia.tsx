@@ -2,7 +2,9 @@
 
 import type { PublicListing } from "@/types/database";
 import { HostIntroVideo } from "@/components/listings/HostIntroVideo";
+import { ListingCoverFallback } from "@/components/listings/ListingCoverFallback";
 import { ListingImage } from "@/components/listings/ListingImage";
+import { isUsableListingImageUrl } from "@/lib/listing-images";
 
 interface ListingPreviewMediaProps {
   listing: Pick<PublicListing, "id" | "country" | "city" | "title" | "intro_video_url">;
@@ -31,6 +33,10 @@ export function ListingPreviewMedia({
         ariaLabel={listing.title ?? "Family intro video"}
       />
     );
+  }
+
+  if (!isUsableListingImageUrl(coverPhotoUrl)) {
+    return <ListingCoverFallback />;
   }
 
   return (

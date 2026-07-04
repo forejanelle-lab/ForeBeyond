@@ -493,14 +493,6 @@ export function ListingWizard({
       return;
     }
 
-    if (!introVideoUrl) {
-      const hasCover = photos.some((photo) => photo.is_cover);
-      if (!hasCover) {
-        setError("Upload an intro video or select a cover photo for search results");
-        return;
-      }
-    }
-
     const blockedSaved = await saveBlockedDates(activeListingId);
     if (!blockedSaved) return;
 
@@ -725,8 +717,7 @@ export function ListingWizard({
             <div>
               <h2 className="text-xl font-semibold text-forest">Photos &amp; intro video</h2>
               <p className="text-sm text-charcoal-light mt-1">
-                Your intro video becomes the listing cover in search and on your profile. Add home
-                photos so travelers can see where they will stay.
+                Optional — add an intro video and home photos when you are ready.
               </p>
             </div>
             {listingId ? (
@@ -774,11 +765,10 @@ export function ListingWizard({
               <p><strong className="text-forest">Title:</strong> {title.trim() || defaultFamilyListingTitle(hostName)}</p>
               <p><strong className="text-forest">Location:</strong> {[city, country].filter(Boolean).join(", ")}</p>
               <p><strong className="text-forest">Intro video:</strong> {introVideoUrl ? "Uploaded (used as listing cover)" : "Not set"}</p>
-              <p><strong className="text-forest">Photos:</strong> {photos.length} uploaded</p>
-              {!introVideoUrl && (
+              <p><strong className="text-forest">Photos:</strong> {photos.length > 0 ? `${photos.length} uploaded` : "None"}</p>
+              {!introVideoUrl && photos.some((photo) => photo.is_cover) && (
                 <p>
-                  <strong className="text-forest">Cover photo:</strong>{" "}
-                  {photos.some((photo) => photo.is_cover) ? "Selected" : "Not set"}
+                  <strong className="text-forest">Cover photo:</strong> Selected
                 </p>
               )}
               <p><strong className="text-forest">Max capacity:</strong> {maxCapacity.trim() ? `${maxCapacity} guests` : "Not set"}</p>

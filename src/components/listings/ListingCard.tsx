@@ -15,24 +15,17 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, coverPhoto, hostId }: ListingCardProps) {
   const status = LISTING_STATUS_LABELS[listing.status];
-  const hasMedia = Boolean(listing.intro_video_url || coverPhoto);
 
   return (
     <Card variant="outline" padding="sm" className="overflow-hidden group hover:shadow-md transition-shadow">
       <Link href={`/families/${listing.id}`} className="block">
         <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-sage mb-4">
-          {hasMedia ? (
-            <ListingPreviewMedia
-              listing={listing}
-              coverPhotoUrl={coverPhoto?.file_url ?? null}
-              className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
-              sizes="400px"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-charcoal-light text-sm">
-              No photos yet
-            </div>
-          )}
+          <ListingPreviewMedia
+            listing={listing}
+            coverPhotoUrl={coverPhoto?.file_url ?? null}
+            className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
+            sizes="400px"
+          />
           <Badge variant={status.variant} className="absolute top-2 right-2">
             {status.label}
           </Badge>

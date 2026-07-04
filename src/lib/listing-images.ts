@@ -1,7 +1,7 @@
 import { resolveCatalogListingPhoto } from "@/lib/listing-photo-catalog";
 
-/** Fore Beyond logo shown when a listing photo fails to load */
-export const LISTING_IMAGE_FALLBACK = "/fore-beyond-logo.svg";
+/** Fore Beyond logo shown when a listing has no uploaded photo or video */
+export const LISTING_IMAGE_FALLBACK = "/logo-fore-beyond.png";
 
 const FALLBACK_INDEX_BY_CITY = new Map<string, number>();
 
@@ -18,15 +18,19 @@ function isUsableImageUrl(url?: string | null): url is string {
   return value.startsWith("/") || value.startsWith("http://") || value.startsWith("https://");
 }
 
+export function isUsableListingImageUrl(url?: string | null): url is string {
+  return isUsableImageUrl(url);
+}
+
 export function getListingPlaceholderImage(country?: string | null, city?: string | null): string {
   return resolveCatalogListingPhoto(city, country, fallbackIndex(city, country));
 }
 
 export function resolveListingImage(
   coverPhotoUrl: string | null | undefined,
-  country?: string | null,
-  city?: string | null
+  _country?: string | null,
+  _city?: string | null
 ): string {
   if (isUsableImageUrl(coverPhotoUrl)) return coverPhotoUrl.trim();
-  return getListingPlaceholderImage(country, city);
+  return LISTING_IMAGE_FALLBACK;
 }
