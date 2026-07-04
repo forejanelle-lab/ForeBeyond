@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatPrice } from "@/lib/experiences";
+import { DisplayExperiencePrice } from "@/components/i18n/DisplayMoney";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -61,6 +62,11 @@ export function BookExperienceForm({ experience, profileBio = null }: BookExperi
       return;
     }
 
+    posthog.capture("experience_booking_requested", {
+      experience_id: experience.id,
+      guest_count: guests,
+    });
+
     setSuccess(true);
     setIsLoading(false);
   }
@@ -90,7 +96,9 @@ export function BookExperienceForm({ experience, profileBio = null }: BookExperi
           <>Book independently — no accommodation required.</>
         )}{" "}
         {experience.price_per_person != null && (
-          <span className="font-medium text-forest">{formatPrice(experience.price_per_person)}</span>
+          <span className="font-medium text-forest">
+            <DisplayExperiencePrice priceUsd={experience.price_per_person} />
+          </span>
         )}
       </p>
 

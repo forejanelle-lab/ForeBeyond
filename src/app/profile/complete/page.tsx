@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { brand } from "@/lib/brand";
-import { AuthBrandHeader } from "@/components/auth/AuthBrandHeader";
 import { ProfileSettingsForm } from "@/components/profile/ProfileSettingsForm";
 import { Container } from "@/components/ui/Container";
 import type { Profile } from "@/types/database";
@@ -53,7 +52,6 @@ export default function CompleteProfilePage() {
   if (loading || !userId || !profile) {
     return (
       <Container size="sm" className="py-16 md:py-24">
-        <AuthBrandHeader />
         <p className="text-center text-charcoal-light">Loading profile...</p>
       </Container>
     );
@@ -61,7 +59,6 @@ export default function CompleteProfilePage() {
 
   return (
     <Container size="sm" className="py-16 md:py-24">
-      <AuthBrandHeader />
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-forest">Complete your profile</h1>
         <p className="mt-2 text-charcoal-light">

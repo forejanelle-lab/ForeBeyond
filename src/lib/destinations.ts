@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getListingPlaceholderImage } from "@/lib/listing-images";
+import { getDestinationCountries } from "@/lib/seo/destination-catalog";
 
 export interface PopularDestination {
   name: string;
@@ -40,13 +41,21 @@ export async function getPopularDestinations(): Promise<PopularDestination[]> {
   return [...countryCounts.values()]
     .filter(({ count }) => count > MIN_LISTINGS)
     .sort((a, b) => b.count - a.count || a.display.localeCompare(b.display))
-    .map(({ display, count }) => ({
-      name: display,
-      families: `${count} families`,
-      image: getListingPlaceholderImage(display),
-      href: `/search?country=${encodeURIComponent(display)}`,
-      count,
-    }));
+    .map(({ display, count }) => {
+      const destination = getDestinationCountries().find(
+        (c) => c.searchCountry.toLowerCase() === display.toLowerCase()
+      );
+      const href = destination
+        ? `/destinations/${destination.slug}`
+        : `/search?country=${encodeURIComponent(display)}`;
+      return {
+        name: display,
+        families: `${count} families`,
+        image: getListingPlaceholderImage(display),
+        href,
+        count,
+      };
+    });
   } catch (error) {
     console.error("getPopularDestinations:", error);
     return [];

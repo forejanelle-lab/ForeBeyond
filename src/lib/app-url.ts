@@ -37,7 +37,36 @@ export function getAppUrl(requestOrigin?: string): string {
   return PRODUCTION_SITE_URL;
 }
 
+/** Base URL for links inside Supabase auth emails — never defaults to localhost. */
+export function getAuthEmailAppUrl(requestOrigin?: string): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (configured) {
+    return normalizeOrigin(configured);
+  }
+
+  const vercelUrl =
+    process.env.VERCEL_URL?.trim() || process.env.NEXT_PUBLIC_VERCEL_URL?.trim();
+  if (vercelUrl) {
+    const host = vercelUrl.replace(/^https?:\/\//, "");
+    return `https://${normalizeOrigin(host)}`;
+  }
+
+  if (requestOrigin) {
+    const origin = normalizeOrigin(requestOrigin);
+    if (!isLocalOrigin(origin)) {
+      return origin;
+    }
+  }
+
+  return PRODUCTION_SITE_URL;
+}
+
 export function getEmailVerificationRedirectUrl(requestOrigin?: string): string {
-  const base = getAppUrl(requestOrigin);
+  const base = getAuthEmailAppUrl(requestOrigin);
   return `${base}/auth/callback?next=${encodeURIComponent("/auth/verify-email")}`;
+}
+
+export function getPasswordResetRedirectUrl(requestOrigin?: string): string {
+  const base = getAuthEmailAppUrl(requestOrigin);
+  return `${base}/auth/reset-password`;
 }

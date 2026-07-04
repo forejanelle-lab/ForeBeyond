@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import posthog from "posthog-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Compass, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  parseCommaSeparatedList,
+  TRAVELER_INTEREST_OPTIONS,
+  TRAVELER_STYLE_OPTIONS,
+} from "@/lib/traveler-preferences";
 import { AuthBrandHeader } from "@/components/auth/AuthBrandHeader";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -13,32 +19,13 @@ import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 
-const interestOptions = [
-  "Cooking & Cuisine",
-  "Music & Arts",
-  "Language Learning",
-  "History & Heritage",
-  "Nature & Outdoors",
-  "Spirituality",
-  "Crafts & Handicrafts",
-  "Festivals & Celebrations",
-];
-
-const travelStyles = [
-  { value: "immersive", label: "Deep Immersion", description: "Weeks-long stays with one family" },
-  { value: "exploratory", label: "Cultural Explorer", description: "Multiple short experiences" },
-  { value: "learning", label: "Skill Builder", description: "Focused on learning specific skills" },
-];
-
 export default function TravelerOnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [interests, setInterests] = useState<string[]>([]);
   const [travelStyle, setTravelStyle] = useState("");
-  const [destinations, setDestinations] = useState("");
   const [dietary, setDietary] = useState("");
   const [accessibility, setAccessibility] = useState("");
-  const [stayMotivation, setStayMotivation] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -52,12 +39,6 @@ export default function TravelerOnboardingPage() {
 
   async function handleComplete() {
     setError("");
-
-    if (!stayMotivation.trim()) {
-      setError("Please share why you're interested in staying with a host family.");
-      return;
-    }
-
     setIsLoading(true);
 
     const supabase = createClient();
@@ -73,10 +54,8 @@ export default function TravelerOnboardingPage() {
         user_id: user.id,
         interests,
         travel_style: travelStyle,
-        preferred_destinations: destinations.split(",").map((d) => d.trim()).filter(Boolean),
-        dietary_preferences: dietary.split(",").map((d) => d.trim()).filter(Boolean),
+        dietary_preferences: parseCommaSeparatedList(dietary),
         accessibility_needs: accessibility || null,
-        stay_motivation: stayMotivation.trim(),
       },
       { onConflict: "user_id" }
     );
@@ -91,6 +70,11 @@ export default function TravelerOnboardingPage() {
       .from("profiles")
       .update({ onboarding_step: "verification" })
       .eq("id", user.id);
+
+    posthog.capture("traveler_onboarding_completed", {
+      interest_count: interests.length,
+      travel_style: travelStyle,
+    });
 
     window.location.assign("/verification-center");
   }
@@ -128,7 +112,7 @@ export default function TravelerOnboardingPage() {
               <p className="text-sm text-charcoal-light">Select all that apply</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {interestOptions.map((interest) => (
+              {TRAVELER_INTEREST_OPTIONS.map((interest) => (
                 <button
                   key={interest}
                   type="button"
@@ -163,7 +147,7 @@ export default function TravelerOnboardingPage() {
               <p className="text-sm text-charcoal-light">Choose your preferred style</p>
             </div>
             <div className="space-y-3">
-              {travelStyles.map((style) => (
+              {TRAVELER_STYLE_OPTIONS.map((style) => (
                 <button
                   key={style.value}
                   type="button"
@@ -202,21 +186,6 @@ export default function TravelerOnboardingPage() {
               <h2 className="text-xl font-semibold text-forest mb-1">A few more details</h2>
               <p className="text-sm text-charcoal-light">Help hosts prepare for your visit</p>
             </div>
-            <Textarea
-              label="What are you hoping to get from this experience?"
-              value={stayMotivation}
-              onChange={(e) => setStayMotivation(e.target.value)}
-              placeholder="Why are you interested in staying with a host family? What do you want to learn, experience, or connect with?"
-              hint="Required — hosts review this when you request a stay"
-              required
-            />
-            <Input
-              label="Preferred Destinations"
-              value={destinations}
-              onChange={(e) => setDestinations(e.target.value)}
-              placeholder="Japan, Morocco, Peru..."
-              hint="Separate multiple destinations with commas"
-            />
             <Input
               label="Dietary Preferences"
               value={dietary}
@@ -244,7 +213,6 @@ export default function TravelerOnboardingPage() {
                 size="lg"
                 onClick={handleComplete}
                 isLoading={isLoading}
-                disabled={!stayMotivation.trim()}
                 className="flex-1"
               >
                 Continue to Verification

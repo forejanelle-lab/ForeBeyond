@@ -10,6 +10,7 @@ interface PageHeroProps {
   children?: React.ReactNode;
   height?: "md" | "lg" | "xl";
   align?: "left" | "center";
+  priority?: boolean;
 }
 
 const heights = {
@@ -27,10 +28,18 @@ export function PageHero({
   children,
   height = "lg",
   align = "left",
+  priority = false,
 }: PageHeroProps) {
   return (
     <section className={`relative overflow-hidden ${heights[height]}`}>
-      <Image src={image} alt={imageAlt} fill className="object-cover" priority sizes="100vw" />
+      <Image
+        src={image}
+        alt={imageAlt}
+        fill
+        className="object-cover"
+        priority={priority}
+        sizes="100vw"
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
       <Container className="relative h-full flex flex-col justify-end pb-10 md:pb-14">
         <div

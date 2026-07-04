@@ -100,6 +100,9 @@ export interface Profile {
   address_verified_at: string | null;
   is_trust_moderator?: boolean;
   is_admin?: boolean;
+  default_currency: string;
+  preferred_language: string;
+  stripe_customer_id: string | null;
   last_login_at: string | null;
   last_active_at: string | null;
   created_at: string;
@@ -396,6 +399,7 @@ export interface HostListing {
   budget_per_night_4_guests: number | null;
   budget_per_night_5_guests: number | null;
   budget_per_night_6_plus_guests: number | null;
+  pricing_currency?: string | null;
   max_capacity: number | null;
   status: ListingStatus;
   published_at: string | null;
@@ -451,6 +455,7 @@ export interface PublicListing {
   budget_per_night_4_guests: number | null;
   budget_per_night_5_guests: number | null;
   budget_per_night_6_plus_guests: number | null;
+  pricing_currency?: string | null;
   max_capacity: number | null;
   published_at: string | null;
   created_at: string;

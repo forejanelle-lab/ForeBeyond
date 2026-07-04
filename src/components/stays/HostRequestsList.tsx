@@ -131,6 +131,7 @@ export function HostRequestsList({ requests }: HostRequestsListProps) {
                       travelerName={row.travelerName}
                       guestProfileHref={guestProfilePath(row.travelerId, row.request.id)}
                       listingTitle={row.listingTitle}
+                      listingPricing={row.listingPricing}
                       incomeTotal={row.incomeTotal}
                       href={`/host/requests/${row.request.id}`}
                     />
@@ -147,6 +148,7 @@ export function HostRequestsList({ requests }: HostRequestsListProps) {
                   travelerName={row.travelerName}
                   guestProfileHref={guestProfilePath(row.travelerId, row.request.id)}
                   listingTitle={row.listingTitle}
+                  listingPricing={row.listingPricing}
                   incomeTotal={row.incomeTotal}
                   href={`/host/requests/${row.request.id}`}
                 />

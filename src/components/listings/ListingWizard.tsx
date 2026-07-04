@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Home, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -28,6 +28,12 @@ import {
   type EditableBlockedDateRange,
 } from "@/lib/listing-blocked-dates";
 import type { HostListing, ListingBlockedDate, ListingContactDetails, ListingPhoto, ListingStatus } from "@/types/database";
+import {
+  currencyForCountry,
+  getCurrencyLabel,
+  normalizeCurrencyCode,
+  type SupportedCurrencyCode,
+} from "@/lib/currency";
 
 interface ListingWizardProps {
   userId: string;
@@ -124,6 +130,16 @@ export function ListingWizard({
       note: range.note,
     }))
   );
+
+  const hostCurrency = useMemo(
+    (): SupportedCurrencyCode =>
+      normalizeCurrencyCode(listing?.pricing_currency ?? currencyForCountry(country)),
+    [country, listing?.pricing_currency]
+  );
+  const hostCurrencyLabel = getCurrencyLabel(hostCurrency);
+  const rateStep = hostCurrency === "JPY" || hostCurrency === "KRW" ? "1" : "0.01";
+  const ratePlaceholder =
+    hostCurrency === "JPY" || hostCurrency === "KRW" ? "12000" : "85.00";
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -232,6 +248,7 @@ export function ListingWizard({
       budget_per_night_4_guests: parsePrice(budget4Guests),
       budget_per_night_5_guests: parsePrice(budget5Guests),
       budget_per_night_6_plus_guests: parsePrice(budget6PlusGuests),
+      pricing_currency: hostCurrency,
       max_capacity: maxCapacity.trim() ? Math.max(1, parseInt(maxCapacity, 10) || 1) : null,
       ...(publishStatus !== undefined && {
         status: publishStatus,
@@ -460,57 +477,58 @@ export function ListingWizard({
                   Stay pricing <span className="text-red-600">*</span>
                 </p>
                 <p className="text-xs text-charcoal-light mt-1">
-                  Set a nightly rate for each guest-count tier. The rate shown to travelers updates based on party size.
+                  Enter amounts in <strong className="font-medium text-charcoal">{hostCurrency}</strong> ({hostCurrencyLabel}).
+                  Travelers may see converted prices, but you receive payment in this currency.
                 </p>
               </div>
               <Input
-                label="Base nightly rate (USD)"
+                label={`Base nightly rate (${hostCurrency})`}
                 type="number"
                 min="0"
-                step="0.01"
+                step={rateStep}
                 value={budgetPerNight}
                 onChange={(e) => setBudgetPerNight(e.target.value)}
-                placeholder="85.00"
+                placeholder={ratePlaceholder}
                 required
               />
               <Input
-                label="3 guests: nightly rate (USD)"
+                label={`3 guests: nightly rate (${hostCurrency})`}
                 type="number"
                 min="0"
-                step="0.01"
+                step={rateStep}
                 value={budget3Guests}
                 onChange={(e) => setBudget3Guests(e.target.value)}
-                placeholder="120.00"
+                placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "15000" : "120.00"}
                 required
               />
               <Input
-                label="4 guests: nightly rate (USD)"
+                label={`4 guests: nightly rate (${hostCurrency})`}
                 type="number"
                 min="0"
-                step="0.01"
+                step={rateStep}
                 value={budget4Guests}
                 onChange={(e) => setBudget4Guests(e.target.value)}
-                placeholder="150.00"
+                placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "18000" : "150.00"}
                 required
               />
               <Input
-                label="5 guests: nightly rate (USD)"
+                label={`5 guests: nightly rate (${hostCurrency})`}
                 type="number"
                 min="0"
-                step="0.01"
+                step={rateStep}
                 value={budget5Guests}
                 onChange={(e) => setBudget5Guests(e.target.value)}
-                placeholder="175.00"
+                placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "20000" : "175.00"}
                 required
               />
               <Input
-                label="6+ guests: nightly rate (USD)"
+                label={`6+ guests: nightly rate (${hostCurrency})`}
                 type="number"
                 min="0"
-                step="0.01"
+                step={rateStep}
                 value={budget6PlusGuests}
                 onChange={(e) => setBudget6PlusGuests(e.target.value)}
-                placeholder="200.00"
+                placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "24000" : "200.00"}
                 hint="Applies to groups of 6 or more guests"
                 required
               />

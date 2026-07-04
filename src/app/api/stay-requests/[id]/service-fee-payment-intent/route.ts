@@ -1,10 +1,54 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { getStripeServerClient, isStripeConfigured, STRIPE_CONFIG_MESSAGE } from "@/lib/stripe";
-import { loadStayServiceFeeContext } from "@/lib/stay-service-fee-payment";
+import { ensureStripeCustomer } from "@/lib/stripe-customer";
+import { defaultBillingCountryForCurrency } from "@/lib/currency";
+import {
+  buildServiceFeeIdempotencyKey,
+  loadStayServiceFeeContext,
+  type StayServiceFeeContext,
+} from "@/lib/stay-service-fee-payment";
+
+function isIdempotencyKeyConflict(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return error.message.toLowerCase().includes("idempotent");
+}
+
+function buildPaymentIntentParams(
+  stayRequestId: string,
+  userId: string,
+  context: StayServiceFeeContext,
+  customerId: string,
+  email: string,
+  name: string | null
+): Stripe.PaymentIntentCreateParams {
+  return {
+    amount: context.serviceFeeMinorUnits,
+    currency: context.paymentCurrency.toLowerCase(),
+    customer: customerId,
+    receipt_email: email,
+    automatic_payment_methods: {
+      enabled: true,
+      allow_redirects: "always",
+    },
+    metadata: {
+      stay_request_id: stayRequestId,
+      traveler_id: userId,
+      host_id: context.request.host_id,
+      listing_id: context.request.listing_id ?? "",
+      payment_type: "service_fee",
+      payment_currency: context.paymentCurrency,
+      service_fee_minor_units: String(context.serviceFeeMinorUnits),
+      traveler_email: email,
+      traveler_name: name ?? "",
+    },
+    description: "Fore Beyond stay service fee",
+  };
+}
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isStripeConfigured()) {
@@ -20,6 +64,12 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const body = await request.json().catch(() => ({}));
+  const paymentSessionId =
+    typeof body.paymentSessionId === "string" && body.paymentSessionId.trim()
+      ? body.paymentSessionId.trim()
+      : crypto.randomUUID();
+
   const { id: stayRequestId } = await params;
   const { data: context, error: contextError } = await loadStayServiceFeeContext(
     supabase,
@@ -34,19 +84,50 @@ export async function POST(
   const stripe = getStripeServerClient();
 
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
-    amount: context.serviceFeeCents,
-    currency: "usd",
-    automatic_payment_methods: { enabled: true },
-    metadata: {
-      stay_request_id: stayRequestId,
-      traveler_id: user.id,
-      host_id: context.request.host_id,
-      listing_id: context.request.listing_id ?? "",
-      payment_type: "service_fee",
-    },
-    description: "Fore Beyond stay service fee",
-    });
+    const { customerId, email, name } = await ensureStripeCustomer(
+      stripe,
+      supabase,
+      user.id,
+      user.email ?? ""
+    );
+
+    const paymentIntentParams = buildPaymentIntentParams(
+      stayRequestId,
+      user.id,
+      context,
+      customerId,
+      email,
+      name
+    );
+
+    const idempotencyKey = buildServiceFeeIdempotencyKey(
+      stayRequestId,
+      context.serviceFeeMinorUnits,
+      context.paymentCurrency,
+      context.request,
+      paymentSessionId
+    );
+
+    let paymentIntent: Stripe.PaymentIntent;
+
+    try {
+      paymentIntent = await stripe.paymentIntents.create(paymentIntentParams, { idempotencyKey });
+    } catch (error) {
+      if (!isIdempotencyKeyConflict(error)) {
+        throw error;
+      }
+
+      const retryKey = buildServiceFeeIdempotencyKey(
+        stayRequestId,
+        context.serviceFeeMinorUnits,
+        context.paymentCurrency,
+        context.request,
+        `${paymentSessionId}-retry-${Date.now()}`
+      );
+      paymentIntent = await stripe.paymentIntents.create(paymentIntentParams, {
+        idempotencyKey: retryKey,
+      });
+    }
 
     if (!paymentIntent.client_secret) {
       return NextResponse.json({ error: "Unable to start payment." }, { status: 500 });
@@ -55,7 +136,11 @@ export async function POST(
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
-      amountCents: context.serviceFeeCents,
+      amountMinorUnits: context.serviceFeeMinorUnits,
+      paymentCurrency: context.paymentCurrency,
+      defaultBillingCountry: defaultBillingCountryForCurrency(context.paymentCurrency),
+      customerEmail: email,
+      customerName: name,
     });
   } catch (error) {
     const message =

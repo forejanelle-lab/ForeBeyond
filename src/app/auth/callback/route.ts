@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { recordLoginAudit } from "@/app/auth/actions";
 import type { EmailOtpType } from "@supabase/supabase-js";
@@ -10,8 +9,9 @@ export async function GET(request: Request) {
   const tokenHash = requestUrl.searchParams.get("token_hash");
   const type = requestUrl.searchParams.get("type") as EmailOtpType | null;
   const next = requestUrl.searchParams.get("next") ?? "/auth/verify-email";
-  const origin = getAppUrl(requestUrl.origin);
+  const origin = requestUrl.origin;
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/auth/verify-email";
+  const isPasswordReset = safeNext.includes("reset-password");
 
   const supabase = await createClient();
 
@@ -29,6 +29,10 @@ export async function GET(request: Request) {
       void recordLoginAudit(type);
       return NextResponse.redirect(`${origin}${safeNext}`);
     }
+  }
+
+  if (isPasswordReset) {
+    return NextResponse.redirect(`${origin}/auth/reset-password?error=link_expired`);
   }
 
   return NextResponse.redirect(`${origin}/auth/sign-in?error=verification`);

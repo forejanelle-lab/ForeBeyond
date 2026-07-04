@@ -14,6 +14,7 @@ import {
 } from "@/lib/messaging";
 import { formatHostGuestDisplayName } from "@/lib/member-display-name";
 import { guestProfilePath } from "@/lib/host-guest-access";
+import { getOverlappingStays } from "@/lib/stay-availability";
 import { StayRequestStatusBadge } from "@/components/stays/StayRequestStatusBadge";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import { TravelerOnboardingDetails } from "@/components/profile/TravelerOnboardingDetails";
@@ -166,6 +167,17 @@ export default async function HostRequestDetailPage({
     typedTrip.status !== "completed" &&
     isTripPastEndDate(typedTrip.end_date);
 
+  const overlappingStays =
+    typedRequest.listing_id && typedRequest.start_date && typedRequest.end_date
+      ? await getOverlappingStays(
+          supabase,
+          typedRequest.listing_id,
+          typedRequest.start_date,
+          typedRequest.end_date,
+          typedRequest.id
+        )
+      : [];
+
   return (
     <Container size="md" className="py-10 md:py-16">
       <Link href="/host/requests" className="inline-flex items-center gap-2 text-sm text-forest hover:underline mb-6">
@@ -278,6 +290,7 @@ export default async function HostRequestDetailPage({
             request={typedRequest}
             listingPricing={listingPricing}
             guestName={travelerDisplayName}
+            overlappingStays={overlappingStays}
           />
           <HostStayMessageButton
             request={typedRequest}

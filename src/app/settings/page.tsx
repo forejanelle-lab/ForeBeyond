@@ -2,10 +2,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageShell } from "@/components/layout/PageShell";
 import { ProfileSettingsForm } from "@/components/profile/ProfileSettingsForm";
+import { TravelerPreferencesForm } from "@/components/settings/TravelerPreferencesForm";
+import { DisplayPreferencesForm } from "@/components/settings/DisplayPreferencesForm";
 import { Card } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { PasswordSettingsActions } from "@/components/settings/PasswordSettingsActions";
 import type { Profile } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
+import { getServerTranslations } from "@/lib/i18n/server";
 
 export const metadata = privatePageMetadata({
   title: "Settings",
@@ -20,9 +24,22 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, email, phone, bio, location, role, avatar_url, onboarding_complete")
+    .select(
+      "full_name, email, phone, bio, location, role, avatar_url, onboarding_complete, default_currency"
+    )
     .eq("id", user.id)
     .single();
+
+  const travelerProfile =
+    profile?.role === "traveler"
+      ? (
+          await supabase
+            .from("traveler_profiles")
+            .select("interests, travel_style, dietary_preferences, accessibility_needs")
+            .eq("user_id", user.id)
+            .maybeSingle()
+        ).data
+      : null;
 
   const typedProfile = profile as Pick<
     Profile,
@@ -34,10 +51,13 @@ export default async function SettingsPage() {
     | "role"
     | "avatar_url"
     | "onboarding_complete"
+    | "default_currency"
   > | null;
 
+  const { t } = await getServerTranslations();
+
   return (
-    <PageShell title="Settings" subtitle="Manage your profile and account">
+    <PageShell title={t("settings.title")} subtitle={t("settings.subtitle")}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="lg:col-span-2">
           <ProfileSettingsForm
@@ -52,6 +72,19 @@ export default async function SettingsPage() {
               avatar_url: typedProfile?.avatar_url ?? null,
               onboarding_complete: typedProfile?.onboarding_complete ?? false,
             }}
+          />
+        </div>
+
+        {typedProfile?.role === "traveler" && (
+          <div className="lg:col-span-2">
+            <TravelerPreferencesForm userId={user.id} initial={travelerProfile} />
+          </div>
+        )}
+
+        <div className="lg:col-span-2">
+          <DisplayPreferencesForm
+            userId={user.id}
+            initialCurrency={typedProfile?.default_currency ?? "USD"}
           />
         </div>
 
@@ -81,12 +114,10 @@ export default async function SettingsPage() {
         <Card variant="outline" padding="lg" className="space-y-3">
           <h2 className="text-lg font-semibold text-forest">Password</h2>
           <p className="text-sm text-charcoal-light">
-            To change your password, sign out and use &quot;Forgot password&quot; on the sign-in page,
-            or update it from your email provider if you use social login.
+            Fore Beyond uses email and password sign-in. Change your password below, or request a
+            reset link sent to your account email.
           </p>
-          <ButtonLink href="/auth/sign-in" variant="ghost" size="sm">
-            Go to sign in
-          </ButtonLink>
+          <PasswordSettingsActions email={user.email ?? typedProfile?.email ?? ""} />
         </Card>
       </div>
     </PageShell>

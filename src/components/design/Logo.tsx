@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 const LOGO_SRC = "/logo-fore-beyond.png";
+const LOGO_MARK_SRC = "/logo-tree-mark.png";
 const LOGO_ASPECT = 612 / 408;
 
 const LOGO_HEIGHTS = {
@@ -40,11 +41,11 @@ export function LogoMark({
 
   return (
     <Image
-      src={LOGO_SRC}
+      src={LOGO_MARK_SRC}
       alt=""
       width={size}
       height={size}
-      className={logoImageClass(variant, false)}
+      className="object-contain"
       style={{ width: size, height: size }}
       unoptimized
       aria-hidden

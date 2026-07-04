@@ -3,14 +3,64 @@ import { ensureStayConversation } from "@/lib/messaging";
 import {
   findStayDateConflict,
   getHostApproveConflictMessage,
-  getStayBlockedDates,
+  getListingHostBlockedDates,
 } from "@/lib/stay-availability";
 import {
   calculateEffectiveNightlyTotal,
   calculateStayTotal,
+  LISTING_PRICING_SELECT,
+  pickListingPricing,
   type ListingPricing,
 } from "@/lib/stay-requests";
 import type { StayRequest } from "@/types/database";
+
+export async function loadStayConfirmContext(
+  supabase: SupabaseClient,
+  stayRequestId: string,
+  travelerId: string
+): Promise<{ request: StayRequest; pricing: ListingPricing } | { error: string }> {
+  const { data: request, error: requestError } = await supabase
+    .from("stay_requests")
+    .select("*")
+    .eq("id", stayRequestId)
+    .eq("traveler_id", travelerId)
+    .maybeSingle();
+
+  if (requestError) {
+    return { error: requestError.message };
+  }
+
+  if (!request) {
+    return { error: "Stay request not found." };
+  }
+
+  if (request.status !== "host_approved") {
+    return { error: "This stay is not ready to confirm yet." };
+  }
+
+  if (!request.listing_id || !request.start_date || !request.end_date) {
+    return { error: "Stay dates or listing are missing for this request." };
+  }
+
+  const { data: listing, error: listingError } = await supabase
+    .from("host_listings")
+    .select(LISTING_PRICING_SELECT)
+    .eq("id", request.listing_id)
+    .maybeSingle();
+
+  if (listingError) {
+    return { error: listingError.message };
+  }
+
+  if (!listing) {
+    return { error: "Listing pricing is unavailable." };
+  }
+
+  return {
+    request: request as StayRequest,
+    pricing: pickListingPricing(listing),
+  };
+}
 
 async function assertNoApprovedStayConflict(
   supabase: SupabaseClient,
@@ -18,10 +68,9 @@ async function assertNoApprovedStayConflict(
 ): Promise<string | null> {
   if (!request.listing_id || !request.start_date || !request.end_date) return null;
 
-  const blockedRanges = await getStayBlockedDates(
+  const blockedRanges = await getListingHostBlockedDates(
     supabase,
-    request.listing_id,
-    request.id
+    request.listing_id
   );
   const conflict = findStayDateConflict(
     request.start_date,
@@ -137,7 +186,7 @@ export async function confirmStayByTraveler(
     guest_count: request.guest_count,
     nightly_rate: nightlyRate,
     total_amount: totalAmount,
-    payment_status: "paid",
+    payment_status: "pending",
     stripe_payment_intent_id: options.stripePaymentIntentId,
   });
 

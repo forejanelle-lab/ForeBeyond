@@ -1,4 +1,4 @@
-import { Compass, Heart, Sparkles, Utensils, Accessibility } from "lucide-react";
+import { Compass, Heart, Utensils, Accessibility } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import {
@@ -32,18 +32,6 @@ export function TravelerOnboardingDetails({
   return (
     <Card variant="outline" padding="md" className="space-y-4">
       <h2 className="font-semibold text-forest">{title}</h2>
-
-      {profile?.stay_motivation?.trim() && (
-        <section className="space-y-1">
-          <p className="text-sm font-medium text-forest flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
-            What they&apos;re hoping for
-          </p>
-          <p className="text-sm text-charcoal-light whitespace-pre-wrap">
-            {profile.stay_motivation}
-          </p>
-        </section>
-      )}
 
       {profile?.interests && profile.interests.length > 0 && (
         <section className="space-y-2">

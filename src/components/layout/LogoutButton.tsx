@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import posthog from "posthog-js";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 interface LogoutButtonProps {
   variant?: "button" | "menu";
@@ -11,9 +13,12 @@ interface LogoutButtonProps {
 
 export function LogoutButton({ variant = "button" }: LogoutButtonProps) {
   const router = useRouter();
+  const t = useTranslations();
 
   async function handleLogout() {
     const supabase = createClient();
+    posthog.capture("user_logged_out");
+    posthog.reset();
     await supabase.auth.signOut();
     router.push("/");
     router.refresh();
@@ -26,7 +31,7 @@ export function LogoutButton({ variant = "button" }: LogoutButtonProps) {
         onClick={handleLogout}
         className="w-full text-left px-3 py-2.5 text-sm font-medium text-charcoal hover:bg-sage/50 rounded-lg transition-colors"
       >
-        Log out
+        {t("nav.logOut")}
       </button>
     );
   }
@@ -34,7 +39,7 @@ export function LogoutButton({ variant = "button" }: LogoutButtonProps) {
   return (
     <Button variant="ghost" size="sm" onClick={handleLogout}>
       <LogOut className="h-4 w-4" />
-      Log out
+      {t("nav.logOut")}
     </Button>
   );
 }

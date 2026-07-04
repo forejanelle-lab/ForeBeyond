@@ -1,4 +1,5 @@
 import { Shield, Star } from "lucide-react";
+import { TranslatableText } from "@/components/i18n/TranslatableText";
 import { TrustScoreRing } from "@/components/trust/TrustScoreRing";
 import { TrustBadges } from "@/components/trust/TrustBadges";
 import { Card } from "@/components/ui/Card";
@@ -66,7 +67,10 @@ export function ListingTrustPanel({
                   ))}
                 </div>
                 {review.comment && (
-                  <p className="text-sm text-charcoal-light">{review.comment}</p>
+                  <TranslatableText
+                    text={review.comment}
+                    className="text-sm text-charcoal-light"
+                  />
                 )}
               </div>
             ))}

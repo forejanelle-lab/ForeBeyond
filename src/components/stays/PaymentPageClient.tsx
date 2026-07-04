@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CreditCard, Lock, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatCurrency } from "@/lib/stay-requests";
+import { useCurrency } from "@/components/i18n/CurrencyProvider";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -21,6 +21,7 @@ interface PaymentPageClientProps {
 
 export function PaymentPageClient({ tripId, booking, listingTitle }: PaymentPageClientProps) {
   const router = useRouter();
+  const { formatUsd } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
   const [paid, setPaid] = useState(booking.payment_status === "paid");
   const [error, setError] = useState("");
@@ -86,10 +87,10 @@ export function PaymentPageClient({ tripId, booking, listingTitle }: PaymentPage
           <h2 className="font-semibold text-forest">Booking summary</h2>
           <p className="text-sm text-charcoal-light">{listingTitle ?? "Stay booking"}</p>
           <div className="rounded-xl bg-sage/40 p-4">
-            <p className="text-3xl font-bold text-forest">{formatCurrency(booking.total_amount)}</p>
+            <p className="text-3xl font-bold text-forest">{formatUsd(booking.total_amount)}</p>
             {booking.nightly_rate != null && (
               <p className="text-sm text-charcoal-light mt-1">
-                {formatCurrency(booking.nightly_rate)} per night
+                {formatUsd(booking.nightly_rate)} per night
               </p>
             )}
           </div>
@@ -111,7 +112,7 @@ export function PaymentPageClient({ tripId, booking, listingTitle }: PaymentPage
           )}
 
           <Button variant="primary" size="lg" className="w-full" onClick={handlePay} isLoading={isLoading}>
-            Pay {formatCurrency(booking.total_amount)}
+            Pay {formatUsd(booking.total_amount)}
           </Button>
           <p className="text-xs text-charcoal-light text-center">
             This is a demo. Clicking pay marks the booking as paid in your account.

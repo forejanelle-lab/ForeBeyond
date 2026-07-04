@@ -4,26 +4,31 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Calendar, ImagePlus, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import posthog from "posthog-js";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
 import {
   calculateStayWithServiceFee,
-  formatCurrency,
   formatDateRange,
-  formatStayRateLabel,
   formatStayRequestMessage,
   missingPricingMessage,
   pickListingPricing,
 } from "@/lib/stay-requests";
 import { StayDateRangePicker } from "@/components/stays/StayDateRangePicker";
+import { DisplayStayRateFromPricing } from "@/components/i18n/DisplayMoney";
 import { StayRequestMediaUpload, type DraftStayRequestPhoto } from "@/components/stays/StayRequestMediaUpload";
 import { StayTravelerPricingBreakdown } from "@/components/stays/StayTravelerPricingBreakdown";
+import { useCurrency } from "@/components/i18n/CurrencyProvider";
+import { resolveListingPricingCurrency } from "@/lib/currency";
 import { useTodayIso } from "@/hooks/use-today-iso";
 import {
   findStayDateConflict,
+  findOverlappingStays,
   getStayDateConflictMessage,
   type BlockedDateRange,
+  type OverlappingStay,
 } from "@/lib/stay-availability";
+import { StayOverlapNotice } from "@/components/stays/StayOverlapNotice";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Input } from "@/components/ui/Input";
@@ -55,22 +60,23 @@ interface RequestStayWizardProps {
   >;
   userId?: string | null;
   blockedDateRanges?: BlockedDateRange[];
+  existingStays?: OverlappingStay[];
   profileBio?: string | null;
-  profileStayMotivation?: string | null;
 }
 
 export function RequestStayWizard({
   listing,
   userId,
   blockedDateRanges = [],
+  existingStays = [],
   profileBio = null,
-  profileStayMotivation = null,
 }: RequestStayWizardProps) {
   const router = useRouter();
+  const { formatAmount, formatAmountWithNote } = useCurrency();
   const minDate = useTodayIso();
   const [step, setStep] = useState(0);
   const [intro, setIntro] = useState(profileBio?.trim() ?? "");
-  const [stayMotivation, setStayMotivation] = useState(profileStayMotivation?.trim() ?? "");
+  const [stayMotivation, setStayMotivation] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [guestCount, setGuestCount] = useState("1");
@@ -89,6 +95,7 @@ export function RequestStayWizard({
   ];
 
   const listingPricing = useMemo(() => pickListingPricing(listing), [listing]);
+  const sourceCurrency = resolveListingPricingCurrency(listingPricing);
   const maxGuests = listing.max_capacity && listing.max_capacity > 0 ? listing.max_capacity : 8;
 
   const pricing = useMemo(() => {
@@ -96,6 +103,11 @@ export function RequestStayWizard({
     const guests = parseInt(guestCount, 10) || 1;
     return calculateStayWithServiceFee(listingPricing, startDate, endDate, guests);
   }, [listingPricing, startDate, endDate, guestCount]);
+
+  const overlappingStays = useMemo(() => {
+    if (!startDate || !endDate || endDate <= startDate) return [];
+    return findOverlappingStays(startDate, endDate, existingStays);
+  }, [startDate, endDate, existingStays]);
 
   async function handleSubmit() {
     setError("");
@@ -211,6 +223,12 @@ export function RequestStayWizard({
       listing_id: listing.id,
       request_id: data.id,
     });
+    posthog.capture("stay_request_submitted", {
+      listing_id: listing.id,
+      request_id: data.id,
+      guest_count: parseInt(guestCount, 10) || 1,
+      nights: pricing?.nights ?? undefined,
+    });
   }
 
   function validateDates(): string | null {
@@ -268,7 +286,8 @@ export function RequestStayWizard({
         <p className="font-medium text-forest">Your stay request is pending</p>
         <p className="text-sm text-charcoal-light mt-2">
           {listing.host_first_name ?? "The host"} will review your introduction and dates.
-          If approved, you&apos;ll pay the Fore Beyond service fee via Stripe to confirm your stay.
+          If approved, you&apos;ll pay the service fee via Stripe to confirm, then pay the remaining
+          balance directly to your host.
         </p>
         <div className="flex flex-col gap-2 mt-4">
           <ButtonLink href={`/dashboard/requests/${submittedId}`} variant="primary" size="md" className="w-full">
@@ -324,7 +343,11 @@ export function RequestStayWizard({
       <p className="text-sm text-charcoal-light mb-4">
         Requesting stay at <span className="font-medium text-forest">{listing.title}</span>
         {" · "}
-        {formatStayRateLabel(listingPricing, parseInt(guestCount, 10) || 1)}
+        <DisplayStayRateFromPricing
+          pricing={listingPricing}
+          guestCount={parseInt(guestCount, 10) || 1}
+          country={listing.country}
+        />
       </p>
 
       {step === 0 && (
@@ -356,6 +379,7 @@ export function RequestStayWizard({
             blockedRanges={blockedDateRanges}
             onChange={applyDateSelection}
           />
+          <StayOverlapNotice overlaps={overlappingStays} variant="traveler" />
           <Input
             label="Guests"
             type="number"
@@ -368,11 +392,14 @@ export function RequestStayWizard({
           />
           {pricing ? (
             <StayTravelerPricingBreakdown
-              rateLabel={pricing.rateLabel}
+              nightlyRateUsd={pricing.effectiveNightlyTotal}
               nights={pricing.nights}
               guestCount={pricing.guestCount}
               subtotal={pricing.subtotal}
               serviceFee={pricing.serviceFee}
+              hostBalance={pricing.hostBalance}
+              listingPricing={listingPricing}
+              hostCountry={listing.country}
               showDueAtConfirmation={false}
             />
           ) : (
@@ -429,11 +456,14 @@ export function RequestStayWizard({
             </div>
           </div>
           <StayTravelerPricingBreakdown
-            rateLabel={pricing.rateLabel}
+            nightlyRateUsd={pricing.effectiveNightlyTotal}
             nights={pricing.nights}
             guestCount={pricing.guestCount}
             subtotal={pricing.subtotal}
             serviceFee={pricing.serviceFee}
+            hostBalance={pricing.hostBalance}
+            listingPricing={listingPricing}
+            hostCountry={listing.country}
             className="mt-0"
           />
           <p className="flex items-center gap-1.5 text-charcoal-light">
@@ -441,8 +471,8 @@ export function RequestStayWizard({
             {guestCount} guest{guestCount !== "1" ? "s" : ""}
           </p>
           <p className="text-xs text-charcoal-light">
-            Stay payment is paid directly to your host. The service fee is collected via Stripe when
-            you confirm after the host approves your request.
+            Pay the service fee via Stripe when you confirm after approval. The remaining balance is
+            paid directly to your host.
           </p>
         </div>
       )}
@@ -464,11 +494,28 @@ export function RequestStayWizard({
             {pricing && (
               <>
                 <p>
-                  <strong>Remaining due to host:</strong> {formatCurrency(pricing.subtotal)}
+                  <strong>Total stay:</strong> {formatAmount(pricing.subtotal, sourceCurrency)}
                 </p>
                 <p>
-                  <strong>Service fee at confirmation (Stripe):</strong>{" "}
-                  {formatCurrency(pricing.serviceFee)}
+                  <strong>Service fee at confirmation:</strong>{" "}
+                  {formatAmount(pricing.serviceFee, sourceCurrency)}
+                </p>
+                <p>
+                  <strong>Remaining balance (host):</strong>{" "}
+                  {(() => {
+                    const { primary, secondary } = formatAmountWithNote(
+                      pricing.hostBalance,
+                      sourceCurrency
+                    );
+                    return (
+                      <>
+                        {primary}
+                        {secondary && (
+                          <span className="block text-xs text-charcoal-light mt-0.5">{secondary}</span>
+                        )}
+                      </>
+                    );
+                  })()}
                 </p>
               </>
             )}

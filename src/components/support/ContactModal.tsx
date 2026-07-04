@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Mail, X } from "lucide-react";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -22,9 +23,10 @@ export function ContactModal({
   userId,
   fullName = null,
   email = "",
-  title = "Contact us",
-  description = "Send us a message and our team will get back to you.",
+  title,
+  description,
 }: ContactModalProps) {
+  const t = useTranslations();
   const isLoggedIn = Boolean(userId);
   const [name, setName] = useState(fullName ?? "");
   const [contactEmail, setContactEmail] = useState(email);
@@ -32,6 +34,9 @@ export function ContactModal({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const modalTitle = title ?? t("contact.title");
+  const modalDescription = description ?? t("contact.description");
 
   useEffect(() => {
     if (!open) {
@@ -50,17 +55,17 @@ export function ContactModal({
   async function handleSubmit() {
     const trimmed = message.trim();
     if (trimmed.length < 10) {
-      setError("Please enter at least 10 characters describing how we can help.");
+      setError(t("contact.errorMinLength"));
       return;
     }
 
     if (!isLoggedIn) {
       if (!name.trim()) {
-        setError("Your name is required.");
+        setError(t("contact.errorNameRequired"));
         return;
       }
       if (!contactEmail.trim()) {
-        setError("Your email is required.");
+        setError(t("contact.errorEmailRequired"));
         return;
       }
     }
@@ -84,7 +89,7 @@ export function ContactModal({
       };
 
       if (!response.ok) {
-        setError(payload.error ?? "Something went wrong. Please try again.");
+        setError(payload.error ?? t("contact.errorGeneric"));
         setIsLoading(false);
         return;
       }
@@ -93,7 +98,7 @@ export function ContactModal({
       setIsLoading(false);
       setTimeout(() => onClose(), 1800);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("contact.errorGeneric"));
       setIsLoading(false);
     }
   }
@@ -104,7 +109,7 @@ export function ContactModal({
         type="button"
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
-        aria-label="Close contact dialog"
+        aria-label={t("contact.closeDialog")}
       />
       <div
         role="dialog"
@@ -116,7 +121,7 @@ export function ContactModal({
           type="button"
           onClick={onClose}
           className="absolute right-4 top-4 text-charcoal-light hover:text-forest"
-          aria-label="Close"
+          aria-label={t("common.close")}
         >
           <X className="h-5 w-5" />
         </button>
@@ -127,48 +132,46 @@ export function ContactModal({
           </div>
           <div>
             <h2 id="contact-modal-title" className="text-lg font-semibold text-forest">
-              {title}
+              {modalTitle}
             </h2>
-            <p className="text-sm text-charcoal-light mt-1">{description}</p>
+            <p className="text-sm text-charcoal-light mt-1">{modalDescription}</p>
           </div>
         </div>
 
         {success ? (
-          <p className="text-sm text-forest bg-sage/40 rounded-xl px-4 py-3">
-            Message sent. We&apos;ll be in touch soon.
-          </p>
+          <p className="text-sm text-forest bg-sage/40 rounded-xl px-4 py-3">{t("contact.success")}</p>
         ) : (
           <>
             <div className="space-y-4">
               {isLoggedIn ? (
                 <>
-                  <Input label="Your name" value={name} readOnly disabled />
-                  <Input label="Your email" value={contactEmail} readOnly disabled />
+                  <Input label={t("contact.yourName")} value={name} readOnly disabled />
+                  <Input label={t("contact.yourEmail")} value={contactEmail} readOnly disabled />
                 </>
               ) : (
                 <>
                   <Input
-                    label="Your name"
+                    label={t("contact.yourName")}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="First and last name"
+                    placeholder={t("contact.namePlaceholder")}
                     required
                   />
                   <Input
-                    label="Your email"
+                    label={t("contact.yourEmail")}
                     type="email"
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder={t("contact.emailPlaceholder")}
                     required
                   />
                 </>
               )}
               <Textarea
-                label="How can we help?"
+                label={t("contact.messageLabel")}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Describe your question or issue…"
+                placeholder={t("contact.messagePlaceholder")}
                 rows={5}
                 required
               />
@@ -180,7 +183,7 @@ export function ContactModal({
 
             <div className="flex flex-col-reverse sm:flex-row gap-2 mt-6">
               <Button variant="ghost" size="md" onClick={onClose} className="flex-1">
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -189,7 +192,7 @@ export function ContactModal({
                 isLoading={isLoading}
                 className="flex-1"
               >
-                Send message
+                {t("contact.sendMessage")}
               </Button>
             </div>
           </>

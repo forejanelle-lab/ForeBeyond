@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { MapPin, Calendar } from "lucide-react";
-import { formatCurrency, formatDateRange, TRIP_STATUS_LABELS } from "@/lib/stay-requests";
+import { Money } from "@/components/i18n/Money";
+import { resolveListingPricingCurrency } from "@/lib/currency";
+import { formatDateRange, TRIP_STATUS_LABELS } from "@/lib/stay-requests";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -8,7 +10,7 @@ import type { PublicListing, StayBooking, Trip } from "@/types/database";
 
 interface TripListCardProps {
   trip: Trip;
-  listing: Pick<PublicListing, "title" | "city" | "country"> | null;
+  listing: Pick<PublicListing, "title" | "city" | "country" | "pricing_currency"> | null;
   listingId?: string | null;
   booking?: Pick<StayBooking, "total_amount" | "payment_status"> | null;
   coverPhotoUrl?: string | null;
@@ -45,7 +47,13 @@ export function TripListCard({
               <Badge variant={status.variant}>{status.label}</Badge>
               {booking && (
                 <span className="text-sm font-medium text-forest">
-                  {formatCurrency(booking.total_amount)}
+                  <Money
+                    amountUsd={booking.total_amount}
+                    sourceCurrency={
+                      listing ? resolveListingPricingCurrency(listing) : "USD"
+                    }
+                    hostCountry={listing?.country}
+                  />
                 </span>
               )}
             </div>

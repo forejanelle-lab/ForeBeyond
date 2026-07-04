@@ -23,6 +23,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  await supabase.auth.signOut();
+
   return NextResponse.json({
     message: "Account deletion scheduled for 7 days from now.",
     scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),

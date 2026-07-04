@@ -1,4 +1,5 @@
 import { getAppUrl } from "@/lib/app-url";
+import { getResendFromEmail } from "@/lib/email-config";
 import { formatDateRange } from "@/lib/stay-requests";
 
 export type HostNotificationEvent =
@@ -74,7 +75,7 @@ export async function sendHostNotificationEmail(
     return { sent: false, error: "RESEND_API_KEY is not configured" };
   }
 
-  const from = process.env.RESEND_FROM_EMAIL?.trim() ?? "Fore Beyond <onboarding@resend.dev>";
+  const from = getResendFromEmail();
   const content = buildEmailContent(input);
 
   const response = await fetch("https://api.resend.com/emails", {

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, MapPin, Shield, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatBudget } from "@/lib/search";
+import { DisplayBudget } from "@/components/i18n/DisplayMoney";
 import { ListingPreviewMedia } from "@/components/listings/ListingPreviewMedia";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -137,7 +137,7 @@ export function FamilySearchCard({
           {listing.trust_score}
         </Badge>
         <span className="text-sm font-medium text-forest">
-          {formatBudget(listing.budget_per_night)}
+          <DisplayBudget nightlyRateUsd={listing.budget_per_night} listing={listing} />
         </span>
         {listing.verification_status === "verified" && layout === "list" && (
           <Badge variant="success" className="text-[10px]">

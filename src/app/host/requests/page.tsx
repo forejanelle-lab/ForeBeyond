@@ -6,6 +6,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { HostRequestsList, type HostRequestRow } from "@/components/stays/HostRequestsList";
 import type { Profile, HostListing, StayRequest } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
+import { getServerTranslations } from "@/lib/i18n/server";
 
 export const metadata = privatePageMetadata({
   title: "Requests",
@@ -95,10 +96,16 @@ export default async function HostRequestsPage() {
     (r) => r.request.status === "approved" || r.request.status === "host_approved"
   ).length;
 
+  const { t } = await getServerTranslations();
+
   return (
     <PageShell
-      title="Requests"
-      subtitle={`${active} in progress · ${pending} pending · ${rows.length} total`}
+      title={t("host.requestsTitle")}
+      subtitle={t("host.requestsSubtitle", {
+        active,
+        pending,
+        total: rows.length,
+      })}
     >
       <HostRequestsList requests={rows} />
     </PageShell>

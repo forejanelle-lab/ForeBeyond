@@ -88,11 +88,11 @@ export default async function TripsPage() {
 
   const [{ data: listings }, { data: bookings }, { data: hostProfiles }, coverPhotos] = await Promise.all([
     listingIds.length > 0
-      ? supabase.from("public_listings").select(`id, title, city, country, host_id, host_first_name, ${LISTING_PRICING_SELECT}`)
+      ? supabase.from("public_listings").select(`id, title, city, country, host_id, host_first_name, pricing_currency, ${LISTING_PRICING_SELECT}`)
           .in("id", listingIds)
       : Promise.resolve({ data: [] }),
     tripIds.length > 0
-      ? supabase.from("stay_bookings").select("trip_id, total_amount, payment_status").in("trip_id", tripIds)
+      ? supabase.from("stay_bookings").select("trip_id, total_amount, payment_status, stripe_payment_intent_id").in("trip_id", tripIds)
       : Promise.resolve({ data: [] }),
     pendingHostIds.length > 0
       ? supabase.from("profiles").select("id, full_name").in("id", pendingHostIds)
@@ -105,12 +105,12 @@ export default async function TripsPage() {
   );
 
   const listingMap = Object.fromEntries(
-    ((listings as (Pick<PublicListing, "id" | "title" | "city" | "country" | "host_id" | "host_first_name"> & ListingPricing)[]) ?? []).map(
+    ((listings as (Pick<PublicListing, "id" | "title" | "city" | "country" | "host_id" | "host_first_name" | "pricing_currency"> & ListingPricing)[]) ?? []).map(
       (l) => [l.id, l]
     )
   );
   const bookingMap = Object.fromEntries(
-    ((bookings as Pick<StayBooking, "trip_id" | "total_amount" | "payment_status">[]) ?? []).map((b) => [
+    ((bookings as Pick<StayBooking, "trip_id" | "total_amount" | "payment_status" | "stripe_payment_intent_id">[]) ?? []).map((b) => [
       b.trip_id,
       b,
     ])
@@ -147,6 +147,8 @@ export default async function TripsPage() {
         stayStatus: request.status,
       }),
       stayTotal,
+      hostCountry: listing?.country ?? null,
+      pricingCurrency: listing?.pricing_currency ?? null,
     };
   });
 

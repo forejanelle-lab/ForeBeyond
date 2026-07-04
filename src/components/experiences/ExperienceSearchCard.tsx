@@ -6,7 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Clock, Eye, Heart, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatDuration, formatPrice, getCategoryLabel } from "@/lib/experiences";
+import { formatDuration, getCategoryLabel } from "@/lib/experiences";
+import { DisplayExperiencePrice } from "@/components/i18n/DisplayMoney";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ExperienceCoverFallback } from "@/components/experiences/ExperienceCoverFallback";
@@ -107,7 +108,9 @@ export function ExperienceSearchCard({
         )}
 
         <div className="flex items-center justify-between mt-2 text-sm text-charcoal-light">
-          <span className="font-medium text-forest">{formatPrice(experience.price_per_person)}</span>
+          <span className="font-medium text-forest">
+            <DisplayExperiencePrice priceUsd={experience.price_per_person} />
+          </span>
           <span className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" />
             {formatDuration(experience.duration_minutes)}

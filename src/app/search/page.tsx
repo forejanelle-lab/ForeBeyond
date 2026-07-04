@@ -16,12 +16,49 @@ import {
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import type { ListingPhoto, PublicListing } from "@/types/database";
 import { createPageMetadata } from "@/lib/site-metadata";
+import { getDestinationCountries } from "@/lib/seo/destination-catalog";
+import { getServerTranslations } from "@/lib/i18n/server";
 
-export const metadata = createPageMetadata({
-  title: "Search Families",
-  description: "Find verified host families and book authentic cultural stays around the world.",
-  path: "/search",
-});
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const filters = parseSearchParams(params);
+  const country = filters.country.trim();
+  const city = filters.city.trim();
+
+  if (city && country) {
+    const title = `Homestays in ${city}, ${country}`;
+    return createPageMetadata({
+      title,
+      description: `Find verified local host families in ${city}, ${country}. Cultural immersion travel and authentic homestay experiences with Fore Beyond.`,
+      path: `/search?country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}`,
+    });
+  }
+
+  if (country) {
+    const destination = getDestinationCountries().find(
+      (d) => d.searchCountry.toLowerCase() === country.toLowerCase()
+    );
+    const title = destination
+      ? `${destination.pageTitle.split(" — ")[0] ?? destination.name + " Homestays"}`
+      : `Homestays in ${country}`;
+    return createPageMetadata({
+      title,
+      description: `Browse verified host families in ${country} for cultural immersion travel and authentic homestay experiences. Travel like a local with Fore Beyond.`,
+      path: `/search?country=${encodeURIComponent(country)}`,
+    });
+  }
+
+  return createPageMetadata({
+    title: "Search Verified Host Families",
+    description:
+      "Find verified local hosts for cultural immersion travel and homestay experiences worldwide. Authentic travel beyond hotels.",
+    path: "/search",
+  });
+}
 
 async function getCoverPhotos(listingIds: string[]) {
   if (listingIds.length === 0) return {};
@@ -109,29 +146,40 @@ export default async function SearchFamiliesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const filters = parseSearchParams(params);
+  const locationLabel = [filters.city, filters.country].filter(Boolean).join(", ");
+  const { t } = await getServerTranslations();
 
   return (
     <>
       <PageHero
         image={sampleImages.searchFamilies}
-        imageAlt="Friends and travelers sharing time together outdoors"
-        eyebrow="Search Families"
-        title="Find your host family"
-        subtitle="Discover verified families offering authentic cultural immersion around the world."
+        imageAlt="Friends and travelers sharing time together outdoors during a cultural homestay"
+        eyebrow={t("search.eyebrow")}
+        title={
+          locationLabel
+            ? t("search.titleInLocation", { location: locationLabel })
+            : t("search.title")
+        }
+        subtitle={
+          locationLabel
+            ? t("search.subtitleInLocation", { location: locationLabel })
+            : t("search.subtitle")
+        }
         height="md"
       />
 
       <Container className="py-10 md:py-14">
         <div className="flex items-center justify-between gap-4 mb-8">
           <p className="text-sm text-charcoal-light hidden md:block">
-            Filter by budget, language, meals, and verification status
+            {t("search.filterHint")}
           </p>
           <Link
             href="/saved"
             className="inline-flex items-center gap-2 text-sm font-medium text-forest hover:underline"
           >
             <Heart className="h-4 w-4" />
-            Saved families
+            {t("common.savedFamilies")}
           </Link>
         </div>
 
@@ -139,7 +187,7 @@ export default async function SearchFamiliesPage({
           <SearchAnalyticsTracker />
         </Suspense>
 
-        <Suspense fallback={<p className="text-sm text-charcoal-light">Loading families...</p>}>
+        <Suspense fallback={<p className="text-sm text-charcoal-light">{t("common.loadingFamilies")}</p>}>
           <SearchResults searchParams={params} />
         </Suspense>
       </Container>

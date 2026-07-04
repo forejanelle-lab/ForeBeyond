@@ -1,11 +1,13 @@
-import { navigation } from "@/lib/brand";
-import { getAdminNav, getUserNav, isPlatformAdmin } from "@/lib/navigation-menu";
+"use client";
+
 import { Logo } from "@/components/design/Logo";
 import { HeaderProfileAvatar } from "@/components/layout/HeaderProfileAvatar";
 import { MobileNavMenu } from "@/components/layout/MobileNavMenu";
 import { NotificationBell } from "@/components/messaging/NotificationBell";
 import { Container } from "@/components/ui/Container";
-
+import { useTranslations } from "@/components/i18n/LocaleProvider";
+import { getTranslatedMainNav, getTranslatedNavForUser } from "@/lib/i18n/nav";
+import { isPlatformAdmin } from "@/lib/navigation-menu";
 import type { UserRole } from "@/types/database";
 
 interface NavigationProps {
@@ -20,8 +22,9 @@ interface NavigationProps {
 }
 
 export function Navigation({ user }: NavigationProps) {
+  const t = useTranslations();
   const showAdmin = user ? isPlatformAdmin(user.email, user.isAdmin) : false;
-  const userNav = user ? (showAdmin ? getAdminNav() : getUserNav(user.role)) : [];
+  const userNav = user ? getTranslatedNavForUser(t, user) : getTranslatedMainNav(t);
   const showSupport = Boolean(user) && !showAdmin;
 
   return (
@@ -30,7 +33,7 @@ export function Navigation({ user }: NavigationProps) {
         <nav className="flex h-14 items-center justify-between gap-4 overflow-visible">
           <Logo size="xl" className="-my-8" />
 
-          <div className="flex items-center gap-1 shrink-0 ml-auto">
+          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
             {user && <NotificationBell userId={user.id} />}
             {user && (
               <HeaderProfileAvatar
@@ -39,7 +42,7 @@ export function Navigation({ user }: NavigationProps) {
               />
             )}
             <MobileNavMenu
-              items={user ? userNav : navigation.main}
+              items={userNav}
               showSupport={showSupport}
               isLoggedIn={Boolean(user)}
               userId={user?.id}

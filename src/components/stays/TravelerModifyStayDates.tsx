@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -8,10 +8,13 @@ import { updateStayRequestDatesByTraveler } from "@/lib/stay-request-dates";
 import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
 import { useTodayIso } from "@/hooks/use-today-iso";
 import { StayDateRangePicker } from "@/components/stays/StayDateRangePicker";
+import { StayOverlapNotice } from "@/components/stays/StayOverlapNotice";
 import {
   findStayDateConflict,
+  findOverlappingStays,
   getStayDateConflictMessage,
   type BlockedDateRange,
+  type OverlappingStay,
 } from "@/lib/stay-availability";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -20,11 +23,13 @@ import type { StayRequest } from "@/types/database";
 interface TravelerModifyStayDatesProps {
   request: Pick<StayRequest, "id" | "traveler_id" | "status" | "start_date" | "end_date">;
   blockedDateRanges?: BlockedDateRange[];
+  existingStays?: OverlappingStay[];
 }
 
 export function TravelerModifyStayDates({
   request,
   blockedDateRanges = [],
+  existingStays = [],
 }: TravelerModifyStayDatesProps) {
   const router = useRouter();
   const minDate = useTodayIso();
@@ -33,6 +38,11 @@ export function TravelerModifyStayDates({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const overlappingStays = useMemo(() => {
+    if (!startDate || !endDate || endDate <= startDate) return [];
+    return findOverlappingStays(startDate, endDate, existingStays);
+  }, [startDate, endDate, existingStays]);
 
   function applyDateSelection(nextStart: string, nextEnd: string) {
     setStartDate(nextStart);
@@ -93,6 +103,8 @@ export function TravelerModifyStayDates({
           blockedRanges={blockedDateRanges}
           onChange={applyDateSelection}
         />
+
+        <StayOverlapNotice overlaps={overlappingStays} variant="traveler" />
 
         {error && (
           <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">{error}</p>

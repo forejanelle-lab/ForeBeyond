@@ -9,9 +9,9 @@ import { EXPERIENCE_VISIBILITY_LABELS } from "@/lib/experience-visibility";
 import {
   EXPERIENCE_STATUS_LABELS,
   formatDuration,
-  formatPrice,
   getCategoryLabel,
 } from "@/lib/experiences";
+import { DisplayExperiencePrice } from "@/components/i18n/DisplayMoney";
 import type { ExperiencePhoto, HostExperience } from "@/types/database";
 
 interface ExperienceCardProps {
@@ -56,7 +56,9 @@ export function ExperienceCard({ experience, coverPhoto, hostId }: ExperienceCar
       )}
 
       <div className="flex items-center justify-between mt-2 text-sm text-charcoal-light">
-        <span className="font-medium text-forest">{formatPrice(experience.price_per_person)}</span>
+        <span className="font-medium text-forest">
+          <DisplayExperiencePrice priceUsd={experience.price_per_person} />
+        </span>
         <span className="flex items-center gap-1">
           <Clock className="h-3.5 w-3.5" />
           {formatDuration(experience.duration_minutes)}

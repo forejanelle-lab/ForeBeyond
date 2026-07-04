@@ -56,6 +56,7 @@ export function VerificationSubmitModal({
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selfieCameraActive, setSelfieCameraActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -69,6 +70,7 @@ export function VerificationSubmitModal({
       setError("");
       setRecordedBlob(null);
       setPreviewUrl(null);
+      setSelfieCameraActive(false);
       stopCamera();
     }
   }, [open]);
@@ -180,6 +182,81 @@ export function VerificationSubmitModal({
     setFile(null);
   }
 
+  function clearSelfiePreview() {
+    setFile(null);
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+    setSelfieCameraActive(false);
+    stopStreamTracks();
+  }
+
+  async function startSelfieCamera() {
+    setError("");
+    setFile(null);
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setSelfieCameraActive(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch {
+      setError("Camera access is required for a live selfie. Allow camera permissions and try again.");
+      stopStreamTracks();
+      setSelfieCameraActive(false);
+    }
+  }
+
+  function captureSelfie() {
+    const video = videoRef.current;
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+      setError("Camera is not ready yet. Please try again.");
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      setError("Unable to capture photo. Please try again.");
+      return;
+    }
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setError("Unable to capture photo. Please try again.");
+          return;
+        }
+
+        stopStreamTracks();
+        setSelfieCameraActive(false);
+        const selfieFile = new File([blob], `selfie-${Date.now()}.jpg`, { type: "image/jpeg" });
+        setFile(selfieFile);
+        setPreviewUrl((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return URL.createObjectURL(blob);
+        });
+        setError("");
+      },
+      "image/jpeg",
+      0.92
+    );
+  }
+
   function handleVideoFileSelect(next: File | null) {
     if (!next) return;
     clearVideoPreview();
@@ -212,7 +289,9 @@ export function VerificationSubmitModal({
       setError(
         documentType === "video_verification"
           ? "Record or upload a short video before submitting."
-          : "Please choose a file to upload."
+          : documentType === "selfie"
+            ? "Take a live selfie before submitting."
+            : "Please choose a file to upload."
       );
       return;
     }
@@ -287,6 +366,7 @@ export function VerificationSubmitModal({
   if (!open || !documentType) return null;
 
   const isVideo = documentType === "video_verification";
+  const isSelfie = documentType === "selfie";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -372,6 +452,51 @@ export function VerificationSubmitModal({
                 Record a short clip saying your full name. Keep it under 30 seconds.
               </p>
             </div>
+          ) : isSelfie ? (
+            <div className="space-y-4">
+              <div className="rounded-xl overflow-hidden bg-charcoal/5 aspect-[4/5] max-h-80 relative">
+                {previewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewUrl}
+                    alt="Captured selfie preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <video
+                    ref={videoRef}
+                    muted
+                    playsInline
+                    autoPlay
+                    className="w-full h-full object-cover bg-black mirror"
+                    style={{ transform: "scaleX(-1)" }}
+                  />
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {!previewUrl && !selfieCameraActive && (
+                  <Button type="button" variant="secondary" size="sm" onClick={startSelfieCamera}>
+                    <Camera className="h-4 w-4" />
+                    Open camera
+                  </Button>
+                )}
+                {selfieCameraActive && !previewUrl && (
+                  <Button type="button" variant="primary" size="sm" onClick={captureSelfie}>
+                    <Camera className="h-4 w-4" />
+                    Take photo
+                  </Button>
+                )}
+                {previewUrl && (
+                  <Button type="button" variant="outline" size="sm" onClick={clearSelfiePreview}>
+                    Retake selfie
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-charcoal-light">
+                Use your front camera and take a live selfie. Uploads from your photo library are
+                not accepted for this step.
+              </p>
+            </div>
           ) : (
             <div className="space-y-3">
               <button
@@ -379,11 +504,7 @@ export function VerificationSubmitModal({
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full rounded-xl border-2 border-dashed border-sage-dark/50 px-4 py-8 text-center hover:bg-sage/20 transition-colors"
               >
-                {documentType === "selfie" ? (
-                  <Camera className="h-8 w-8 text-forest mx-auto mb-2" />
-                ) : (
-                  <FileText className="h-8 w-8 text-forest mx-auto mb-2" />
-                )}
+                <FileText className="h-8 w-8 text-forest mx-auto mb-2" />
                 <p className="text-sm font-medium text-forest">
                   {file ? file.name : "Choose a file to upload"}
                 </p>
@@ -392,6 +513,7 @@ export function VerificationSubmitModal({
             </div>
           )}
 
+          {!isSelfie && (
           <input
             ref={fileInputRef}
             type="file"
@@ -408,6 +530,7 @@ export function VerificationSubmitModal({
               e.target.value = "";
             }}
           />
+          )}
 
           {error && (
             <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>

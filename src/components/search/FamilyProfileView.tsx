@@ -9,7 +9,8 @@ import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
-import { formatStayRateLabel, pickListingPricing } from "@/lib/stay-requests";
+import { DisplayStayRateFromPricing } from "@/components/i18n/DisplayMoney";
+import { pickListingPricing } from "@/lib/stay-requests";
 import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
@@ -88,9 +89,12 @@ export function FamilyProfileView({
 }: FamilyProfileViewProps) {
   const coverPhoto = photos.find((p) => p.is_cover) ?? photos[0];
   const listingPricing = pickListingPricing(listing);
-  const nightlyRateLabel = formatStayRateLabel(listingPricing, 1);
   const isVerified = verificationStatus === "verified";
+  const locationLabel = [listing.city, listing.country].filter(Boolean).join(", ");
   const hostNameForDisplay = hostDisplayName ?? hostFirstName;
+  const listingPhotoAlt = listing.title
+    ? `${listing.title} — verified homestay${locationLabel ? ` in ${locationLabel}` : ""}`
+    : `Verified host family homestay${locationLabel ? ` in ${locationLabel}` : ""}`;
   const hostInitials = hostNameForDisplay
     ?.split(" ")
     .map((part) => part[0])
@@ -105,7 +109,7 @@ export function FamilyProfileView({
           src={coverPhoto?.file_url}
           country={listing.country}
           city={listing.city}
-          alt={listing.title ?? "Family listing"}
+          alt={listingPhotoAlt}
           fill
           className="object-cover"
           priority
@@ -129,7 +133,11 @@ export function FamilyProfileView({
               )}
               <p className="flex items-center gap-1.5 text-white/85 mt-2 text-sm md:text-base">
                 <DollarSign className="h-4 w-4" />
-                {nightlyRateLabel}
+                <DisplayStayRateFromPricing
+                  pricing={listingPricing}
+                  guestCount={1}
+                  country={listing.country}
+                />
               </p>
             </div>
             {showSaveButton && (
@@ -190,7 +198,7 @@ export function FamilyProfileView({
                     {hostAvatarUrl ? (
                       <Image
                         src={hostAvatarUrl}
-                        alt=""
+                        alt={`${hostNameForDisplay} — verified local host`}
                         fill
                         className="object-cover"
                         sizes="56px"

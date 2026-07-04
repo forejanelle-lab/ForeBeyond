@@ -8,6 +8,7 @@ import { LogoutButton } from "@/components/layout/LogoutButton";
 import { ContactModal } from "@/components/support/ContactModal";
 import { SupportRequestModal } from "@/components/support/SupportRequestModal";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import { isExternalNavHref, isMailtoNavHref } from "@/lib/nav-links";
 import type { NavItem } from "@/lib/navigation-menu";
 
@@ -28,6 +29,7 @@ export function MobileNavMenu({
   userFullName = null,
   userEmail = "",
 }: MobileNavMenuProps) {
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -58,7 +60,7 @@ export function MobileNavMenu({
     <>
       <button
         type="button"
-        aria-label="Close menu overlay"
+        aria-label={t("nav.closeOverlay")}
         className="fixed inset-0 z-[100] bg-black/20"
         onClick={() => setOpen(false)}
       />
@@ -124,7 +126,7 @@ export function MobileNavMenu({
             className="px-3 py-2.5 text-sm font-medium text-charcoal hover:bg-sage/50 rounded-lg transition-colors text-left inline-flex items-center gap-2"
           >
             <HelpCircle className="h-4 w-4 text-forest" />
-            Help &amp; Support
+            {t("nav.helpSupport")}
           </button>
         )}
         <hr className="my-2 border-sage-dark/30" />
@@ -138,7 +140,7 @@ export function MobileNavMenu({
               onClick={() => setOpen(false)}
               className="px-3 py-2.5 text-sm font-medium text-charcoal hover:bg-sage/50 rounded-lg"
             >
-              Sign In
+              {t("nav.signIn")}
             </Link>
             <ButtonLink
               href="/auth/sign-up"
@@ -147,7 +149,7 @@ export function MobileNavMenu({
               className="w-full mt-1"
               onClick={() => setOpen(false)}
             >
-              Get Started
+              {t("nav.getStarted")}
             </ButtonLink>
           </>
         )}
@@ -161,7 +163,7 @@ export function MobileNavMenu({
         type="button"
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? t("nav.closeMenu") : t("nav.openMenu")}
         onClick={() => setOpen((value) => !value)}
         className="relative z-[102] p-2 rounded-lg hover:bg-sage/50 transition-colors"
       >

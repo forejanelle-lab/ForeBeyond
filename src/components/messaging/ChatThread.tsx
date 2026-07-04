@@ -12,6 +12,7 @@ import {
   markConversationRead,
 } from "@/lib/messaging";
 import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
+import { TranslatableText } from "@/components/i18n/TranslatableText";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { MessageRead, StayMessage } from "@/types/database";
@@ -347,7 +348,15 @@ export function ChatThread({
                       />
                     </div>
                   )}
-                  {msg.body && <p className="whitespace-pre-wrap break-words">{msg.body}</p>}
+                  {msg.body &&
+                    (isOwn ? (
+                      <p className="whitespace-pre-wrap break-words">{msg.body}</p>
+                    ) : (
+                      <TranslatableText
+                        text={msg.body}
+                        className="whitespace-pre-wrap break-words [&>p]:whitespace-pre-wrap [&>p]:break-words"
+                      />
+                    ))}
                 </div>
                 <div
                   className={`flex items-center gap-1 mt-1 text-xs ${

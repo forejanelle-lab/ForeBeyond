@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, CheckCircle2, Home, Plane } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { brand } from "@/lib/brand";
 import { getPopularDestinations } from "@/lib/destinations";
 import { sampleImages } from "@/lib/sample-images";
 import { HeroSearchBar } from "@/components/design/HeroSearchBar";
@@ -16,30 +15,25 @@ import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
-
+import { JsonLd } from "@/components/seo/JsonLd";
+import { buildHomePageJsonLd } from "@/lib/json-ld";
+import { getServerTranslations } from "@/lib/i18n/server";
+import { createPageMetadata } from "@/lib/site-metadata";
 import { TRAVELER_ACCOUNT_SEARCH_MESSAGE } from "@/lib/traveler-verification";
 import type { Profile } from "@/types/database";
 
-const steps = [
-  { step: "01", title: "Create Your Profile", description: "Tell us about your interests and what you hope to discover." },
-  { step: "02", title: "Get Verified", description: "Complete trust verification so families know you're genuine." },
-  { step: "03", title: "Find Your Match", description: "Browse verified host families and cultural experiences worldwide." },
-  { step: "04", title: "Immerse & Connect", description: "Live with a local family and create memories that last a lifetime." },
-];
-
-const trustPillars = [
-  "Government ID verification",
-  "Video and address verification",
-  "Community vouching system",
-  "24/7 safety support",
-  "Transparent reviews",
-  "Cultural sensitivity training",
-];
+export const metadata = createPageMetadata({
+  title: "Cultural Immersion Travel with Verified Local Hosts",
+  description:
+    "Fore Beyond connects travelers with verified local hosts for cultural immersion travel and authentic homestay experiences. Travel like a local — meaningful travel beyond hotels and tourism.",
+  path: "/",
+});
 
 const homeSectionTitle = "!text-3xl md:!text-5xl lg:!text-[3.25rem]";
 const homeSectionDescription = "text-lg md:text-xl leading-relaxed";
 
 export default async function HomePage() {
+  const { t } = await getServerTranslations();
   const popularDestinations = await getPopularDestinations();
 
   let isHostUser = false;
@@ -62,8 +56,31 @@ export default async function HomePage() {
     console.error("Homepage auth check failed:", error);
   }
 
+  const steps = [
+    { step: "01", title: t("home.step1Title"), description: t("home.step1Desc") },
+    { step: "02", title: t("home.step2Title"), description: t("home.step2Desc") },
+    { step: "03", title: t("home.step3Title"), description: t("home.step3Desc") },
+    { step: "04", title: t("home.step4Title"), description: t("home.step4Desc") },
+  ];
+
+  const trustPillars = [
+    t("home.trustPillarId"),
+    t("home.trustPillarVideo"),
+    t("home.trustPillarCommunity"),
+    t("home.trustPillarSafety"),
+    t("home.trustPillarReviews"),
+    t("home.trustPillarTraining"),
+  ];
+
+  const missionPillars = [
+    { title: t("home.pillarHostsTitle"), desc: t("home.pillarHostsDesc") },
+    { title: t("home.pillarExperiencesTitle"), desc: t("home.pillarExperiencesDesc") },
+    { title: t("home.pillarTrustTitle"), desc: t("home.pillarTrustDesc") },
+  ];
+
   return (
     <>
+      <JsonLd data={buildHomePageJsonLd()} />
       <section className="relative min-h-[92vh] flex flex-col justify-end">
         <Image
           src={sampleImages.homeHeroOutdoorMeal}
@@ -77,13 +94,12 @@ export default async function HomePage() {
         <div className="absolute inset-0 hero-overlay-dark pointer-events-none" />
         <Container className="relative z-10 pb-20 md:pb-28 pt-32">
           <h1 className="hero-text-shadow text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight max-w-2xl text-balance">
-            Travel deeper.
+            {t("home.heroTitleLine1")}
             <br />
-            Belong anywhere.
+            {t("home.heroTitleLine2")}
           </h1>
           <p className="hero-text-shadow mt-5 text-base md:text-lg text-white/90 leading-relaxed max-w-xl">
-            Stay with verified local hosts, experience authentic cultures, and create meaningful
-            connections that last beyond your trip.
+            {t("home.heroSubtitle")}
           </p>
           <div className="mt-8 relative z-20">
             <HeroSearchBar
@@ -92,20 +108,20 @@ export default async function HomePage() {
             />
             {!isLoggedIn && (
               <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="text-xs text-white/50 mr-1">Already a member?</span>
+                <span className="text-xs text-white/50 mr-1">{t("home.alreadyMember")}</span>
                 <Link
                   href="/auth/sign-in?redirect=/trips"
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-sm text-white/80 hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors backdrop-blur-sm"
                 >
                   <Plane className="h-3.5 w-3.5 opacity-80" />
-                  Traveler login
+                  {t("home.travelerLogin")}
                 </Link>
                 <Link
                   href="/auth/sign-in?redirect=/host/requests"
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-sm text-white/80 hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors backdrop-blur-sm"
                 >
                   <Home className="h-3.5 w-3.5 opacity-80" />
-                  Host login
+                  {t("home.hostLogin")}
                 </Link>
               </div>
             )}
@@ -121,15 +137,15 @@ export default async function HomePage() {
         <Container>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
             <SectionHeader
-              title="Popular destinations"
-              description="Verified host families offering authentic cultural immersion around the world."
+              title={t("home.popularDestinations")}
+              description={t("home.popularDestinationsDesc")}
               className="!mb-0"
             />
             <Link
-              href="/search"
+              href="/destinations"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-forest hover:text-forest-light hover:gap-2 transition-all shrink-0"
             >
-              Explore all families
+              {t("home.allDestinations")}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -153,17 +169,13 @@ export default async function HomePage() {
         <Container>
           <SectionHeader
             align="center"
-            title="Not a vacation rental. A cultural bridge."
-            description={brand.mission}
+            title={t("home.missionTitle")}
+            description={t("home.missionDesc")}
             titleClassName={homeSectionTitle}
             descriptionClassName={`${homeSectionDescription} max-w-3xl mx-auto`}
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: "Trusted Families", desc: "Verified hosts who welcome you as family, not a guest." },
-              { title: "Authentic Experiences", desc: "Cooking, ceremonies, markets — beyond tourist attractions." },
-              { title: "Trust-First Safety", desc: "Identity verification, reviews, and community standards." },
-            ].map((item) => (
+            {missionPillars.map((item) => (
               <Card key={item.title} variant="outline" padding="lg" className="hover-lift">
                 <h3 className="text-xl font-semibold text-forest mb-2">{item.title}</h3>
                 <p className="text-base text-charcoal-light leading-relaxed">{item.desc}</p>
@@ -177,8 +189,8 @@ export default async function HomePage() {
         <Container>
           <SectionHeader
             align="center"
-            title="How It Works"
-            description="Your path from curious traveler to cultural insider."
+            title={t("home.howItWorksTitle")}
+            description={t("home.howItWorksDesc")}
             titleClassName={homeSectionTitle}
             descriptionClassName={homeSectionDescription}
           />
@@ -202,10 +214,10 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-4xl md:text-5xl lg:text-[3.25rem] font-bold text-white leading-tight">
-                Built on trust, not transactions
+                {t("home.trustTitle")}
               </h2>
               <p className="mt-5 text-lg md:text-xl text-white/75 leading-relaxed">
-                Every member goes through rigorous verification. Meaningful connection requires genuine trust.
+                {t("home.trustDesc")}
               </p>
               <ButtonLink
                 href="/trust-center"
@@ -213,7 +225,7 @@ export default async function HomePage() {
                 size="md"
                 className="mt-6 border border-sage/50 bg-sage/20 !text-white backdrop-blur-sm hover:bg-sage/30 hover:!text-white focus-visible:ring-sage/40 hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
-                Explore Trust Center
+                {t("home.exploreTrustCenter")}
                 <ArrowRight className="h-4 w-4" />
               </ButtonLink>
             </div>
@@ -237,13 +249,12 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto">
             <div className="rounded-3xl overflow-hidden shadow-2xl bg-white hover-lift p-10 md:p-12 lg:p-14 text-center flex flex-col">
               <h2 className="text-3xl md:text-4xl font-bold text-forest leading-tight text-balance">
-                Travel the world.
+                {t("home.travelTitleLine1")}
                 <br />
-                Live like a local.
+                {t("home.travelTitleLine2")}
               </h2>
               <p className="mt-6 text-base md:text-lg text-charcoal-light leading-relaxed flex-1">
-                Stay with verified local hosts, immerse yourself in authentic culture, and build
-                connections that last long after your trip ends.
+                {t("home.travelDesc")}
               </p>
               <ButtonLink
                 href="/search"
@@ -251,20 +262,19 @@ export default async function HomePage() {
                 size="lg"
                 className="mt-10 hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
-                Find Your Stay
+                {t("home.findYourStay")}
                 <ArrowRight className="h-4 w-4" />
               </ButtonLink>
             </div>
 
             <div className="rounded-3xl overflow-hidden shadow-2xl bg-white hover-lift p-10 md:p-12 lg:p-14 text-center flex flex-col">
               <h2 className="text-3xl md:text-4xl font-bold text-forest leading-tight text-balance">
-                Open your home.
+                {t("home.hostTitleLine1")}
                 <br />
-                Share your world.
+                {t("home.hostTitleLine2")}
               </h2>
               <p className="mt-6 text-base md:text-lg text-charcoal-light leading-relaxed flex-1">
-                Welcome travelers into your daily life — share your culture, your cooking, and your
-                neighborhood stories. Hosting on Fore Beyond is about connection, not commerce.
+                {t("home.hostDesc")}
               </p>
               <BecomeHostButton isLoggedIn={isLoggedIn} />
             </div>

@@ -31,6 +31,8 @@ export const footer = {
   product: [
     { label: "How It Works", href: "/#how-it-works" },
     { label: "Search Families", href: "/search" },
+    { label: "Destinations", href: "/destinations" },
+    { label: "Travel Guides", href: "/guides" },
     { label: "Trust Center", href: "/trust-center" },
   ],
   company: [

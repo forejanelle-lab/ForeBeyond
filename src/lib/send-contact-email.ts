@@ -1,4 +1,5 @@
 import { getPlatformAdminEmail } from "@/lib/platform-admin";
+import { getResendFromEmail } from "@/lib/email-config";
 
 interface SendContactEmailInput {
   fromName: string;
@@ -19,7 +20,7 @@ export async function sendContactEmail(
     input.to?.trim() ||
     process.env.CONTACT_INBOX_EMAIL?.trim() ||
     getPlatformAdminEmail();
-  const from = process.env.RESEND_FROM_EMAIL?.trim() ?? "Fore Beyond <onboarding@resend.dev>";
+  const from = getResendFromEmail();
   const senderName = input.fromName.trim() || "Fore Beyond visitor";
   const senderEmail = input.fromEmail.trim();
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import posthog from "posthog-js";
 import { useRouter } from "next/navigation";
 import { Check, RotateCcw, X, Ban } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -11,22 +12,26 @@ import {
 } from "@/lib/stay-approval";
 import { HostIncomeBreakdown } from "@/components/stays/HostIncomeBreakdown";
 import { HostWithdrawStayModal } from "@/components/stays/HostWithdrawStayModal";
+import { StayOverlapNotice } from "@/components/stays/StayOverlapNotice";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import type { ListingPricing } from "@/lib/stay-requests";
+import type { OverlappingStay } from "@/lib/stay-availability";
 import type { StayRequest } from "@/types/database";
 
 interface HostRequestActionsProps {
   request: StayRequest;
   listingPricing: ListingPricing;
   guestName?: string;
+  overlappingStays?: OverlappingStay[];
 }
 
 export function HostRequestActions({
   request,
   listingPricing,
   guestName = "Guest",
+  overlappingStays = [],
 }: HostRequestActionsProps) {
   const router = useRouter();
   const [error, setError] = useState("");
@@ -133,8 +138,12 @@ export function HostRequestActions({
     setIsLoading("approve");
     const supabase = createClient();
     const { error: approveError } = await approveStayRequest(supabase, request);
-    if (approveError) setError(approveError);
-    else router.refresh();
+    if (approveError) {
+      setError(approveError);
+    } else {
+      posthog.capture("host_approved_stay_request", { stay_request_id: request.id });
+      router.refresh();
+    }
     setIsLoading(null);
   }
 
@@ -147,8 +156,12 @@ export function HostRequestActions({
       request.id,
       request.host_id
     );
-    if (declineError) setError(declineError);
-    else router.refresh();
+    if (declineError) {
+      setError(declineError);
+    } else {
+      posthog.capture("host_declined_stay_request", { stay_request_id: request.id });
+      router.refresh();
+    }
     setIsLoading(null);
   }
 
@@ -163,6 +176,8 @@ export function HostRequestActions({
       </div>
 
       <HostIncomeBreakdown request={request} pricing={listingPricing} />
+
+      <StayOverlapNotice overlaps={overlappingStays} variant="host" />
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">{error}</p>
@@ -205,8 +220,8 @@ export function ApprovedStayLinks({ tripId }: ApprovedStayLinksProps) {
     <Card variant="outline" padding="md" className="space-y-3">
       <p className="font-medium text-forest">Your stay is confirmed!</p>
       <p className="text-xs text-charcoal-light">
-        Your service fee has been charged. Coordinate the remaining stay payment directly with
-        your host family.
+        Your service fee has been paid. Coordinate the remaining balance directly with your host
+        family.
       </p>
       <ButtonLink href={`/trips/${tripId}`} variant="primary" size="md" className="w-full justify-center">
         View trip

@@ -35,8 +35,9 @@ export function ListingBlockedDatesEditor({ ranges, onChange }: ListingBlockedDa
       <div>
         <h2 className="text-xl font-semibold text-forest">Blocked-out dates</h2>
         <p className="text-sm text-charcoal-light mt-1">
-          Mark dates when you cannot host. Travelers cannot request stays that overlap these ranges,
-          and you cannot approve requests on blocked dates.
+          Mark dates when you cannot host. Travelers cannot request or confirm stays on these dates.
+          Requests that overlap other guests&apos; stays are still allowed — review each one and
+          confirm you have room.
         </p>
       </div>
 

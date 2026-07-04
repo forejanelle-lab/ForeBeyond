@@ -50,7 +50,8 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  const authRoutes = ["/auth/sign-in", "/auth/sign-up", "/auth/check-email", "/auth/verify-email", "/auth/resend-verification"];
+  const authRoutes = ["/auth/sign-in", "/auth/sign-up", "/auth/check-email", "/auth/verify-email", "/auth/resend-verification", "/auth/forgot-password", "/auth/reset-password"];
+  const authRoutesAllowedWhenLoggedIn = ["/auth/forgot-password", "/auth/reset-password"];
   const protectedRoutes = ["/dashboard", "/verification-center", "/profile", "/settings", "/trust-center/dashboard", "/host", "/saved", "/experiences/saved", "/trips", "/messages", "/notifications", "/admin", "/onboarding"];
 
   if (pathname === "/auth/callback") {
@@ -68,6 +69,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isAuthRoute && pathname !== "/auth/verify-email") {
+    if (authRoutesAllowedWhenLoggedIn.some((route) => pathname.startsWith(route))) {
+      return supabaseResponse;
+    }
+
     const url = request.nextUrl.clone();
     const redirect = request.nextUrl.searchParams.get("redirect");
 

@@ -7,11 +7,10 @@ import { TripCompleteButton } from "@/components/reviews/TripCompleteButton";
 import { TripReviewSection } from "@/components/reviews/TripReviewSection";
 import { isTripPastEndDate } from "@/lib/reviews";
 import { formatMessagingDisplayName } from "@/lib/messaging";
+import { TripBookingSummary } from "@/components/trips/TripBookingSummary";
 import {
   PAYMENT_STATUS_LABELS,
   TRIP_STATUS_LABELS,
-  calculateServiceFee,
-  formatCurrency,
   formatDateRange,
 } from "@/lib/stay-requests";
 import { Badge } from "@/components/ui/Badge";
@@ -53,7 +52,7 @@ export default async function TripDetailPage({
   const [{ data: listing }, { data: otherProfile }, { data: booking }, { data: stayRequest }, { data: conversation }, { data: tripReviews }, { data: userReview }, { data: listingContact }] =
     await Promise.all([
       typedTrip.listing_id
-        ? supabase.from("public_listings").select("title, city, country").eq("id", typedTrip.listing_id).single()
+        ? supabase.from("public_listings").select("title, city, country, pricing_currency").eq("id", typedTrip.listing_id).single()
         : Promise.resolve({ data: null }),
       supabase.from("profiles").select("full_name, email").eq("id", otherUserId).single(),
       supabase.from("stay_bookings").select("*").eq("trip_id", id).maybeSingle(),
@@ -74,7 +73,7 @@ export default async function TripDetailPage({
         : Promise.resolve({ data: null }),
     ]);
 
-  const listingData = listing as Pick<PublicListing, "title" | "city" | "country"> | null;
+  const listingData = listing as Pick<PublicListing, "title" | "city" | "country" | "pricing_currency"> | null;
   const bookingData = booking as StayBooking | null;
   const requestData = stayRequest as Pick<StayRequest, "id" | "status" | "end_date"> | null;
 
@@ -89,7 +88,6 @@ export default async function TripDetailPage({
   const contactData = listingContact as Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
   const conversationId = (conversation as { id: string } | null)?.id ?? null;
   const tripStatus = TRIP_STATUS_LABELS[typedTrip.status] ?? TRIP_STATUS_LABELS.upcoming;
-  const serviceFee = bookingData ? calculateServiceFee(bookingData.total_amount) : null;
   const showHostContact =
     isTraveler &&
     (requestData?.status === "approved" || requestData?.status === "completed");
@@ -111,6 +109,9 @@ export default async function TripDetailPage({
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <Badge variant={tripStatus.variant}>{tripStatus.label}</Badge>
+        {bookingData?.stripe_payment_intent_id && (
+          <Badge variant="success">Service fee paid</Badge>
+        )}
         {bookingData?.payment_status === "paid" && (
           <Badge variant={PAYMENT_STATUS_LABELS.paid.variant}>
             {PAYMENT_STATUS_LABELS.paid.label}
@@ -134,29 +135,12 @@ export default async function TripDetailPage({
             <h2 className="font-semibold text-forest">Trip details</h2>
             <p className="text-sm text-charcoal-light">{formatDateRange(typedTrip.start_date, typedTrip.end_date)}</p>
             {bookingData && (
-              <div className="rounded-xl bg-sage/40 p-4 text-sm space-y-2">
-                <div className="flex justify-between text-charcoal-light">
-                  <span>Stay total (pay host directly)</span>
-                  <span className="font-medium text-forest">
-                    {formatCurrency(bookingData.total_amount)}
-                  </span>
-                </div>
-                {bookingData.nightly_rate != null && (
-                  <p className="text-xs text-charcoal-light">
-                    {formatCurrency(bookingData.nightly_rate)} per night
-                  </p>
-                )}
-                {serviceFee != null && (
-                  <div className="flex justify-between text-charcoal-light border-t border-sage-dark/30 pt-2">
-                    <span>Service fee (charged at confirmation)</span>
-                    <span className="font-medium text-forest">{formatCurrency(serviceFee)}</span>
-                  </div>
-                )}
-                <p className="text-xs text-charcoal-light pt-1">
-                  Remaining stay payment is coordinated directly with your host — not through Fore
-                  Beyond.
-                </p>
-              </div>
+              <TripBookingSummary
+                totalAmount={bookingData.total_amount}
+                serviceFeePaid={Boolean(bookingData.stripe_payment_intent_id)}
+                hostCountry={listingData?.country}
+                pricingCurrency={listingData?.pricing_currency}
+              />
             )}
           </Card>
 

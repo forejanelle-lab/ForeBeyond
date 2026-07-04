@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { MoneyOrDash } from "@/components/i18n/Money";
+import { resolveListingPricingCurrency } from "@/lib/currency";
 import {
   formatBookingReference,
-  formatCurrency,
   formatDateRange,
   STAY_REQUEST_STATUS_LABELS,
 } from "@/lib/stay-requests";
@@ -30,6 +31,8 @@ export interface TravelerPendingRequestRow {
   location: string | null;
   hostName: string | null;
   stayTotal: number | null;
+  hostCountry?: string | null;
+  pricingCurrency?: string | null;
 }
 
 interface TravelerPendingRequestTableRowProps extends TravelerPendingRequestRow {
@@ -42,9 +45,15 @@ export function TravelerPendingRequestTableRow({
   location,
   hostName,
   stayTotal,
+  hostCountry,
+  pricingCurrency,
   href,
 }: TravelerPendingRequestTableRowProps) {
   const status = statusBadge(request);
+  const sourceCurrency = resolveListingPricingCurrency({
+    pricing_currency: pricingCurrency,
+    country: hostCountry,
+  });
 
   return (
     <tr className="group border-b border-sage-dark/20 last:border-b-0 hover:bg-sage/25">
@@ -78,7 +87,7 @@ export function TravelerPendingRequestTableRow({
       </td>
       <td className="px-4 py-4 align-middle text-right">
         <Link href={href} className="block text-sm font-bold text-forest tabular-nums whitespace-nowrap">
-          {stayTotal != null && stayTotal > 0 ? formatCurrency(stayTotal) : "—"}
+          <MoneyOrDash amountUsd={stayTotal} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />
         </Link>
       </td>
       <td className="px-4 py-4 align-middle">
@@ -99,9 +108,15 @@ export function TravelerPendingRequestListCard({
   location,
   hostName,
   stayTotal,
+  hostCountry,
+  pricingCurrency,
   href,
 }: TravelerPendingRequestTableRowProps) {
   const status = statusBadge(request);
+  const sourceCurrency = resolveListingPricingCurrency({
+    pricing_currency: pricingCurrency,
+    country: hostCountry,
+  });
 
   return (
     <Link href={href} className="block group px-4 py-4 hover:bg-sage/25 transition-colors">
@@ -129,7 +144,7 @@ export function TravelerPendingRequestListCard({
               Est. stay total
             </p>
             <p className="text-sm font-bold text-forest tabular-nums">
-              {stayTotal != null && stayTotal > 0 ? formatCurrency(stayTotal) : "—"}
+              <MoneyOrDash amountUsd={stayTotal} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />
             </p>
           </div>
           <Badge variant={status.variant}>{status.label}</Badge>

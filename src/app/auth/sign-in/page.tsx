@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import posthog from "posthog-js";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -11,15 +12,23 @@ import { getPostLoginPath } from "@/lib/post-login";
 import { recordLoginAudit } from "@/app/auth/actions";
 import type { Profile } from "@/types/database";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 
 function SignInForm() {
+  const t = useTranslations();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => {
+    const authError = searchParams.get("error");
+    if (authError === "verification") {
+      return "That sign-in link expired or was already used. Try signing in, or request a new verification or password reset email.";
+    }
+    return "";
+  });
   const [needsVerification, setNeedsVerification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,7 +53,7 @@ function SignInForm() {
 
     const user = data.user;
     if (!user || !data.session) {
-      setError("Sign in failed. Please try again.");
+      setError(t("auth.signInFailed"));
       setIsLoading(false);
       return;
     }
@@ -62,6 +71,9 @@ function SignInForm() {
       redirectParam
     );
 
+    posthog.identify(user.id, { role: (profile as { role?: string } | null)?.role ?? undefined });
+    posthog.capture("sign_in_completed", { role: (profile as { role?: string } | null)?.role ?? undefined });
+
     void recordLoginAudit("password");
     window.location.assign(redirectTo);
   }
@@ -75,20 +87,20 @@ function SignInForm() {
     <Card variant="elevated" padding="lg" className="shadow-xl border border-sage-dark/30">
       <form onSubmit={handleSubmit} className="space-y-5">
         <Input
-          label="Email"
+          label={t("common.email")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          placeholder={t("auth.emailPlaceholder")}
           autoComplete="email"
           required
         />
         <Input
-          label="Password"
+          label={t("common.password")}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Your password"
+          placeholder={t("auth.passwordPlaceholder")}
           autoComplete="current-password"
           required
         />
@@ -101,32 +113,38 @@ function SignInForm() {
 
         {needsVerification && email.trim() && (
           <div className="rounded-lg bg-sage/40 px-4 py-3 text-sm text-charcoal">
-            <p className="mb-2">Your email isn&apos;t verified yet.</p>
+            <p className="mb-2">{t("auth.emailNotVerified")}</p>
             <Link
               href={`/auth/check-email?email=${encodeURIComponent(email.trim())}&resend=1`}
               className="font-medium text-forest underline hover:no-underline"
             >
-              Resend verification link to {email.trim()}
+              {t("auth.resendTo")} {email.trim()}
             </Link>
           </div>
         )}
 
         <Button type="submit" variant="primary" size="lg" className="w-full" isLoading={isLoading}>
-          Sign In
+          {t("auth.signIn")}
         </Button>
       </form>
 
+      <p className="mt-4 text-center text-sm">
+        <Link href="/auth/forgot-password" className="text-forest font-medium hover:underline">
+          {t("auth.forgotPassword")}
+        </Link>
+      </p>
+
       <div className="mt-6 space-y-2 text-center text-sm text-charcoal-light">
         <div>
-          Don&apos;t have an account?{" "}
+          {t("auth.noAccount")}{" "}
           <Link href="/auth/sign-up" className="text-forest font-medium hover:underline">
-            Create one
+            {t("auth.createOne")}
           </Link>
         </div>
         <div>
-          Need to verify your email?{" "}
+          {t("auth.needVerify")}{" "}
           <Link href="/auth/resend-verification" className="text-forest font-medium hover:underline">
-            Resend verification link
+            {t("auth.resendVerification")}
           </Link>
         </div>
       </div>
@@ -135,15 +153,18 @@ function SignInForm() {
 }
 
 export default function SignInPage() {
+  const t = useTranslations();
+
   return (
     <AuthShell
-      title="Welcome back"
-      subtitle="Sign in to continue your journey with verified host families and meaningful cultural connection."
+      title={t("auth.welcomeBack")}
+      subtitle={t("auth.signInSubtitle")}
+      showLogo={false}
     >
       <Suspense
         fallback={
           <Card variant="elevated" padding="lg" className="text-center text-charcoal-light">
-            Loading sign in...
+            {t("auth.signInLoading")}
           </Card>
         }
       >

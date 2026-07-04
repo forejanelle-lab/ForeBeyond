@@ -65,7 +65,7 @@ export function ResendVerificationEmail({
     setStatus("sent");
     setCooldown(30);
     setMessage(
-      `Verification link sent to ${target}. Open it on this phone or computer — it will not use localhost.`
+      `Verification link sent to ${target}. Check your inbox and spam folder, then open the link to continue.`
     );
   }
 

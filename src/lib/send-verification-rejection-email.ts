@@ -1,4 +1,5 @@
 import { getAppUrl } from "@/lib/app-url";
+import { getResendFromEmail } from "@/lib/email-config";
 import { formatDocumentTypeLabel } from "@/lib/verification-labels";
 
 interface SendVerificationRejectionEmailInput {
@@ -16,7 +17,7 @@ export async function sendVerificationRejectionEmail(
     return { sent: false, error: "RESEND_API_KEY is not configured" };
   }
 
-  const from = process.env.RESEND_FROM_EMAIL?.trim() ?? "Fore Beyond <onboarding@resend.dev>";
+  const from = getResendFromEmail();
   const docLabel = formatDocumentTypeLabel(input.documentType);
   const greeting = input.userName?.trim() ? `Hi ${input.userName.trim()},` : "Hi,";
   const noteText =

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatPrice } from "@/lib/experiences";
+import { Money } from "@/components/i18n/Money";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { ExperienceBooking } from "@/types/database";
@@ -68,7 +68,12 @@ export function HostExperienceBookings({ bookings, hostId }: HostExperienceBooki
                   {booking.scheduled_time ? ` at ${booking.scheduled_time}` : ""}
                   {" · "}
                   {booking.guest_count} guest{booking.guest_count !== 1 ? "s" : ""}
-                  {booking.total_price != null && ` · ${formatPrice(booking.total_price)}`}
+                  {booking.total_price != null && (
+                    <>
+                      {" · "}
+                      <Money amountUsd={booking.total_price} sourceCurrency="USD" />
+                    </>
+                  )}
                 </p>
               </div>
               <span className="text-xs font-medium capitalize text-charcoal-light shrink-0">

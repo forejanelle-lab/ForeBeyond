@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import posthog from "posthog-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -8,7 +9,7 @@ import { formatAuthError } from "@/lib/auth-errors";
 import { fetchEmailVerificationRedirectUrl } from "@/lib/auth-email-redirect";
 import { getPostLoginPath } from "@/lib/post-login";
 import { AuthShell } from "@/components/auth/AuthShell";
-import { brand } from "@/lib/brand";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import {
   isTravelerSignupEnabled,
   TRAVELER_SIGNUP_DISABLED_MESSAGE,
@@ -20,6 +21,7 @@ import type { Profile } from "@/types/database";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const t = useTranslations();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -104,6 +106,13 @@ export default function SignUpPage() {
         return;
       }
 
+      if (data.user) {
+        posthog.identify(data.user.id, {
+          name: `${firstName.trim()} ${lastName.trim()}`.trim() || undefined,
+        });
+        posthog.capture("sign_up_submitted");
+      }
+
       if (data.user && data.user.identities?.length === 0) {
         router.push(
           `/auth/check-email?email=${encodeURIComponent(email.trim())}&existing=1&resend=1`
@@ -126,9 +135,9 @@ export default function SignUpPage() {
 
   if (isCheckingSession) {
     return (
-      <AuthShell title={`Join ${brand.name}`} subtitle={brand.tagline}>
+      <AuthShell title={t("auth.joinTitle")} subtitle={t("brand.tagline")} showLogo={false}>
         <Card variant="elevated" padding="lg" className="text-center text-charcoal-light">
-          Loading...
+          {t("common.loading")}
         </Card>
       </AuthShell>
     );
@@ -136,8 +145,9 @@ export default function SignUpPage() {
 
   return (
     <AuthShell
-      title={`Join ${brand.name}`}
-      subtitle={brand.tagline}
+      title={t("auth.joinTitle")}
+      subtitle={t("brand.tagline")}
+      showLogo={false}
     >
       <Card variant="elevated" padding="lg" className="shadow-xl border border-sage-dark/30">
         {!isTravelerSignupEnabled() && (
@@ -149,37 +159,37 @@ export default function SignUpPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="First Name"
+              label={t("common.firstName")}
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              placeholder="First name"
+              placeholder={t("auth.firstNamePlaceholder")}
               required
             />
             <Input
-              label="Last Name"
+              label={t("common.lastName")}
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              placeholder="Last name"
+              placeholder={t("auth.lastNamePlaceholder")}
               required
             />
           </div>
           <Input
-            label="Email"
+            label={t("common.email")}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder={t("auth.emailPlaceholder")}
             required
           />
           <Input
-            label="Password"
+            label={t("common.password")}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            hint="Must be at least 8 characters"
+            placeholder={t("auth.passwordPlaceholderSignup")}
+            hint={t("auth.passwordHint")}
             minLength={8}
             required
           />
@@ -191,14 +201,14 @@ export default function SignUpPage() {
           )}
 
           <Button type="submit" variant="primary" size="lg" className="w-full" isLoading={isLoading}>
-            Create Account
+            {t("auth.createAccount")}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-charcoal-light">
-          Already have an account?{" "}
+          {t("auth.alreadyHaveAccount")}{" "}
           <Link href="/auth/sign-in" className="text-forest font-medium hover:underline">
-            Sign in
+            {t("auth.signIn")}
           </Link>
         </p>
       </Card>

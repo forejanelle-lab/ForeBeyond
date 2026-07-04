@@ -4,12 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { FamilyProfileView } from "@/components/search/FamilyProfileView";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
+import { createPageMetadata } from "@/lib/site-metadata";
+import { getListingCoverPhotoUrl } from "@/lib/seo-cover-photos";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { buildListingJsonLd } from "@/lib/json-ld";
 import { formatAverageRating } from "@/lib/reviews";
 import { getHostListingStats } from "@/lib/host-stats";
 import { getHostReviewEligibility } from "@/lib/listing-review-eligibility";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { hostHasMessagedStayRequest, isStayMessagingOpen } from "@/lib/messaging";
-import { createPageMetadata } from "@/lib/site-metadata";
 import type { DocumentType, HostListing, ListingPhoto, Profile, PublicListing, PublicReview, StayRequest, TrustBadge, VerificationStatus } from "@/types/database";
 import { normalizeTrustScoreBreakdown, type TrustScoreBreakdown } from "@/lib/trust-score";
 import { getRequestStayEligibility, documentsMapFromRows } from "@/lib/traveler-verification";
@@ -23,7 +26,7 @@ export async function generateMetadata({
   const supabase = await createClient();
   const { data } = await supabase
     .from("public_listings")
-    .select("title, city, country")
+    .select("title, city, country, family_story, budget_per_night, pricing_currency")
     .eq("id", id)
     .single();
 
@@ -32,16 +35,20 @@ export async function generateMetadata({
     if (user) {
       const { data: own } = await supabase
         .from("host_listings")
-        .select("title, city, country")
+        .select("title, city, country, family_story")
         .eq("id", id)
         .eq("host_id", user.id)
         .single();
       if (own) {
         const title = own.title ?? `Family in ${own.city}`;
+        const description =
+          own.family_story?.slice(0, 155) ??
+          `Stay with ${title} in ${own.city}, ${own.country}. Book an authentic cultural immersion with Fore Beyond.`;
         return createPageMetadata({
           title,
-          description: `Stay with ${title} in ${own.city}, ${own.country}. Book an authentic cultural immersion with Fore Beyond.`,
+          description,
           path: `/families/${id}`,
+          noIndex: true,
         });
       }
     }
@@ -49,14 +56,21 @@ export async function generateMetadata({
       title: "Family Not Found",
       description: "This host family listing could not be found on Fore Beyond.",
       path: `/families/${id}`,
+      noIndex: true,
     });
   }
 
   const title = data.title ?? `Family in ${data.city}`;
+  const description =
+    data.family_story?.slice(0, 155) ??
+    `Stay with ${title} in ${data.city}, ${data.country}. Book an authentic cultural immersion with Fore Beyond.`;
+  const coverPhoto = await getListingCoverPhotoUrl(supabase, id);
+
   return createPageMetadata({
     title,
-    description: `Stay with ${title} in ${data.city}, ${data.country}. Book an authentic cultural immersion with Fore Beyond.`,
+    description,
     path: `/families/${id}`,
+    ...(coverPhoto ? { image: coverPhoto } : {}),
   });
 }
 
@@ -149,6 +163,7 @@ export default async function FamilyProfilePage({
       budget_per_night_4_guests: typedListing.budget_per_night_4_guests,
       budget_per_night_5_guests: typedListing.budget_per_night_5_guests,
       budget_per_night_6_plus_guests: typedListing.budget_per_night_6_plus_guests,
+      pricing_currency: typedListing.pricing_currency ?? "USD",
       max_capacity: typedListing.max_capacity,
       status: "published",
       published_at: typedListing.published_at,
@@ -299,6 +314,27 @@ export default async function FamilyProfilePage({
 
   return (
     <>
+      {typedListing && (
+        <JsonLd
+          data={buildListingJsonLd({
+            id,
+            title: typedListing.title ?? `Family in ${typedListing.city}`,
+            description:
+              typedListing.family_story?.slice(0, 300) ??
+              `Stay with a verified host family in ${typedListing.city}, ${typedListing.country}.`,
+            city: typedListing.city,
+            country: typedListing.country,
+            image:
+              (photos as ListingPhoto[] | null)?.find((photo) => photo.is_cover)?.file_url ??
+              (photos as ListingPhoto[] | null)?.[0]?.file_url ??
+              null,
+            price: typedListing.budget_per_night,
+            priceCurrency: typedListing.pricing_currency ?? "USD",
+            ratingValue: hostAvgRating,
+            reviewCount: hostReviewCount,
+          })}
+        />
+      )}
       {isOwnListing && (
         <div className="bg-forest text-white text-sm text-center py-2.5 px-4">
           Previewing your listing as travelers see it.{" "}

@@ -13,11 +13,7 @@ export function formatTravelStyle(value: string | null | undefined): string | nu
 
 export type TravelerOnboardingForHost = Pick<
   TravelerProfile,
-  | "interests"
-  | "travel_style"
-  | "dietary_preferences"
-  | "accessibility_needs"
-  | "stay_motivation"
+  "interests" | "travel_style" | "dietary_preferences" | "accessibility_needs"
 >;
 
 export function hasTravelerOnboardingDetails(
@@ -28,7 +24,6 @@ export function hasTravelerOnboardingDetails(
     (profile.interests?.length ?? 0) > 0 ||
       profile.travel_style?.trim() ||
       (profile.dietary_preferences?.length ?? 0) > 0 ||
-      profile.accessibility_needs?.trim() ||
-      profile.stay_motivation?.trim()
+      profile.accessibility_needs?.trim()
   );
 }

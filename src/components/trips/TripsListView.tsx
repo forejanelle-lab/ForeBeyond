@@ -4,14 +4,16 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Download, Search } from "lucide-react";
 import { TripListCard } from "@/components/trips/TripListCard";
+import { useCurrency } from "@/components/i18n/CurrencyProvider";
+import { resolveListingPricingCurrency, type SupportedCurrencyCode } from "@/lib/currency";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { PublicListing, StayBooking, Trip } from "@/types/database";
 
 type TripRow = Trip & {
-  listing: Pick<PublicListing, "id" | "title" | "city" | "country"> | null;
-  booking: Pick<StayBooking, "total_amount" | "payment_status"> | null;
+  listing: Pick<PublicListing, "id" | "title" | "city" | "country" | "pricing_currency"> | null;
+  booking: Pick<StayBooking, "total_amount" | "payment_status" | "stripe_payment_intent_id"> | null;
   coverPhotoUrl: string | null;
 };
 
@@ -19,8 +21,17 @@ interface TripsListViewProps {
   trips: TripRow[];
 }
 
-function downloadInvoice(trip: TripRow) {
+function downloadInvoice(
+  trip: TripRow,
+  formatAmount: (
+    amount: number | null | undefined,
+    sourceCurrency?: SupportedCurrencyCode
+  ) => string
+) {
   const bookingRef = trip.stay_request_id?.slice(0, 8).toUpperCase() ?? trip.id.slice(0, 8).toUpperCase();
+  const sourceCurrency = trip.listing
+    ? resolveListingPricingCurrency(trip.listing)
+    : "USD";
   const lines = [
     "FORE BEYOND — TRIP INVOICE",
     "",
@@ -30,11 +41,12 @@ function downloadInvoice(trip: TripRow) {
     `Location: ${[trip.listing?.city, trip.listing?.country].filter(Boolean).join(", ") || "N/A"}`,
     `Dates: ${trip.start_date} to ${trip.end_date}`,
     `Status: ${trip.status}`,
-    trip.booking ? `Stay total (host): $${trip.booking.total_amount}` : "",
-    trip.booking?.payment_status === "paid" ? "Service fee: paid at confirmation" : "",
+    trip.booking
+      ? `Stay total: ${formatAmount(trip.booking.total_amount, sourceCurrency)}`
+      : "",
+    trip.booking?.stripe_payment_intent_id ? "Service fee: paid at confirmation" : "",
     "",
     "Stay payment is coordinated directly between traveler and host.",
-    "Fore Beyond service fee is charged when the traveler confirms the stay.",
   ].filter(Boolean);
 
   const blob = new Blob([lines.join("\n")], { type: "text/plain" });
@@ -49,6 +61,7 @@ function downloadInvoice(trip: TripRow) {
 export function TripsListView({ trips }: TripsListViewProps) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"date-desc" | "date-asc" | "status">("date-desc");
+  const { formatAmount } = useCurrency();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -122,7 +135,7 @@ export function TripsListView({ trips }: TripsListViewProps) {
             />
             {trip.status === "completed" && (
               <div className="flex justify-end pr-1">
-                <Button variant="outline" size="sm" onClick={() => downloadInvoice(trip)}>
+                <Button variant="outline" size="sm" onClick={() => downloadInvoice(trip, formatAmount)}>
                   <Download className="h-4 w-4" />
                   Download invoice
                 </Button>

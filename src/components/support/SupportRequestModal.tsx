@@ -1,6 +1,7 @@
 "use client";
 
 import { ContactModal } from "@/components/support/ContactModal";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 interface SupportRequestModalProps {
   open: boolean;
@@ -11,11 +12,13 @@ interface SupportRequestModalProps {
 }
 
 export function SupportRequestModal(props: SupportRequestModalProps) {
+  const t = useTranslations();
+
   return (
     <ContactModal
       {...props}
-      title="Help & Support"
-      description="Tell us what you need. Our team will review your message and get back to you."
+      title={t("contact.supportTitle")}
+      description={t("contact.supportDescription")}
     />
   );
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 interface BecomeHostButtonProps {
   isLoggedIn: boolean;
@@ -13,6 +14,7 @@ interface BecomeHostButtonProps {
 
 export function BecomeHostButton({ isLoggedIn, className = "" }: BecomeHostButtonProps) {
   const router = useRouter();
+  const t = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleClick() {
@@ -36,7 +38,7 @@ export function BecomeHostButton({ isLoggedIn, className = "" }: BecomeHostButto
       onClick={handleClick}
       isLoading={isLoading}
     >
-      Become a Host
+      {t("home.becomeHost")}
       <ArrowRight className="h-4 w-4" />
     </Button>
   );

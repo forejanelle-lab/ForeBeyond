@@ -8,7 +8,7 @@ import { ApprovedStayLinks } from "@/components/stays/HostRequestActions";
 import { HostContactDetailsCard } from "@/components/listings/HostContactDetailsCard";
 import { StayRequestStatusBadge } from "@/components/stays/StayRequestStatusBadge";
 import { canTravelerModifyStayDates } from "@/lib/stay-request-dates";
-import { getStayBlockedDates } from "@/lib/stay-availability";
+import { getActiveListingStays, getStayBlockedDates } from "@/lib/stay-availability";
 import { formatMessagingDisplayName } from "@/lib/messaging";
 import { formatDateRange, LISTING_PRICING_SELECT, pickListingPricing, type ListingPricing } from "@/lib/stay-requests";
 import { Badge } from "@/components/ui/Badge";
@@ -81,9 +81,12 @@ export default async function TravelerRequestDetailPage({
   const contactData = listingContact as Pick<ListingContactDetails, "contact_email" | "contact_address"> | null;
   const showHostContact =
     typedRequest.status === "approved" || typedRequest.status === "completed";
-  const blockedDateRanges = typedRequest.listing_id
-    ? await getStayBlockedDates(supabase, typedRequest.listing_id, typedRequest.id)
-    : [];
+  const [blockedDateRanges, existingStays] = typedRequest.listing_id
+    ? await Promise.all([
+        getStayBlockedDates(supabase, typedRequest.listing_id, typedRequest.id),
+        getActiveListingStays(supabase, typedRequest.listing_id, typedRequest.id),
+      ])
+    : [[], []];
 
   return (
     <Container size="md" className="py-10 md:py-16">
@@ -131,6 +134,7 @@ export default async function TravelerRequestDetailPage({
             <TravelerModifyStayDates
               request={typedRequest}
               blockedDateRanges={blockedDateRanges}
+              existingStays={existingStays}
             />
           )}
           {typedRequest.status === "host_approved" && (
@@ -138,6 +142,9 @@ export default async function TravelerRequestDetailPage({
               request={typedRequest}
               listingPricing={listingPricing}
               hostName={hostDisplayName}
+              hostCountry={listingData?.country ?? null}
+              customerEmail={user.email ?? null}
+              customerName={user.user_metadata?.full_name ?? user.user_metadata?.fullName ?? null}
             />
           )}
           {typedRequest.status === "approved" && (
@@ -151,8 +158,8 @@ export default async function TravelerRequestDetailPage({
           {typedRequest.status === "pending" && (
             <Card variant="outline" padding="md">
               <p className="text-sm text-charcoal-light">
-                Waiting for {hostDisplayName} to review your request. Once they approve, you&apos;ll confirm
-                the final stay and service fee.
+                Waiting for {hostDisplayName} to review your request. Once they approve, you&apos;ll
+                pay the service fee to confirm and coordinate the remaining balance with your host.
               </p>
             </Card>
           )}

@@ -1,5 +1,12 @@
 import { sampleImages } from "@/lib/sample-images";
 import { PageHero } from "@/components/design/PageHero";
+import { privatePageMetadata } from "@/lib/site-metadata";
+
+export const metadata = privatePageMetadata({
+  title: "Settings",
+  description: "Manage your Fore Beyond account settings.",
+  path: "/settings",
+});
 
 export default function SettingsLayout({
   children,

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { formatCurrency, formatBookingReference, formatDateRange, STAY_REQUEST_STATUS_LABELS } from "@/lib/stay-requests";
+import { ListingMoneyOrDash } from "@/components/i18n/Money";
+import { formatBookingReference, formatDateRange, STAY_REQUEST_STATUS_LABELS, type ListingPricing } from "@/lib/stay-requests";
 import { Badge } from "@/components/ui/Badge";
 import type { StayRequest } from "@/types/database";
 
@@ -9,6 +10,7 @@ interface StayRequestListCardProps {
   travelerName: string;
   guestProfileHref?: string;
   listingTitle: string;
+  listingPricing: ListingPricing;
   incomeTotal: number | null;
   href: string;
 }
@@ -18,6 +20,7 @@ export function StayRequestTableRow({
   travelerName,
   guestProfileHref,
   listingTitle,
+  listingPricing,
   incomeTotal,
   href,
 }: StayRequestListCardProps) {
@@ -59,7 +62,7 @@ export function StayRequestTableRow({
       </td>
       <td className="px-4 py-4 align-middle text-right">
         <Link href={href} className="block text-sm font-bold text-forest tabular-nums whitespace-nowrap">
-          {incomeTotal != null && incomeTotal > 0 ? formatCurrency(incomeTotal) : "—"}
+          <ListingMoneyOrDash amount={incomeTotal} listing={listingPricing} />
         </Link>
       </td>
       <td className="px-4 py-4 align-middle">
@@ -79,6 +82,7 @@ export function StayRequestListCard({
   travelerName,
   guestProfileHref,
   listingTitle,
+  listingPricing,
   incomeTotal,
   href,
 }: StayRequestListCardProps) {
@@ -124,7 +128,7 @@ export function StayRequestListCard({
             Value
           </p>
           <p className="text-sm font-bold text-forest tabular-nums">
-            {incomeTotal != null && incomeTotal > 0 ? formatCurrency(incomeTotal) : "—"}
+            <ListingMoneyOrDash amount={incomeTotal} listing={listingPricing} />
           </p>
         </div>
 

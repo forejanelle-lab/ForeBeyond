@@ -1,0 +1,36 @@
+export const DEFAULT_LANGUAGE = "en";
+
+export const SUPPORTED_LANGUAGES = [
+  { value: "en", label: "English", nativeLabel: "English", shortLabel: "EN" },
+  { value: "es", label: "Spanish", nativeLabel: "Español", shortLabel: "ES" },
+  { value: "fr", label: "French", nativeLabel: "Français", shortLabel: "FR" },
+  { value: "de", label: "German", nativeLabel: "Deutsch", shortLabel: "DE" },
+  { value: "it", label: "Italian", nativeLabel: "Italiano", shortLabel: "IT" },
+  { value: "pt", label: "Portuguese", nativeLabel: "Português", shortLabel: "PT" },
+  { value: "ja", label: "Japanese", nativeLabel: "日本語", shortLabel: "JA" },
+] as const;
+
+export type SupportedLanguageCode = (typeof SUPPORTED_LANGUAGES)[number]["value"];
+
+export function normalizeLanguageCode(code: string | null | undefined): SupportedLanguageCode {
+  const base = (code?.trim().toLowerCase().split("-")[0] || DEFAULT_LANGUAGE) as SupportedLanguageCode;
+  if (SUPPORTED_LANGUAGES.some((lang) => lang.value === base)) {
+    return base;
+  }
+  return DEFAULT_LANGUAGE;
+}
+
+export function getLanguageLabel(code: string): string {
+  const base = normalizeLanguageCode(code);
+  return SUPPORTED_LANGUAGES.find((lang) => lang.value === base)?.label ?? "English";
+}
+
+export function getLanguageNativeLabel(code: string): string {
+  const base = normalizeLanguageCode(code);
+  return SUPPORTED_LANGUAGES.find((lang) => lang.value === base)?.nativeLabel ?? "English";
+}
+
+export function getLanguageShortLabel(code: string): string {
+  const base = normalizeLanguageCode(code);
+  return SUPPORTED_LANGUAGES.find((lang) => lang.value === base)?.shortLabel ?? "EN";
+}

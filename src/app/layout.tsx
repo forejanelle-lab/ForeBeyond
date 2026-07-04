@@ -6,7 +6,10 @@ import { Analytics } from "@vercel/analytics/next";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { SupabaseConfigNotice } from "@/components/layout/SupabaseConfigNotice";
+import { AppProviders } from "@/components/layout/AppProviders";
 import { isPlatformAdmin } from "@/lib/navigation-menu";
+import { getExchangeRates } from "@/lib/exchange-rates";
+import { getServerTranslations } from "@/lib/i18n/server";
 import { rootMetadata } from "@/lib/site-metadata";
 import type { UserRole } from "@/types/database";
 import "./globals.css";
@@ -31,7 +34,7 @@ async function loadNavUser() {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role, is_admin, avatar_url, full_name")
+      .select("role, is_admin, avatar_url, full_name, default_currency")
       .eq("id", user.id)
       .single();
 
@@ -47,6 +50,7 @@ async function loadNavUser() {
       isAdmin,
       avatarUrl: profileError ? null : profile?.avatar_url ?? null,
       fullName: profileError ? null : profile?.full_name ?? null,
+      defaultCurrency: profileError ? "USD" : profile?.default_currency ?? "USD",
     };
   } catch (error) {
     console.error("Layout nav user load failed:", error);
@@ -69,15 +73,26 @@ export default async function RootLayout({
     );
   }
 
-  const navUser = await loadNavUser();
+  const [navUser, { rates: initialExchangeRates }] = await Promise.all([
+    loadNavUser(),
+    getExchangeRates(),
+  ]);
+  const { locale, messages } = await getServerTranslations();
 
   return (
     <html lang="en" className={inter.variable}>
       <body className={`${inter.className} min-h-screen flex flex-col antialiased bg-cream text-charcoal`}>
-        <Navigation user={navUser} />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <CookieConsent />
+        <AppProviders
+          locale={locale}
+          messages={messages}
+          initialCurrency={navUser?.defaultCurrency}
+          initialExchangeRates={initialExchangeRates}
+        >
+          <Navigation user={navUser} />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <CookieConsent />
+        </AppProviders>
         <Analytics />
       </body>
     </html>

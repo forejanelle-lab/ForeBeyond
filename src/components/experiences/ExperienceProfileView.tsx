@@ -3,9 +3,9 @@ import { Clock, Globe, MapPin, Shield, Users } from "lucide-react";
 import { ListingTrustPanel } from "@/components/listings/ListingTrustPanel";
 import { BookExperienceForm } from "@/components/experiences/BookExperienceForm";
 import { SaveExperienceButton } from "@/components/experiences/SaveExperienceButton";
+import { DisplayExperiencePrice } from "@/components/i18n/DisplayMoney";
 import {
   formatDuration,
-  formatPrice,
   getCategoryLabel,
   getExperienceHeroImage,
 } from "@/lib/experiences";
@@ -68,7 +68,9 @@ export function ExperienceProfileView({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
           <div className="lg:col-span-2 space-y-8">
             <div className="flex flex-wrap gap-3">
-              <Badge variant="outline">{formatPrice(experience.price_per_person)}</Badge>
+              <Badge variant="outline">
+                <DisplayExperiencePrice priceUsd={experience.price_per_person} />
+              </Badge>
               <Badge variant="outline">
                 <Clock className="h-3 w-3" />
                 {formatDuration(experience.duration_minutes)}

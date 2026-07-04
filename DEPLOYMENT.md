@@ -46,6 +46,20 @@ If Site URL is still `localhost`, verification emails will redirect to `localhos
 
 In Vercel, set `NEXT_PUBLIC_APP_URL` to the same production URL (see [ENVIRONMENT.md](./ENVIRONMENT.md)).
 
+### Auth verification email (Resend SMTP)
+
+Default Supabase email only sends to project team members and is not suitable for production. Configure branded verification emails from `hello@forebeyond.com`:
+
+1. Verify `forebeyond.com` in Resend
+2. Set `RESEND_API_KEY` in your shell or `.env.local`
+3. Run:
+
+```bash
+npm run supabase:auth-email
+```
+
+This enables Resend SMTP, branded templates, and required email confirmation on your Supabase project.
+
 ## 2. Deploy to Vercel
 
 ### Option A — Vercel Dashboard

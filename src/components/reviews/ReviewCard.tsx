@@ -1,3 +1,4 @@
+import { TranslatableText } from "@/components/i18n/TranslatableText";
 import { StarRating } from "@/components/reviews/StarRating";
 import { Badge } from "@/components/ui/Badge";
 import { REVIEW_MODERATION_LABELS } from "@/lib/reviews";
@@ -34,7 +35,10 @@ export function ReviewCard({
         )}
       </div>
       {review.comment && (
-        <p className="text-sm text-charcoal-light leading-relaxed">{review.comment}</p>
+        <TranslatableText
+          text={review.comment}
+          className="text-sm text-charcoal-light leading-relaxed"
+        />
       )}
       <time className="block text-xs text-charcoal-light/70 mt-2" dateTime={review.created_at}>
         {new Date(review.created_at).toLocaleDateString("en-US", {

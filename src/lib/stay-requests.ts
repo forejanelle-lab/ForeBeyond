@@ -8,18 +8,24 @@ export interface ListingPricing {
   budget_per_night_4_guests: number | null;
   budget_per_night_5_guests: number | null;
   budget_per_night_6_plus_guests: number | null;
+  pricing_currency?: string | null;
+  country?: string | null;
 }
 
 export const LISTING_PRICING_SELECT =
-  "budget_per_night, budget_per_night_3_guests, budget_per_night_4_guests, budget_per_night_5_guests, budget_per_night_6_plus_guests";
+  "budget_per_night, budget_per_night_3_guests, budget_per_night_4_guests, budget_per_night_5_guests, budget_per_night_6_plus_guests, pricing_currency, country";
 
-export function pickListingPricing(listing: Partial<ListingPricing>): ListingPricing {
+export function pickListingPricing(
+  listing: Partial<ListingPricing> & { country?: string | null; pricing_currency?: string | null }
+): ListingPricing {
   return {
     budget_per_night: listing.budget_per_night ?? null,
     budget_per_night_3_guests: listing.budget_per_night_3_guests ?? null,
     budget_per_night_4_guests: listing.budget_per_night_4_guests ?? null,
     budget_per_night_5_guests: listing.budget_per_night_5_guests ?? null,
     budget_per_night_6_plus_guests: listing.budget_per_night_6_plus_guests ?? null,
+    pricing_currency: listing.pricing_currency ?? null,
+    country: listing.country ?? null,
   };
 }
 
@@ -102,8 +108,8 @@ export const PAYMENT_STATUS_LABELS: Record<
   BookingPaymentStatus,
   { label: string; variant: "outline" | "success" | "warning" | "default" }
 > = {
-  pending: { label: "Payment Pending", variant: "warning" },
-  paid: { label: "Service fee paid", variant: "success" },
+  pending: { label: "Host payment pending", variant: "warning" },
+  paid: { label: "Paid to host", variant: "success" },
   failed: { label: "Payment Failed", variant: "default" },
   refunded: { label: "Refunded", variant: "outline" },
 };
@@ -144,6 +150,13 @@ export function calculateServiceFee(staySubtotal: number | null) {
   return Math.round(staySubtotal * SERVICE_FEE_RATE * 100) / 100;
 }
 
+/** Amount the guest pays the host after the service fee is paid at confirmation */
+export function calculateHostBalance(staySubtotal: number | null) {
+  if (staySubtotal == null) return null;
+  const serviceFee = calculateServiceFee(staySubtotal) ?? 0;
+  return Math.round((staySubtotal - serviceFee) * 100) / 100;
+}
+
 export function calculateStayWithServiceFee(
   pricing: ListingPricing,
   startDate: string,
@@ -155,11 +168,13 @@ export function calculateStayWithServiceFee(
   const subtotal = calculateStayTotal(pricing, startDate, endDate, guestCount);
   if (subtotal == null) return null;
   const serviceFee = calculateServiceFee(subtotal);
+  const hostBalance = calculateHostBalance(subtotal);
   return {
     nights,
     guestCount: guests,
     subtotal,
     serviceFee,
+    hostBalance,
     rateLabel: formatStayRateLabel(pricing, guestCount),
     effectiveNightlyTotal: calculateEffectiveNightlyTotal(pricing, guestCount),
     dueAtConfirmation: serviceFee,
@@ -250,6 +265,11 @@ export function isLikelyImageUrl(url: string): boolean {
 export function formatCurrency(amount: number | null | undefined) {
   if (amount == null) return "Price on request";
   return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Server-safe USD formatting; client components should prefer `useCurrency().formatUsd`. */
+export function formatCurrencyUsd(amount: number | null | undefined) {
+  return formatCurrency(amount);
 }
 
 export function missingPricingMessage(guestCount: number): string {

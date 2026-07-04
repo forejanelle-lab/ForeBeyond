@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import posthog from "posthog-js";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -17,7 +18,6 @@ export default function DeleteAccountPage() {
   const [reason, setReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [scheduled, setScheduled] = useState(false);
 
   async function handleDelete() {
     if (confirmText !== "DELETE") {
@@ -42,25 +42,13 @@ export default function DeleteAccountPage() {
       return;
     }
 
-    setScheduled(true);
-    setIsLoading(false);
+    posthog.capture("account_deletion_requested");
+    posthog.reset();
 
     const supabase = createClient();
     await supabase.auth.signOut();
-    setTimeout(() => router.push("/"), 3000);
-  }
-
-  if (scheduled) {
-    return (
-      <Container size="sm" className="py-16 md:py-24">
-        <Card variant="elevated" padding="lg" className="text-center">
-          <h1 className="text-2xl font-bold text-forest">Account deletion scheduled</h1>
-          <p className="mt-3 text-charcoal-light">
-            Your account will be permanently deleted in 7 days. You have been signed out.
-          </p>
-        </Card>
-      </Container>
-    );
+    router.refresh();
+    window.location.assign("/account-deletion-scheduled");
   }
 
   return (

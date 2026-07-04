@@ -51,6 +51,7 @@ function CheckEmailContent() {
 
         <p className="mt-6 text-xs text-charcoal-light">
           Didn&apos;t receive the email? Check spam, or resend to the same address below.
+          Look for a message from <span className="font-medium">hello@forebeyond.com</span>.
         </p>
         <ResendVerificationEmail
           email={email}

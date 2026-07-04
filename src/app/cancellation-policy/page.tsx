@@ -15,12 +15,18 @@ export default function CancellationPolicyPage() {
       <section className="space-y-4">
         <h2>Service fee</h2>
         <p>
-          {brand.name} only collects the Service Fee. Accommodation payment is made directly between
-          the traveler and the host.
+          {brand.name} collects a service fee when you confirm a stay. This fee is{" "}
+          <strong>12% of your stay total</strong> — it is included in the listed price, not charged
+          on top of it. For example, on a $100 stay you pay $12 to confirm and $88 directly to your
+          host.
+        </p>
+        <p>
+          Accommodation payment for the remaining balance is made directly between the traveler and
+          the host.
         </p>
         <p>
           The Service Fee is <strong>non-refundable</strong> once payment has been completed. This
-          fee covers identity verification, trust & safety, secure messaging, booking management,
+          fee covers identity verification, trust &amp; safety, secure messaging, booking management,
           customer support, and platform maintenance. These services begin immediately after payment.
         </p>
         <p>
@@ -31,9 +37,9 @@ export default function CancellationPolicyPage() {
       <section className="space-y-4">
         <h2>Accommodation payment</h2>
         <p>
-          Stay payment is coordinated directly between the traveler and the host. {brand.name} does
-          not process host payouts. Any refund of accommodation costs is at the discretion of the host
-          and subject to the arrangements you make with them.
+          The remaining balance after the service fee is coordinated directly between the traveler
+          and the host. {brand.name} does not process host payouts. Any refund of accommodation costs
+          is at the discretion of the host and subject to the arrangements you make with them.
         </p>
       </section>
 
@@ -41,7 +47,7 @@ export default function CancellationPolicyPage() {
         <h2>Cancellations by travelers</h2>
         <p>
           If you cancel a confirmed stay, the Service Fee is not refunded. Contact your host promptly
-          about any accommodation payment you have already made or scheduled.
+          about any remaining balance you have already paid or scheduled.
         </p>
       </section>
 
@@ -49,7 +55,7 @@ export default function CancellationPolicyPage() {
         <h2>Cancellations by hosts</h2>
         <p>
           If a host cancels a confirmed stay, the Service Fee is not refunded. The host is responsible
-          for resolving any accommodation payment with you directly.
+          for resolving any remaining accommodation payment with you directly.
         </p>
       </section>
 

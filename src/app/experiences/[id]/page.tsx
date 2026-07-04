@@ -8,6 +8,10 @@ import {
   fetchApprovedHostIdsForUser,
 } from "@/lib/experience-visibility";
 import { createPageMetadata } from "@/lib/site-metadata";
+import { getExperienceCoverPhotoUrl } from "@/lib/seo-cover-photos";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { buildExperienceJsonLd } from "@/lib/json-ld";
+import { formatAverageRating } from "@/lib/reviews";
 import type { ExperiencePhoto, PublicExperience, PublicReview, TrustBadge } from "@/types/database";
 
 export async function generateMetadata({
@@ -19,7 +23,7 @@ export async function generateMetadata({
   const supabase = await createClient();
   const { data } = await supabase
     .from("public_experiences")
-    .select("title, city, country, category")
+    .select("title, city, country, category, description, price_per_person, duration_minutes")
     .eq("id", id)
     .single();
 
@@ -28,14 +32,21 @@ export async function generateMetadata({
       title: "Experience Not Found",
       description: "This local experience could not be found on Fore Beyond.",
       path: `/experiences/${id}`,
+      noIndex: true,
     });
   }
 
   const title = data.title ?? `Experience in ${data.city}`;
+  const description =
+    data.description?.slice(0, 155) ??
+    `Join ${title} in ${data.city}, ${data.country}. Authentic local experiences on Fore Beyond.`;
+  const coverPhoto = await getExperienceCoverPhotoUrl(supabase, id);
+
   return createPageMetadata({
     title,
-    description: `Join ${title} in ${data.city}, ${data.country}. Authentic local experiences on Fore Beyond.`,
+    description,
     path: `/experiences/${id}`,
+    ...(coverPhoto ? { image: coverPhoto } : {}),
   });
 }
 
@@ -99,8 +110,31 @@ export default async function ExperienceDetailPage({
         : Promise.resolve({ data: null }),
     ]);
 
+  const experienceReviews = (reviews as PublicReview[] | null) ?? [];
+  const avgRating = formatAverageRating(experienceReviews);
+
   return (
     <>
+      <JsonLd
+        data={buildExperienceJsonLd({
+          id,
+          title: typedExperience.title ?? `Experience in ${typedExperience.city}`,
+          description:
+            typedExperience.description?.slice(0, 300) ??
+            `Join a local experience in ${typedExperience.city}, ${typedExperience.country}.`,
+          city: typedExperience.city,
+          country: typedExperience.country,
+          category: typedExperience.category,
+          image:
+            (photos as ExperiencePhoto[] | null)?.find((photo) => photo.is_cover)?.file_url ??
+            (photos as ExperiencePhoto[] | null)?.[0]?.file_url ??
+            null,
+          price: typedExperience.price_per_person,
+          durationMinutes: typedExperience.duration_minutes,
+          ratingValue: avgRating,
+          reviewCount: experienceReviews.length,
+        })}
+      />
       <TrackPageEvent
         event={AnalyticsEvents.EXPERIENCE_VIEW}
         data={{
@@ -113,7 +147,7 @@ export default async function ExperienceDetailPage({
       experience={typedExperience}
       photos={(photos as ExperiencePhoto[]) ?? []}
       badges={(badges as TrustBadge[]) ?? []}
-      reviews={(reviews as PublicReview[]) ?? []}
+      reviews={experienceReviews}
       isSaved={Boolean(savedResult.data)}
       profileBio={(profileResult.data as { bio: string | null } | null)?.bio ?? null}
     />

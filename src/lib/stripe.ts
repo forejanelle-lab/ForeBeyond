@@ -10,6 +10,10 @@ export function getStripePublishableKey(): string | null {
   return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? null;
 }
 
+export function getStripeWebhookSecret(): string | null {
+  return process.env.STRIPE_WEBHOOK_SECRET ?? null;
+}
+
 export function isStripeConfigured(): boolean {
   return Boolean(getStripeSecretKey() && getStripePublishableKey());
 }
