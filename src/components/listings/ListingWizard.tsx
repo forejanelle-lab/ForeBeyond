@@ -576,7 +576,7 @@ export function ListingWizard({
                 max="20"
                 value={maxCapacity}
                 onChange={(e) => setMaxCapacity(e.target.value)}
-                hint="Sets which guest-count pricing tiers apply to your listing"
+                hint="Only guest-count pricing tiers up to this number are shown below"
                 required
               />
               <Input
@@ -590,78 +590,55 @@ export function ListingWizard({
                 hint="Applies to 1–2 guests"
                 required
               />
-              <Input
-                label={`3 guests: nightly rate (${hostCurrency})`}
-                type="number"
-                min="0"
-                step={rateStep}
-                value={budget3Guests}
-                onChange={(e) => setBudget3Guests(e.target.value)}
-                placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "15000" : "120.00"}
-                disabled={!isListingPricingTierEnabled(parsedMaxCapacity, "3")}
-                hint={
-                  !isListingPricingTierEnabled(parsedMaxCapacity, "3")
-                    ? parsedMaxCapacity != null
-                      ? `Unavailable — your max capacity is ${parsedMaxCapacity} guest${parsedMaxCapacity === 1 ? "" : "s"}`
-                      : undefined
-                    : undefined
-                }
-                required={isListingPricingTierEnabled(parsedMaxCapacity, "3")}
-              />
-              <Input
-                label={`4 guests: nightly rate (${hostCurrency})`}
-                type="number"
-                min="0"
-                step={rateStep}
-                value={budget4Guests}
-                onChange={(e) => setBudget4Guests(e.target.value)}
-                placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "18000" : "150.00"}
-                disabled={!isListingPricingTierEnabled(parsedMaxCapacity, "4")}
-                hint={
-                  !isListingPricingTierEnabled(parsedMaxCapacity, "4")
-                    ? parsedMaxCapacity != null
-                      ? `Unavailable — your max capacity is ${parsedMaxCapacity} guest${parsedMaxCapacity === 1 ? "" : "s"}`
-                      : undefined
-                    : undefined
-                }
-                required={isListingPricingTierEnabled(parsedMaxCapacity, "4")}
-              />
-              <Input
-                label={`5 guests: nightly rate (${hostCurrency})`}
-                type="number"
-                min="0"
-                step={rateStep}
-                value={budget5Guests}
-                onChange={(e) => setBudget5Guests(e.target.value)}
-                placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "20000" : "175.00"}
-                disabled={!isListingPricingTierEnabled(parsedMaxCapacity, "5")}
-                hint={
-                  !isListingPricingTierEnabled(parsedMaxCapacity, "5")
-                    ? parsedMaxCapacity != null
-                      ? `Unavailable — your max capacity is ${parsedMaxCapacity} guest${parsedMaxCapacity === 1 ? "" : "s"}`
-                      : undefined
-                    : undefined
-                }
-                required={isListingPricingTierEnabled(parsedMaxCapacity, "5")}
-              />
-              <Input
-                label={`6+ guests: nightly rate (${hostCurrency})`}
-                type="number"
-                min="0"
-                step={rateStep}
-                value={budget6PlusGuests}
-                onChange={(e) => setBudget6PlusGuests(e.target.value)}
-                placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "24000" : "200.00"}
-                disabled={!isListingPricingTierEnabled(parsedMaxCapacity, "6_plus")}
-                hint={
-                  !isListingPricingTierEnabled(parsedMaxCapacity, "6_plus")
-                    ? parsedMaxCapacity != null
-                      ? `Unavailable — your max capacity is ${parsedMaxCapacity} guest${parsedMaxCapacity === 1 ? "" : "s"}`
-                      : "Applies to groups of 6 or more guests"
-                    : "Applies to groups of 6 or more guests"
-                }
-                required={isListingPricingTierEnabled(parsedMaxCapacity, "6_plus")}
-              />
+              {isListingPricingTierEnabled(parsedMaxCapacity, "3") && (
+                <Input
+                  label={`3 guests: nightly rate (${hostCurrency})`}
+                  type="number"
+                  min="0"
+                  step={rateStep}
+                  value={budget3Guests}
+                  onChange={(e) => setBudget3Guests(e.target.value)}
+                  placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "15000" : "120.00"}
+                  required
+                />
+              )}
+              {isListingPricingTierEnabled(parsedMaxCapacity, "4") && (
+                <Input
+                  label={`4 guests: nightly rate (${hostCurrency})`}
+                  type="number"
+                  min="0"
+                  step={rateStep}
+                  value={budget4Guests}
+                  onChange={(e) => setBudget4Guests(e.target.value)}
+                  placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "18000" : "150.00"}
+                  required
+                />
+              )}
+              {isListingPricingTierEnabled(parsedMaxCapacity, "5") && (
+                <Input
+                  label={`5 guests: nightly rate (${hostCurrency})`}
+                  type="number"
+                  min="0"
+                  step={rateStep}
+                  value={budget5Guests}
+                  onChange={(e) => setBudget5Guests(e.target.value)}
+                  placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "20000" : "175.00"}
+                  required
+                />
+              )}
+              {isListingPricingTierEnabled(parsedMaxCapacity, "6_plus") && (
+                <Input
+                  label={`6+ guests: nightly rate (${hostCurrency})`}
+                  type="number"
+                  min="0"
+                  step={rateStep}
+                  value={budget6PlusGuests}
+                  onChange={(e) => setBudget6PlusGuests(e.target.value)}
+                  placeholder={hostCurrency === "JPY" || hostCurrency === "KRW" ? "24000" : "200.00"}
+                  hint="Applies to groups of 6 or more guests"
+                  required
+                />
+              )}
             </div>
           </div>
         )}
