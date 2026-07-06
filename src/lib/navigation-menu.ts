@@ -14,7 +14,7 @@ export function getTravelerNav(): NavItem[] {
     { label: "Experiences", href: "/experiences" },
     { label: "Saved", href: "/saved" },
     { label: "Messages", href: "/messages" },
-    { label: "Trust Center", href: "/trust-center/dashboard" },
+    { label: "Trust Center", href: "/trust-center" },
   ];
 }
 
@@ -24,7 +24,7 @@ export function getHostNav(): NavItem[] {
     { label: "My Listings", href: "/host/listings" },
     { label: "Experiences", href: "/host/experiences" },
     { label: "Messages", href: "/messages" },
-    { label: "Trust Center", href: "/trust-center/dashboard" },
+    { label: "Trust Center", href: "/trust-center" },
   ];
 }
 

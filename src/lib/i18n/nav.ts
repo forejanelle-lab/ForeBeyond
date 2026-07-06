@@ -18,7 +18,7 @@ export function getTranslatedTravelerNav(t: Translator): NavItem[] {
     { label: t("nav.experiences"), href: "/experiences" },
     { label: t("nav.saved"), href: "/saved" },
     { label: t("nav.messages"), href: "/messages" },
-    { label: t("nav.trustCenter"), href: "/trust-center/dashboard" },
+    { label: t("nav.trustCenter"), href: "/trust-center" },
   ];
 }
 
@@ -28,7 +28,7 @@ export function getTranslatedHostNav(t: Translator): NavItem[] {
     { label: t("nav.myListings"), href: "/host/listings" },
     { label: t("nav.experiences"), href: "/host/experiences" },
     { label: t("nav.messages"), href: "/messages" },
-    { label: t("nav.trustCenter"), href: "/trust-center/dashboard" },
+    { label: t("nav.trustCenter"), href: "/trust-center" },
   ];
 }
 

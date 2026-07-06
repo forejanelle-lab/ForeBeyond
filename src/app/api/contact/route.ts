@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { sendContactEmail } from "@/lib/send-contact-email";
 import { createClient } from "@/lib/supabase/server";
+import { PARTNERSHIP_EMAIL } from "@/lib/email-config";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
     message?: string;
     name?: string;
     email?: string;
+    inbox?: "default" | "partnership";
   };
 
   const message = body.message?.trim() ?? "";
@@ -62,6 +64,8 @@ export async function POST(request: Request) {
     fromName: userFullName,
     fromEmail: userEmail,
     message,
+    to: body.inbox === "partnership" ? PARTNERSHIP_EMAIL : undefined,
+    subjectPrefix: body.inbox === "partnership" ? "Partnership inquiry" : undefined,
   });
 
   if (!emailResult.sent) {

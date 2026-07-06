@@ -53,7 +53,7 @@ export async function updateSession(request: NextRequest) {
 
   const authRoutes = ["/auth/sign-in", "/auth/sign-up", "/auth/check-email", "/auth/verify-email", "/auth/resend-verification", "/auth/forgot-password", "/auth/reset-password"];
   const authRoutesAllowedWhenLoggedIn = ["/auth/forgot-password", "/auth/reset-password"];
-  const protectedRoutes = ["/dashboard", "/verification-center", "/profile", "/settings", "/trust-center/dashboard", "/host", "/saved", "/experiences/saved", "/trips", "/messages", "/notifications", "/admin", "/onboarding"];
+  const protectedRoutes = ["/dashboard", "/profile", "/settings", "/trust-center/dashboard", "/host", "/saved", "/experiences/saved", "/trips", "/messages", "/notifications", "/admin", "/onboarding"];
 
   if (pathname === "/auth/callback") {
     return supabaseResponse;
@@ -61,6 +61,17 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+
+  if (pathname === "/trust-center" || pathname === "/trust-center/") {
+    return supabaseResponse;
+  }
+
+  if (!user && pathname.startsWith("/trust-center/dashboard")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/trust-center";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();

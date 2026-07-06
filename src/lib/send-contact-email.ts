@@ -6,6 +6,7 @@ interface SendContactEmailInput {
   fromEmail: string;
   message: string;
   to?: string;
+  subjectPrefix?: string;
 }
 
 export async function sendContactEmail(
@@ -34,7 +35,7 @@ export async function sendContactEmail(
       from,
       to,
       reply_to: senderEmail,
-      subject: `Fore Beyond contact from ${senderName}`,
+      subject: `${input.subjectPrefix ? `${input.subjectPrefix} — ` : "Fore Beyond contact from "}${senderName}`,
       html: `
         <p><strong>From:</strong> ${senderName} &lt;${senderEmail}&gt;</p>
         <p><strong>Message:</strong></p>

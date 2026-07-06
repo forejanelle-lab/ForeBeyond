@@ -49,6 +49,8 @@ export function Footer() {
 
   const companyLinks = [
     { label: t("nav.about"), href: "/#mission" },
+    { label: "Become a host in Japan", href: "/become-a-host-japan" },
+    { label: "Language school partnerships", href: "/partner-language-schools-japan" },
     { label: t("footer.verificationCenter"), href: "/verification-center" },
     { label: t("nav.contact"), href: "mailto:hello@forebeyond.com" },
   ];

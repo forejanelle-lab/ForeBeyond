@@ -1,10 +1,10 @@
 import { sampleImages } from "@/lib/sample-images";
 import { PageHero } from "@/components/design/PageHero";
-import { privatePageMetadata } from "@/lib/site-metadata";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata = privatePageMetadata({
+export const metadata = createPageMetadata({
   title: "Verification Center",
-  description: "Complete identity and trust verifications on Fore Beyond.",
+  description: "Learn how Fore Beyond verifies hosts and travelers, and complete identity verification to build trust.",
   path: "/verification-center",
 });
 

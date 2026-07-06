@@ -142,9 +142,15 @@ export default async function TrustCenterPage() {
               Complete your verification to unlock the full {brand.name} experience.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-              <ButtonLink href="/trust-center/dashboard" variant="primary" size="lg">
-                Open Trust Dashboard
-              </ButtonLink>
+              {user ? (
+                <ButtonLink href="/trust-center/dashboard" variant="primary" size="lg">
+                  Open Trust Dashboard
+                </ButtonLink>
+              ) : (
+                <ButtonLink href="/auth/sign-in?redirect=%2Ftrust-center%2Fdashboard" variant="primary" size="lg">
+                  Sign in to Trust Dashboard
+                </ButtonLink>
+              )}
               <ButtonLink href="/verification-center" variant="gold" size="lg">
                 Go to Verification Center
               </ButtonLink>

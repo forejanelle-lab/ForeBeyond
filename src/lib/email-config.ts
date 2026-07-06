@@ -2,6 +2,8 @@
 
 export const BUSINESS_EMAIL = "hello@forebeyond.com";
 
+export const PARTNERSHIP_EMAIL = "info@forebeyond.com";
+
 export const EMAIL_SENDER_NAME = "Fore Beyond";
 
 export const DEFAULT_FROM_EMAIL = `${EMAIL_SENDER_NAME} <${BUSINESS_EMAIL}>`;

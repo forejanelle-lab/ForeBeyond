@@ -2,8 +2,8 @@ import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 
 interface PageHeroProps {
-  image: string;
-  imageAlt: string;
+  image?: string;
+  imageAlt?: string;
   title: string;
   subtitle?: string;
   eyebrow?: string;
@@ -11,6 +11,7 @@ interface PageHeroProps {
   height?: "md" | "lg" | "xl";
   align?: "left" | "center";
   priority?: boolean;
+  variant?: "image" | "solid";
 }
 
 const heights = {
@@ -21,7 +22,7 @@ const heights = {
 
 export function PageHero({
   image,
-  imageAlt,
+  imageAlt = "",
   title,
   subtitle,
   eyebrow,
@@ -29,18 +30,25 @@ export function PageHero({
   height = "lg",
   align = "left",
   priority = false,
+  variant = "image",
 }: PageHeroProps) {
+  const useSolid = variant === "solid" || !image;
+
   return (
-    <section className={`relative overflow-hidden ${heights[height]}`}>
-      <Image
-        src={image}
-        alt={imageAlt}
-        fill
-        className="object-cover"
-        priority={priority}
-        sizes="100vw"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
+    <section className={`relative overflow-hidden ${heights[height]} ${useSolid ? "bg-forest" : ""}`}>
+      {!useSolid && image && (
+        <Image
+          src={image}
+          alt={imageAlt}
+          fill
+          className="object-cover"
+          priority={priority}
+          sizes="100vw"
+        />
+      )}
+      {!useSolid && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
+      )}
       <Container className="relative h-full flex flex-col justify-end pb-10 md:pb-14">
         <div
           className={`max-w-3xl ${align === "center" ? "mx-auto text-center" : ""}`}

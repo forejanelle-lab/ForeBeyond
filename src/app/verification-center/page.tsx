@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Shield,
   Camera,
@@ -24,6 +23,7 @@ import {
 } from "@/lib/traveler-verification";
 import { getHostListingId, hostListingManagePath } from "@/lib/host-listing-limit";
 import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -96,7 +96,6 @@ const statusConfig: Record<
 };
 
 export default function VerificationCenterPage() {
-  const router = useRouter();
   const [documents, setDocuments] = useState<Record<string, VerificationStatus>>({});
   const [overallStatus, setOverallStatus] = useState<VerificationStatus>("unverified");
   const [phone, setPhone] = useState("");
@@ -109,14 +108,15 @@ export default function VerificationCenterPage() {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [requiresSignIn, setRequiresSignIn] = useState(false);
 
   async function loadStatus() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
+      setRequiresSignIn(true);
       setIsLoading(false);
-      router.push("/auth/sign-in?redirect=/verification-center");
       return;
     }
 
@@ -262,6 +262,73 @@ export default function VerificationCenterPage() {
       <div className="flex justify-center py-20">
         <span className="h-8 w-8 animate-spin rounded-full border-2 border-forest border-t-transparent" />
       </div>
+    );
+  }
+
+  if (requiresSignIn) {
+    return (
+      <PageShell
+        title="Verification Checklist"
+        subtitle="Sign in to submit documents, track your status, and build your trust score."
+      >
+        <Card variant="elevated" padding="lg" className="mb-8 max-w-2xl">
+          <p className="text-sm text-charcoal-light leading-relaxed">
+            Fore Beyond verifies hosts and travelers before placements. Review the steps below,
+            then sign in or create a free account to complete verification.
+          </p>
+          <div className="mt-5 flex flex-col sm:flex-row gap-3">
+            <ButtonLink
+              href="/auth/sign-up?redirect=%2Fverification-center"
+              variant="primary"
+              size="md"
+            >
+              Create account
+            </ButtonLink>
+            <ButtonLink
+              href="/auth/sign-in?redirect=%2Fverification-center"
+              variant="outline"
+              size="md"
+            >
+              Sign in
+            </ButtonLink>
+          </div>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            {verificationSteps.map((step) => (
+              <Card key={step.type} variant="outline" padding="md">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sage/60 text-forest">
+                    <step.icon className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-forest">{step.title}</h3>
+                      {step.required && <Badge variant="outline">Required</Badge>}
+                      {step.points > 0 && <Badge variant="gold">+{step.points} pts</Badge>}
+                    </div>
+                    <p className="mt-1 text-sm text-charcoal-light">{step.description}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <Card variant="outline" padding="md" className="space-y-3">
+              <p className="text-sm font-medium text-forest">Why verify?</p>
+              <p className="text-sm text-charcoal-light leading-relaxed">
+                Verification helps hosts and travelers trust each other. Complete your checklist
+                after signing in to unlock hosting, stay requests, and a higher trust score.
+              </p>
+            </Card>
+            <Link href="/trust-center" className="block text-center text-sm text-forest hover:underline">
+              Learn about trust & safety →
+            </Link>
+          </div>
+        </div>
+      </PageShell>
     );
   }
 

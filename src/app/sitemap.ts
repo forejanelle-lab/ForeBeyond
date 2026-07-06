@@ -4,6 +4,7 @@ import { absoluteUrl } from "@/lib/site-metadata";
 import { getDestinationCountries } from "@/lib/seo/destination-catalog";
 import { GUIDE_ARTICLES } from "@/lib/seo/guides-catalog";
 import { TRAVELER_STORIES } from "@/lib/seo/stories-catalog";
+import { JAPAN_HOST_SEO_PAGES } from "@/lib/seo/japan-host-catalog";
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: absoluteUrl("/"), changeFrequency: "weekly", priority: 1 },
@@ -61,11 +62,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     })) ?? [];
 
+  const japanHostRoutes: MetadataRoute.Sitemap = JAPAN_HOST_SEO_PAGES.map((page) => ({
+    url: absoluteUrl(`/${page.slug}`),
+    changeFrequency: "weekly" as const,
+    priority:
+      page.type === "core" ? 0.95 : page.type === "city" ? 0.9 : page.type === "intent" ? 0.85 : 0.8,
+  }));
+
   return [
     ...STATIC_ROUTES,
     ...destinationRoutes,
     ...guideRoutes,
     ...storyRoutes,
+    ...japanHostRoutes,
     ...experienceEntries,
   ];
 }

@@ -15,6 +15,7 @@ interface ContactModalProps {
   email?: string;
   title?: string;
   description?: string;
+  inbox?: "default" | "partnership";
 }
 
 export function ContactModal({
@@ -25,6 +26,7 @@ export function ContactModal({
   email = "",
   title,
   description,
+  inbox = "default",
 }: ContactModalProps) {
   const t = useTranslations();
   const isLoggedIn = Boolean(userId);
@@ -81,6 +83,7 @@ export function ContactModal({
           message: trimmed,
           name: name.trim() || undefined,
           email: contactEmail.trim() || undefined,
+          inbox,
         }),
       });
 

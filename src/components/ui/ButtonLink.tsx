@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "gold";
+type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "gold" | "white";
 type ButtonSize = "sm" | "md" | "lg";
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -15,6 +15,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     "text-forest hover:bg-sage/50 focus-visible:ring-forest/50",
   gold:
     "bg-gold text-white hover:bg-gold-light focus-visible:ring-gold/50 shadow-sm",
+  white:
+    "bg-white text-forest hover:bg-white/90 focus-visible:ring-white/50 shadow-sm",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

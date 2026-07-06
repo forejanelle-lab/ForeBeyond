@@ -257,3 +257,52 @@ export function buildExperienceJsonLd(input: ExperienceJsonLdInput) {
 
   return schema;
 }
+
+type HostSeoJsonLdInput = {
+  title: string;
+  description: string;
+  path: string;
+  image?: string;
+  breadcrumbs: BreadcrumbItemInput[];
+  faq?: { question: string; answer: string }[];
+};
+
+export function buildHostSeoPageJsonLd(input: HostSeoJsonLdInput) {
+  const url = absoluteUrl(input.path);
+  const graph: Record<string, unknown>[] = [
+    {
+      "@type": "WebPage",
+      "@id": url,
+      name: input.title,
+      description: input.description,
+      url,
+      ...(input.image ? { primaryImageOfPage: input.image } : {}),
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      about: {
+        "@type": "Country",
+        name: "Japan",
+      },
+    },
+    buildBreadcrumbJsonLd(input.breadcrumbs),
+  ];
+
+  if (input.faq && input.faq.length > 0) {
+    graph.push({
+      "@type": "FAQPage",
+      "@id": `${url}#faq`,
+      mainEntity: input.faq.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer,
+        },
+      })),
+    });
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": graph,
+  };
+}
