@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { sendContactEmail } from "@/lib/send-contact-email";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { PARTNERSHIP_EMAIL } from "@/lib/email-config";
+import type { SupportRequestSource } from "@/types/database";
+
+function resolveSource(inbox?: "default" | "partnership"): SupportRequestSource {
+  if (inbox === "partnership") return "partnership";
+  return "contact";
+}
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
@@ -39,18 +46,6 @@ export async function POST(request: Request) {
 
     userFullName = profile?.full_name?.trim() || name || "Member";
     userEmail = profile?.email?.trim() || user.email?.trim() || email;
-
-    const { error: insertError } = await supabase.from("support_requests").insert({
-      user_id: user.id,
-      user_full_name: userFullName,
-      user_email: userEmail,
-      message,
-      status: "open",
-    });
-
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
-    }
   } else {
     if (!userFullName) {
       return NextResponse.json({ error: "Your name is required." }, { status: 400 });
@@ -58,6 +53,27 @@ export async function POST(request: Request) {
     if (!userEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
       return NextResponse.json({ error: "A valid email address is required." }, { status: 400 });
     }
+  }
+
+  const source = user ? (body.inbox === "partnership" ? "partnership" : "member") : resolveSource(body.inbox);
+
+  try {
+    const service = createServiceClient();
+    const { error: insertError } = await service.from("support_requests").insert({
+      user_id: user?.id ?? null,
+      user_full_name: userFullName,
+      user_email: userEmail,
+      message,
+      source,
+      status: "open",
+    });
+
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    }
+  } catch (err) {
+    const messageText = err instanceof Error ? err.message : "Could not save your message.";
+    return NextResponse.json({ error: messageText }, { status: 500 });
   }
 
   const emailResult = await sendContactEmail({
@@ -72,14 +88,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          user != null
-            ? "Your message was saved, but we could not send the email notification. Please try again or email us directly."
-            : "We could not send your message right now. Please try again or email hello@forebeyond.com directly.",
+          "Your message was saved, but we could not send the email notification. Our team will still review it in admin.",
         emailError: emailResult.error ?? null,
+        saved: true,
       },
       { status: 503 }
     );
   }
 
-  return NextResponse.json({ ok: true, emailSent: true });
+  return NextResponse.json({ ok: true, emailSent: true, saved: true });
 }

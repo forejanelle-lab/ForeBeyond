@@ -5,6 +5,7 @@ import { Breadcrumbs, type BreadcrumbItem } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildHostSeoPageJsonLd } from "@/lib/json-ld";
 import {
+  getJapanHostCtaHref,
   type JapanHostSeoPage,
 } from "@/lib/seo/japan-host-catalog";
 import { JapanHostSeoCta } from "@/components/seo/JapanHostSeoCta";
@@ -73,7 +74,11 @@ export function JapanHostSeoLayout({ page }: JapanHostSeoLayoutProps) {
         height="lg"
         priority
       >
-        <JapanHostSeoCta page={page} />
+        <JapanHostSeoCta
+          ctaKind={page.ctaKind}
+          ctaLabel={page.ctaLabel}
+          href={getJapanHostCtaHref(page)}
+        />
       </PageHero>
 
       <Section background="cream">
@@ -197,7 +202,12 @@ export function JapanHostSeoLayout({ page }: JapanHostSeoLayoutProps) {
               ? "Tell us about your institution, cities, and intake calendar. Our partnership team will respond with a pilot structure matched to your homestay needs."
               : "Join verified host families across Japan. Apply today — verification and onboarding are built into the process."}
           </p>
-          <JapanHostSeoCta page={page} className="mt-8" />
+          <JapanHostSeoCta
+            ctaKind={page.ctaKind}
+            ctaLabel={page.ctaLabel}
+            href={getJapanHostCtaHref(page)}
+            className="mt-8"
+          />
         </Container>
       </Section>
     </>

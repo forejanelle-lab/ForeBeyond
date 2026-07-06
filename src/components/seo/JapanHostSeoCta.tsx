@@ -1,19 +1,29 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
 import { PartnershipContactButton } from "@/components/seo/PartnershipContactButton";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { getJapanHostCtaHref, type JapanHostSeoPage } from "@/lib/seo/japan-host-catalog";
+import type { JapanHostCtaKind } from "@/lib/seo/japan-host-catalog";
 
 interface JapanHostSeoCtaProps {
-  page: JapanHostSeoPage;
+  ctaKind: JapanHostCtaKind;
+  ctaLabel: string;
+  href: string;
   size?: "md" | "lg";
   className?: string;
 }
 
-export function JapanHostSeoCta({ page, size = "lg", className = "" }: JapanHostSeoCtaProps) {
-  if (page.ctaKind === "partnership") {
+export function JapanHostSeoCta({
+  ctaKind,
+  ctaLabel,
+  href,
+  size = "lg",
+  className = "",
+}: JapanHostSeoCtaProps) {
+  if (ctaKind === "partnership") {
     return (
       <PartnershipContactButton
-        label={page.ctaLabel}
+        label={ctaLabel}
         size={size}
         variant="white"
         className={className}
@@ -22,8 +32,8 @@ export function JapanHostSeoCta({ page, size = "lg", className = "" }: JapanHost
   }
 
   return (
-    <ButtonLink href={getJapanHostCtaHref(page)} variant="white" size={size} className={className}>
-      {page.ctaLabel}
+    <ButtonLink href={href} variant="white" size={size} className={className}>
+      {ctaLabel}
       <ArrowRight className="h-4 w-4" />
     </ButtonLink>
   );

@@ -22,6 +22,18 @@ interface AdminSupportPanelProps {
   requests: SupportRequest[];
 }
 
+const SOURCE_LABEL: Record<SupportRequest["source"], string> = {
+  member: "Member",
+  partnership: "Partnership",
+  contact: "Contact",
+};
+
+const SOURCE_VARIANT: Record<SupportRequest["source"], "gold" | "outline" | "default"> = {
+  member: "default",
+  partnership: "gold",
+  contact: "outline",
+};
+
 const STATUS_VARIANT: Record<
   SupportRequestStatus,
   "warning" | "success" | "default" | "outline"
@@ -164,12 +176,21 @@ export function AdminSupportPanel({ requests: initial }: AdminSupportPanelProps)
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={`/admin/users/${request.user_id}`}
-                className="font-medium text-forest hover:underline"
-              >
-                {request.user_full_name ?? "Member"}
-              </Link>
+              {request.user_id ? (
+                <Link
+                  href={`/admin/users/${request.user_id}`}
+                  className="font-medium text-forest hover:underline"
+                >
+                  {request.user_full_name ?? "Member"}
+                </Link>
+              ) : (
+                <span className="font-medium text-forest">
+                  {request.user_full_name ?? "Guest"}
+                </span>
+              )}
+              <Badge variant={SOURCE_VARIANT[request.source ?? "contact"]}>
+                {SOURCE_LABEL[request.source ?? "contact"]}
+              </Badge>
               <Badge variant={STATUS_VARIANT[request.status]}>{request.status}</Badge>
             </div>
             <p className="text-xs text-charcoal-light mt-1">{request.user_email}</p>
@@ -177,13 +198,15 @@ export function AdminSupportPanel({ requests: initial }: AdminSupportPanelProps)
               Requested {formatRequestedAt(request.created_at)}
             </p>
           </div>
-          <Link
-            href={`/admin/users/${request.user_id}?message=1`}
-            className="inline-flex items-center gap-1 text-sm text-forest hover:underline shrink-0"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Message user
-          </Link>
+          {request.user_id ? (
+            <Link
+              href={`/admin/users/${request.user_id}?message=1`}
+              className="inline-flex items-center gap-1 text-sm text-forest hover:underline shrink-0"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Message user
+            </Link>
+          ) : null}
         </div>
 
         <div className="rounded-xl bg-sage/30 px-4 py-3">

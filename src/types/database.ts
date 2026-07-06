@@ -325,12 +325,15 @@ export interface ContentReport {
   created_at: string;
 }
 
+export type SupportRequestSource = "member" | "partnership" | "contact";
+
 export interface SupportRequest {
   id: string;
-  user_id: string;
+  user_id: string | null;
   user_full_name: string | null;
   user_email: string | null;
   message: string;
+  source: SupportRequestSource;
   status: SupportRequestStatus;
   admin_response: string | null;
   resolved_by: string | null;

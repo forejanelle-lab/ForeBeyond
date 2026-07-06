@@ -89,9 +89,16 @@ export function ContactModal({
 
       const payload = (await response.json().catch(() => ({}))) as {
         error?: string;
+        saved?: boolean;
       };
 
       if (!response.ok) {
+        if (payload.saved) {
+          setSuccess(true);
+          setIsLoading(false);
+          setTimeout(() => onClose(), 1800);
+          return;
+        }
         setError(payload.error ?? t("contact.errorGeneric"));
         setIsLoading(false);
         return;
