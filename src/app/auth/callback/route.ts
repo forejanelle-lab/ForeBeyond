@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { recordLoginAudit } from "@/app/auth/actions";
+import { recordLoginAudit } from "@/lib/record-login-audit";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
@@ -18,7 +18,11 @@ export async function GET(request: Request) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      await recordLoginAudit("email_link");
+      try {
+        await recordLoginAudit("email_link");
+      } catch (auditError) {
+        console.error("recordLoginAudit failed:", auditError);
+      }
       return NextResponse.redirect(`${origin}${safeNext}`);
     }
   }
@@ -26,7 +30,11 @@ export async function GET(request: Request) {
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
     if (!error) {
-      await recordLoginAudit(type ?? "email_link");
+      try {
+        await recordLoginAudit(type ?? "email_link");
+      } catch (auditError) {
+        console.error("recordLoginAudit failed:", auditError);
+      }
       return NextResponse.redirect(`${origin}${safeNext}`);
     }
   }

@@ -8,8 +8,8 @@ import { createClient } from "@/lib/supabase/client";
 import { formatAuthError } from "@/lib/auth-errors";
 import { fetchEmailVerificationRedirectUrl } from "@/lib/auth-email-redirect";
 import { notifyNewSignup } from "@/lib/notify-signup";
+import { tryRecordLoginAudit } from "@/lib/try-record-login-audit";
 import { getPostLoginPath } from "@/lib/post-login";
-import { recordLoginAudit } from "@/app/auth/actions";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { useTranslations } from "@/components/i18n/LocaleProvider";
 import {
@@ -118,7 +118,7 @@ export default function SignUpPage() {
       }
 
       if (isNewAccount && data.user) {
-        await notifyNewSignup({
+        void notifyNewSignup({
           userId: data.user.id,
           email: email.trim(),
           fullName: `${firstName.trim()} ${lastName.trim()}`.trim() || undefined,
@@ -129,16 +129,18 @@ export default function SignUpPage() {
         router.push(
           `/auth/check-email?email=${encodeURIComponent(email.trim())}&existing=1&resend=1`
         );
+        setIsLoading(false);
         return;
       }
 
       if (data.session) {
-        await recordLoginAudit("signup");
+        void tryRecordLoginAudit("signup");
         window.location.assign("/profile/complete");
         return;
       }
 
       router.push(`/auth/check-email?email=${encodeURIComponent(email.trim())}`);
+      setIsLoading(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       setError(message);

@@ -9,7 +9,7 @@ import { formatAuthError } from "@/lib/auth-errors";
 import { isEmailNotConfirmedError } from "@/lib/auth-verification";
 import { normalizeLoginEmail } from "@/lib/demo-credentials";
 import { getPostLoginPath } from "@/lib/post-login";
-import { recordLoginAudit } from "@/app/auth/actions";
+import { tryRecordLoginAudit } from "@/lib/try-record-login-audit";
 import type { Profile } from "@/types/database";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { useTranslations } from "@/components/i18n/LocaleProvider";
@@ -74,7 +74,7 @@ function SignInForm() {
     posthog.identify(user.id, { role: (profile as { role?: string } | null)?.role ?? undefined });
     posthog.capture("sign_in_completed", { role: (profile as { role?: string } | null)?.role ?? undefined });
 
-    await recordLoginAudit("password");
+    void tryRecordLoginAudit("password");
     window.location.assign(redirectTo);
   }
 
