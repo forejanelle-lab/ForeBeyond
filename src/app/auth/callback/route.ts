@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      void recordLoginAudit("email_link");
+      await recordLoginAudit("email_link");
       return NextResponse.redirect(`${origin}${safeNext}`);
     }
   }
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
     if (!error) {
-      void recordLoginAudit(type);
+      await recordLoginAudit(type ?? "email_link");
       return NextResponse.redirect(`${origin}${safeNext}`);
     }
   }

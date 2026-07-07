@@ -74,7 +74,7 @@ function SignInForm() {
     posthog.identify(user.id, { role: (profile as { role?: string } | null)?.role ?? undefined });
     posthog.capture("sign_in_completed", { role: (profile as { role?: string } | null)?.role ?? undefined });
 
-    void recordLoginAudit("password");
+    await recordLoginAudit("password");
     window.location.assign(redirectTo);
   }
 

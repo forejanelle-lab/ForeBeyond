@@ -9,6 +9,7 @@ import { formatAuthError } from "@/lib/auth-errors";
 import { fetchEmailVerificationRedirectUrl } from "@/lib/auth-email-redirect";
 import { notifyNewSignup } from "@/lib/notify-signup";
 import { getPostLoginPath } from "@/lib/post-login";
+import { recordLoginAudit } from "@/app/auth/actions";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { useTranslations } from "@/components/i18n/LocaleProvider";
 import {
@@ -128,6 +129,7 @@ export default function SignUpPage() {
       }
 
       if (data.session) {
+        await recordLoginAudit("signup");
         window.location.assign("/profile/complete");
         return;
       }
