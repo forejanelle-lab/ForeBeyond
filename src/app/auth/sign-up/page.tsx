@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatAuthError } from "@/lib/auth-errors";
 import { fetchEmailVerificationRedirectUrl } from "@/lib/auth-email-redirect";
+import { notifyNewSignup } from "@/lib/notify-signup";
 import { getPostLoginPath } from "@/lib/post-login";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { useTranslations } from "@/components/i18n/LocaleProvider";
@@ -106,11 +107,17 @@ export default function SignUpPage() {
         return;
       }
 
+      const isNewAccount = Boolean(data.user && data.user.identities?.length !== 0);
+
       if (data.user) {
         posthog.identify(data.user.id, {
           name: `${firstName.trim()} ${lastName.trim()}`.trim() || undefined,
         });
         posthog.capture("sign_up_submitted");
+      }
+
+      if (isNewAccount && data.user) {
+        await notifyNewSignup(data.user.id);
       }
 
       if (data.user && data.user.identities?.length === 0) {
