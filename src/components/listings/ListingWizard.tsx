@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Home, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -115,6 +115,7 @@ export function ListingWizard({
   initialMaxCapacity = null,
 }: ListingWizardProps) {
   const router = useRouter();
+  const stepTopRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(0);
   const [listingId, setListingId] = useState(listing?.id ?? "");
   const [title, setTitle] = useState(
@@ -187,6 +188,10 @@ export function ListingWizard({
     void supabase.from("listing_photos").update({ is_cover: false }).eq("listing_id", listingId);
     setPhotos((prev) => prev.map((photo) => ({ ...photo, is_cover: false })));
   }, [introVideoUrl, listingId, photos]);
+
+  useEffect(() => {
+    stepTopRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+  }, [step]);
 
   const steps = ["Family Story", "Details", "Blocked Dates", "Photos", "Publish"];
 
@@ -501,7 +506,7 @@ export function ListingWizard({
   }
 
   return (
-    <div>
+    <div ref={stepTopRef} className="scroll-mt-24">
       <div className="flex flex-wrap justify-center gap-x-2 gap-y-2 mb-8">
         {steps.map((label, i) => (
           <div key={label} className="flex items-center gap-2">
