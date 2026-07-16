@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import { Navigation } from "@/components/layout/Navigation";
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
+import { ExitIntentProvider } from "@/components/marketing/ExitIntentProvider";
 import { Analytics } from "@vercel/analytics/next";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -92,6 +93,7 @@ export default async function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <CookieConsent />
+          <ExitIntentProvider isLoggedIn={Boolean(navUser)} />
         </AppProviders>
         <Analytics />
       </body>

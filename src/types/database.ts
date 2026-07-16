@@ -327,6 +327,17 @@ export interface ContentReport {
 
 export type SupportRequestSource = "member" | "partnership" | "contact";
 
+export type ExitIntentInterest = "hosting" | "traveling" | "both";
+
+export interface ExitIntentLead {
+  id: string;
+  email: string;
+  interest: ExitIntentInterest;
+  tag: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SupportRequest {
   id: string;
   user_id: string | null;
