@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
+import { notifyNewSignup } from "@/lib/notify-signup";
 import { ProfilePhotoUpload } from "@/components/profile/ProfilePhotoUpload";
 import { joinFullName, splitFullName } from "@/lib/profile";
 import { Button } from "@/components/ui/Button";
@@ -116,6 +117,16 @@ export function ProfileSettingsForm({
         effectiveRole === "host" ? AnalyticsEvents.HOST_SIGNUP : AnalyticsEvents.TRAVELER_SIGNUP,
         { role: effectiveRole }
       );
+
+      void notifyNewSignup({
+        userId,
+        email,
+        fullName: joinFullName(firstName, lastName),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        role: effectiveRole,
+        notifyAdmin: false,
+      });
     }
 
     if (redirectAfterSave) {

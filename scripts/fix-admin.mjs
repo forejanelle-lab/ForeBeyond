@@ -113,18 +113,33 @@ async function main() {
     }
 
     await client.query(
-      `UPDATE profiles SET
-        email = $2,
-        full_name = COALESCE(full_name, 'Janelle Fore'),
+      `INSERT INTO profiles (
+        id, email, full_name, is_admin, is_trust_moderator,
+        onboarding_step, onboarding_complete, verification_status, email_verified_at
+      ) VALUES (
+        $1, $2, COALESCE($3, 'Janelle Fore'), TRUE, FALSE,
+        'complete', TRUE, 'verified', NOW()
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email,
+        full_name = COALESCE(profiles.full_name, EXCLUDED.full_name),
         is_admin = TRUE,
         is_trust_moderator = FALSE,
         onboarding_step = 'complete',
         onboarding_complete = TRUE,
         verification_status = 'verified',
-        email_verified_at = COALESCE(email_verified_at, NOW()),
+        email_verified_at = COALESCE(profiles.email_verified_at, NOW()),
+        updated_at = NOW()`,
+      [adminId, adminEmail, "Janelle Fore"]
+    );
+
+    await client.query(
+      `UPDATE auth.users SET
+        encrypted_password = crypt($2, gen_salt('bf')),
+        email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
         updated_at = NOW()
        WHERE id = $1`,
-      [adminId, adminEmail]
+      [adminId, ADMIN_PASSWORD]
     );
 
     const { rows: profileRows } = await client.query(

@@ -122,6 +122,8 @@ export default function SignUpPage() {
           userId: data.user.id,
           email: email.trim(),
           fullName: `${firstName.trim()} ${lastName.trim()}`.trim() || undefined,
+          firstName: firstName.trim() || undefined,
+          lastName: lastName.trim() || undefined,
         });
       }
 

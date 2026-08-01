@@ -16,7 +16,7 @@ export default async function AdminUsersPage() {
   const { data: users } = await supabase
     .from("profiles")
     .select(
-      "id, full_name, email, role, verification_status, trust_score, created_at, last_login_at, last_active_at"
+      "id, full_name, email, role, is_admin, verification_status, trust_score, created_at, last_login_at, last_active_at"
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -28,6 +28,7 @@ export default async function AdminUsersPage() {
       | "full_name"
       | "email"
       | "role"
+      | "is_admin"
       | "verification_status"
       | "trust_score"
       | "created_at"

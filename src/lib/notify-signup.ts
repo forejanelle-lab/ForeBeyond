@@ -2,6 +2,10 @@ interface NotifyNewSignupInput {
   userId: string;
   email: string;
   fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: "host" | "traveler";
+  notifyAdmin?: boolean;
 }
 
 export async function notifyNewSignup(input: NotifyNewSignupInput): Promise<void> {

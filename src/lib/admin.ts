@@ -63,3 +63,11 @@ export function formatAdminDateTime(value: string | null) {
     minute: "2-digit",
   });
 }
+
+/** Display label for admin user tables — admins show as "admin", not their profile role. */
+export function getAdminUserRoleLabel(
+  user: Pick<Profile, "role" | "is_admin">
+): string | null {
+  if (user.is_admin) return "admin";
+  return user.role ?? null;
+}

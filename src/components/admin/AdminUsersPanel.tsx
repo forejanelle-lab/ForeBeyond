@@ -10,6 +10,7 @@ import { AdminTable, AdminBadgeCell, AdminDateCell } from "@/components/admin/Ad
 import { AdminDeleteUserModal } from "@/components/admin/AdminDeleteUserModal";
 import { Button } from "@/components/ui/Button";
 import { getProfileVerificationStatusLabel } from "@/lib/verification-labels";
+import { getAdminUserRoleLabel } from "@/lib/admin";
 import type { Profile } from "@/types/database";
 
 type AdminUserRow = Pick<
@@ -18,6 +19,7 @@ type AdminUserRow = Pick<
   | "full_name"
   | "email"
   | "role"
+  | "is_admin"
   | "verification_status"
   | "trust_score"
   | "created_at"
@@ -44,7 +46,10 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let rows = users.filter((user) => {
-      if (roleFilter !== "all" && user.role !== roleFilter) return false;
+      if (roleFilter === "admin" && !user.is_admin) return false;
+      if (roleFilter !== "all" && roleFilter !== "admin" && user.role !== roleFilter) {
+        return false;
+      }
       if (verificationFilter !== "all" && user.verification_status !== verificationFilter) {
         return false;
       }
@@ -125,6 +130,7 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
           onChange={setRoleFilter}
           options={[
             { value: "all", label: "All roles" },
+            { value: "admin", label: "Admins" },
             { value: "traveler", label: "Travelers" },
             { value: "host", label: "Hosts" },
           ]}
@@ -172,11 +178,11 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
           {
             key: "name",
             label: "Name",
-            headerClassName: "w-[16%]",
+            headerClassName: "w-[14%]",
             render: (r) => (
               <Link
                 href={`/admin/users/${r.id}`}
-                className="font-medium text-forest hover:underline"
+                className="font-medium text-forest hover:underline break-words"
               >
                 {r.full_name ?? "—"}
               </Link>
@@ -185,9 +191,9 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
           {
             key: "email",
             label: "Email",
-            headerClassName: "w-[28%]",
+            headerClassName: "w-[22%]",
             render: (r) => (
-              <a href={`mailto:${r.email}`} className="text-forest hover:underline">
+              <a href={`mailto:${r.email}`} className="text-forest hover:underline break-all">
                 {r.email}
               </a>
             ),
@@ -195,13 +201,16 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
           {
             key: "role",
             label: "Role",
-            headerClassName: "w-[10%]",
-            render: (r) => (r.role ? <AdminBadgeCell label={r.role} /> : "—"),
+            headerClassName: "w-[8%]",
+            render: (r) => {
+              const label = getAdminUserRoleLabel(r);
+              return label ? <AdminBadgeCell label={label} /> : "—";
+            },
           },
           {
             key: "verification",
             label: "Verification",
-            headerClassName: "w-[14%]",
+            headerClassName: "w-[12%]",
             render: (r) => (
               <AdminBadgeCell
                 label={getProfileVerificationStatusLabel(r.verification_status)}
@@ -212,44 +221,46 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
           {
             key: "trust",
             label: "Trust",
-            headerClassName: "w-[8%]",
+            headerClassName: "w-[6%]",
             render: (r) => r.trust_score,
           },
           {
             key: "last_login",
             label: "Last login",
-            headerClassName: "w-[12%] whitespace-nowrap",
+            headerClassName: "w-[10%] whitespace-nowrap",
             render: (r) => <AdminDateCell value={r.last_login_at} />,
           },
           {
             key: "last_active",
             label: "Last active",
-            headerClassName: "w-[12%] whitespace-nowrap",
+            headerClassName: "w-[10%] whitespace-nowrap",
             render: (r) => <AdminDateCell value={r.last_active_at} />,
           },
           {
             key: "joined",
             label: "Joined",
-            headerClassName: "w-[12%] whitespace-nowrap",
+            headerClassName: "w-[10%] whitespace-nowrap",
             render: (r) => <AdminDateCell value={r.created_at} />,
           },
           {
             key: "actions",
-            label: "Actions",
-            headerClassName: "w-[10%] whitespace-nowrap",
-            className: "whitespace-nowrap",
+            label: "",
+            headerClassName: "w-[8%]",
+            className: "text-right",
             render: (r) => (
               <Button
                 variant="outline"
                 size="sm"
+                className="!px-2 !py-1"
                 disabled={loadingId === r.id}
+                aria-label={`Delete ${r.full_name ?? r.email}`}
+                title="Delete user"
                 onClick={() => {
                   setError("");
                   setPendingDelete(r);
                 }}
               >
                 <Trash2 className="h-4 w-4" />
-                Delete
               </Button>
             ),
           },
