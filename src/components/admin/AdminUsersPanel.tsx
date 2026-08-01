@@ -10,7 +10,7 @@ import { AdminTable, AdminBadgeCell, AdminDateCell } from "@/components/admin/Ad
 import { AdminDeleteUserModal } from "@/components/admin/AdminDeleteUserModal";
 import { Button } from "@/components/ui/Button";
 import { getProfileVerificationStatusLabel } from "@/lib/verification-labels";
-import { getAdminUserRoleLabel } from "@/lib/admin";
+import { getAdminUserRoleLabel, formatAdminTrustScore, sortableAdminTrustScore } from "@/lib/admin";
 import type { Profile } from "@/types/database";
 
 type AdminUserRow = Pick<
@@ -65,7 +65,7 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
         return (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email);
       }
       if (sortBy === "trust") {
-        return (b.trust_score ?? 0) - (a.trust_score ?? 0);
+        return sortableAdminTrustScore(b) - sortableAdminTrustScore(a);
       }
       if (sortBy === "oldest") {
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
@@ -222,7 +222,7 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
             key: "trust",
             label: "Trust",
             headerClassName: "w-[6%]",
-            render: (r) => r.trust_score,
+            render: (r) => formatAdminTrustScore(r),
           },
           {
             key: "last_login",

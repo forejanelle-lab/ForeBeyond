@@ -5,11 +5,13 @@ interface SyncSignupContactInput {
   lastName?: string | null;
   fullName?: string | null;
   role?: "host" | "traveler" | null;
+  isAdmin?: boolean;
 }
 
-function roleLabel(role?: "host" | "traveler" | null): string {
-  if (role === "host") return "Host";
-  if (role === "traveler") return "Traveler";
+function userTypeLabel(input: Pick<SyncSignupContactInput, "isAdmin" | "role">): string {
+  if (input.isAdmin) return "Admin";
+  if (input.role === "host") return "Host";
+  if (input.role === "traveler") return "Traveler";
   return "Pending";
 }
 
@@ -89,13 +91,14 @@ export async function syncSignupContactToBrevo(
   const listIds = await resolveSignupListIds(apiKey);
 
   const attributes: Record<string, string> = {
-    USER_TYPE: roleLabel(input.role),
+    USER_TYPE: userTypeLabel(input),
   };
   if (firstName) attributes.FIRSTNAME = firstName;
   if (lastName) attributes.LASTNAME = lastName;
 
   const tags = ["fore_beyond_signup"];
-  if (input.role === "host") tags.push("role_host");
+  if (input.isAdmin) tags.push("role_admin");
+  else if (input.role === "host") tags.push("role_host");
   else if (input.role === "traveler") tags.push("role_traveler");
   else tags.push("role_pending");
 

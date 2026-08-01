@@ -15,6 +15,7 @@ export default async function AdminTrustScoresPage() {
   const { data: users } = await supabase
     .from("profiles")
     .select("id, full_name, email, role, trust_score, verification_status")
+    .eq("is_admin", false)
     .order("trust_score", { ascending: false })
     .limit(200);
 

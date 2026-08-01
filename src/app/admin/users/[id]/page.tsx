@@ -37,7 +37,7 @@ export default async function AdminUserDetailPage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, full_name, email, role, verification_status, trust_score, bio, location, created_at, last_login_at, last_active_at"
+      "id, full_name, email, role, is_admin, verification_status, trust_score, bio, location, created_at, last_login_at, last_active_at"
     )
     .eq("id", id)
     .single();
@@ -50,6 +50,7 @@ export default async function AdminUserDetailPage({
     | "full_name"
     | "email"
     | "role"
+    | "is_admin"
     | "verification_status"
     | "trust_score"
     | "bio"

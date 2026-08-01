@@ -59,6 +59,7 @@
     "db:migration-057": "node scripts/run-sql.mjs supabase/migrations/057_one_listing_per_host.sql",
     "supabase:auth-email": "node scripts/setup-auth-email.mjs",
     "resend:domain": "node scripts/setup-resend-domain.mjs",
+    "brevo:backfill": "node scripts/backfill-brevo-contacts.mjs",
     "supabase:auth-skip-email-confirm": "node scripts/configure-supabase-dev-auth.mjs",
     "supabase:auth-confirm-email": "node scripts/configure-supabase-dev-auth.mjs --enable",
     "stripe:webhook": "node scripts/setup-stripe-webhook.mjs",

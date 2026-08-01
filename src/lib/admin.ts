@@ -71,3 +71,16 @@ export function getAdminUserRoleLabel(
   if (user.is_admin) return "admin";
   return user.role ?? null;
 }
+
+/** Trust scores are not shown for platform admins. */
+export function formatAdminTrustScore(
+  user: Pick<Profile, "is_admin" | "trust_score">
+): string | number {
+  if (user.is_admin) return "—";
+  return user.trust_score ?? "—";
+}
+
+export function sortableAdminTrustScore(user: Pick<Profile, "is_admin" | "trust_score">): number {
+  if (user.is_admin) return -1;
+  return user.trust_score ?? 0;
+}

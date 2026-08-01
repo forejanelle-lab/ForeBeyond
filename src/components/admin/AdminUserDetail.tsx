@@ -5,6 +5,7 @@ import { MessageSquare } from "lucide-react";
 import { AdminTable, AdminBadgeCell, AdminDateCell } from "@/components/admin/AdminTable";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { getAdminUserRoleLabel } from "@/lib/admin";
 import { getProfileVerificationStatusLabel } from "@/lib/verification-labels";
 import type { Profile, UserLoginEvent } from "@/types/database";
 
@@ -28,6 +29,7 @@ interface AdminUserDetailProps {
     | "full_name"
     | "email"
     | "role"
+    | "is_admin"
     | "verification_status"
     | "trust_score"
     | "bio"
@@ -84,12 +86,16 @@ export function AdminUserDetail({ profile, loginEvents, trips, showMessagePrompt
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            {profile.role && <AdminBadgeCell label={profile.role} />}
+            {getAdminUserRoleLabel(profile) && (
+              <AdminBadgeCell label={getAdminUserRoleLabel(profile)!} />
+            )}
             <AdminBadgeCell
               label={getProfileVerificationStatusLabel(profile.verification_status)}
               variant="outline"
             />
-            <Badge variant="gold">Trust {profile.trust_score}</Badge>
+            {!profile.is_admin && (
+              <Badge variant="gold">Trust {profile.trust_score}</Badge>
+            )}
           </div>
         </div>
         {profile.bio && <p className="text-sm text-charcoal-light">{profile.bio}</p>}
