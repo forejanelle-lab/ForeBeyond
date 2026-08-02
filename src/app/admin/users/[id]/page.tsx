@@ -5,7 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminUserDetail } from "@/components/admin/AdminUserDetail";
 import { privatePageMetadata } from "@/lib/site-metadata";
-import type { HostListing, Profile, StayBooking, Trip, UserLoginEvent } from "@/types/database";
+import type {
+  HostListing,
+  Profile,
+  StayBooking,
+  Trip,
+  UserLoginEvent,
+  VerificationDocument,
+} from "@/types/database";
 
 export async function generateMetadata({
   params,
@@ -60,7 +67,8 @@ export default async function AdminUserDetailPage({
     | "last_active_at"
   >;
 
-  const [{ data: guestTrips }, { data: hostTrips }, { data: loginEvents }] = await Promise.all([
+  const [{ data: guestTrips }, { data: hostTrips }, { data: loginEvents }, { data: verificationDocuments }] =
+    await Promise.all([
     supabase
       .from("trips")
       .select("id, status, start_date, end_date, listing_id, host_id, stay_request_id")
@@ -77,6 +85,11 @@ export default async function AdminUserDetailPage({
       .eq("user_id", id)
       .order("logged_in_at", { ascending: false })
       .limit(50),
+    supabase
+      .from("verification_documents")
+      .select("id, document_type, file_url, status, created_at, reviewed_at, notes")
+      .eq("user_id", id)
+      .order("created_at", { ascending: true }),
   ]);
 
   const guestTripRows = (guestTrips as Trip[]) ?? [];
@@ -186,6 +199,18 @@ export default async function AdminUserDetailPage({
           >[]) ?? []
         }
         trips={tripSummaries}
+        verificationDocuments={
+          (verificationDocuments as Pick<
+            VerificationDocument,
+            | "id"
+            | "document_type"
+            | "file_url"
+            | "status"
+            | "created_at"
+            | "reviewed_at"
+            | "notes"
+          >[]) ?? []
+        }
         showMessagePrompt={message === "1"}
       />
     </AdminShell>

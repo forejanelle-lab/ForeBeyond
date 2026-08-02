@@ -1,3 +1,5 @@
+import { catalogEs } from "@/lib/i18n/messages/catalog-es";
+
 const es = {
   language: {
     label: "Idioma",
@@ -110,6 +112,7 @@ const es = {
     tagline: "Viaja más profundo. Siéntete en casa en cualquier lugar.",
     secondaryTagline: "Por el viaje. Más allá del destino.",
   },
+  ...catalogEs,
 } as const;
 
 export default es;

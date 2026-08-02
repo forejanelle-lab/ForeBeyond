@@ -44,6 +44,8 @@ export function Footer() {
     { label: t("footer.searchFamilies"), href: "/search" },
     { label: t("footer.destinations"), href: "/destinations" },
     { label: t("footer.travelGuides"), href: "/guides" },
+    { label: "Host Guide", href: "/guides/host" },
+    { label: "Traveler Guide", href: "/guides/traveler" },
     { label: t("nav.trustCenter"), href: "/trust-center" },
   ];
 

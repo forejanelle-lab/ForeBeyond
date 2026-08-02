@@ -13,12 +13,16 @@ import {
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import type { ListingPhoto, Profile, PublicListing, StayBooking, StayRequest, Trip } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
+import { getServerTranslations } from "@/lib/i18n/server";
 
-export const metadata = privatePageMetadata({
-  title: "My Trips",
-  description: "View and manage your upcoming and past trips on Fore Beyond.",
-  path: "/trips",
-});
+export async function generateMetadata() {
+  const { t } = await getServerTranslations();
+  return privatePageMetadata({
+    title: t("trips.title"),
+    description: t("trips.subtitle"),
+    path: "/trips",
+  });
+}
 
 async function getCoverPhotos(listingIds: string[]) {
   if (listingIds.length === 0) return {};
@@ -152,17 +156,22 @@ export default async function TripsPage() {
     };
   });
 
+  const { t } = await getServerTranslations();
+
   return (
     <PageShell
-      title="My trips"
-      subtitle={`${pendingRows.length} pending request${pendingRows.length !== 1 ? "s" : ""} · ${typedTrips.length} confirmed trip${typedTrips.length !== 1 ? "s" : ""}`}
+      title={t("trips.title")}
+      subtitle={t("trips.subtitleCounts", {
+        pending: pendingRows.length,
+        confirmed: typedTrips.length,
+      })}
     >
       <div className="space-y-10">
         <section className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-forest">Pending requests</h2>
+            <h2 className="text-lg font-semibold text-forest">{t("trips.pendingTitle")}</h2>
             <p className="text-sm text-charcoal-light mt-1">
-              Stay requests waiting for host review or your confirmation.
+              {t("trips.pendingDesc")}
             </p>
           </div>
           <TravelerPendingRequestsList requests={pendingRows} />
@@ -170,9 +179,9 @@ export default async function TripsPage() {
 
         <section className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-forest">Confirmed trips</h2>
+            <h2 className="text-lg font-semibold text-forest">{t("trips.confirmedTitle")}</h2>
             <p className="text-sm text-charcoal-light mt-1">
-              Approved stays with booking details.
+              {t("trips.confirmedDesc")}
             </p>
           </div>
           <TripsListView trips={rows} />

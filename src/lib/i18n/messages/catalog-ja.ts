@@ -115,6 +115,11 @@ export const catalogJa = {
   trips: {
     title: "マイトリップ",
     subtitle: "ホストファミリーとの今後および過去の滞在",
+    subtitleCounts: "保留 {pending} · 確定 {confirmed}",
+    pendingTitle: "保留中のリクエスト",
+    pendingDesc: "ホストの確認またはあなたの確認待ちの滞在リクエスト。",
+    confirmedTitle: "確定済みトリップ",
+    confirmedDesc: "予約詳細付きの承認済み滞在。",
     empty: "まだトリップがありません。",
     browseFamilies: "ファミリーを探す",
   },
@@ -135,6 +140,15 @@ export const catalogJa = {
     changePasswordSubtitle: "サインインパスワードを更新",
     privacyTitle: "プライバシー設定",
     privacySubtitle: "データと公開範囲を管理",
+    accountPrivacyTitle: "アカウントとプライバシー",
+    accountPrivacyDesc:
+      "プライバシー設定の更新、データのダウンロード、またはアカウントの永久削除。",
+    privacySettingsLink: "プライバシー設定",
+    downloadData: "データをダウンロード",
+    deleteAccount: "アカウントを削除",
+    passwordTitle: "パスワード",
+    passwordDesc:
+      "Fore Beyond はメールとパスワードでサインインします。下でパスワードを変更するか、アカウントメールにリセットリンクを送信してください。",
   },
   trust: {
     dashboardTitle: "トラストダッシュボード",

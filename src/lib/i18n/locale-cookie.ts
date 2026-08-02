@@ -5,8 +5,16 @@ import {
   type SupportedLanguageCode,
 } from "@/lib/languages";
 
+export const LOCALE_COOKIE_NAME = "forebeyond_locale";
+
+export const LOCALE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+
 export function normalizeLocale(code: string | null | undefined): SupportedLanguageCode {
   return normalizeLanguageCode(code);
+}
+
+export function buildLocaleCookieValue(locale: SupportedLanguageCode): string {
+  return `${LOCALE_COOKIE_NAME}=${locale};path=/;max-age=${LOCALE_COOKIE_MAX_AGE_SECONDS};SameSite=Lax`;
 }
 
 /** Pick the best supported locale from the browser Accept-Language header. */

@@ -5,6 +5,7 @@ interface SendNewAccountNotificationEmailInput {
   email: string;
   fullName?: string | null;
   userId: string;
+  role?: "host" | "traveler" | null;
 }
 
 function escapeHtml(value: string): string {
@@ -25,6 +26,8 @@ export async function sendNewAccountNotificationEmail(
 
   const from = getResendFromEmail();
   const name = input.fullName?.trim() || "New member";
+  const roleLabel =
+    input.role === "host" ? "Host" : input.role === "traveler" ? "Traveler" : "Pending";
   const adminUserUrl = `${getAppUrl()}/admin/users/${input.userId}`;
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -41,6 +44,7 @@ export async function sendNewAccountNotificationEmail(
         <p>A new Fore Beyond account was created.</p>
         <p><strong>Name:</strong> ${escapeHtml(name)}</p>
         <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
+        <p><strong>Role:</strong> ${escapeHtml(roleLabel)}</p>
         <p><strong>User ID:</strong> ${escapeHtml(input.userId)}</p>
         <p><a href="${adminUserUrl}">View in admin</a></p>
         <p>— Fore Beyond signup notification</p>

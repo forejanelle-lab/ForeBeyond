@@ -66,8 +66,7 @@ export default async function GuideArticlePage({
         })}
       />
       <PageHero
-        image={guide.image}
-        imageAlt={guide.imageAlt}
+        variant="solid"
         eyebrow="Guide"
         title={guide.heroTitle}
         subtitle={guide.heroSubtitle}
@@ -93,7 +92,9 @@ export default async function GuideArticlePage({
           </div>
           {guide.relatedDestinations.length > 0 && (
             <div className="mt-12 pt-8 border-t border-sage-dark/30">
-              <h2 className="text-lg font-semibold text-forest mb-4">Related destinations</h2>
+              <h2 className="text-lg font-semibold text-forest mb-4">
+                {guide.relatedSectionTitle ?? "Related destinations"}
+              </h2>
               <ul className="space-y-2">
                 {guide.relatedDestinations.map((link) => (
                   <li key={link.href}>

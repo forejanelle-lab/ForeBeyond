@@ -161,7 +161,7 @@ export function FamilySearchCard({
             {meal}
           </Badge>
         ))}
-        {listing.languages?.slice(0, 1).map((lang) => (
+        {listing.languages?.slice(0, 3).map((lang) => (
           <Badge key={lang} variant="default" className="text-[10px]">
             {lang}
           </Badge>

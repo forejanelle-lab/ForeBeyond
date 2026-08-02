@@ -118,7 +118,7 @@ export default function SignUpPage() {
       }
 
       if (isNewAccount && data.user) {
-        void notifyNewSignup({
+        await notifyNewSignup({
           userId: data.user.id,
           email: email.trim(),
           fullName: `${firstName.trim()} ${lastName.trim()}`.trim() || undefined,

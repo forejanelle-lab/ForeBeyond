@@ -11,11 +11,14 @@ import type { Profile } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
 import { getServerTranslations } from "@/lib/i18n/server";
 
-export const metadata = privatePageMetadata({
-  title: "Settings",
-  description: "Manage your Fore Beyond account, privacy, and communication preferences.",
-  path: "/settings",
-});
+export async function generateMetadata() {
+  const { t } = await getServerTranslations();
+  return privatePageMetadata({
+    title: t("settings.title"),
+    description: t("settings.subtitle"),
+    path: "/settings",
+  });
+}
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -89,16 +92,16 @@ export default async function SettingsPage() {
         </div>
 
         <Card variant="outline" padding="lg" className="space-y-4">
-          <h2 className="text-lg font-semibold text-forest">Account & privacy</h2>
+          <h2 className="text-lg font-semibold text-forest">{t("settings.accountPrivacyTitle")}</h2>
           <p className="text-sm text-charcoal-light">
-            Update privacy preferences, download your data, or permanently delete your account.
+            {t("settings.accountPrivacyDesc")}
           </p>
           <div className="flex flex-col gap-2">
             <ButtonLink href="/settings/privacy" variant="outline" size="sm" className="w-full justify-center">
-              Privacy settings
+              {t("settings.privacySettingsLink")}
             </ButtonLink>
             <ButtonLink href="/settings/download-data" variant="outline" size="sm" className="w-full justify-center">
-              Download my data
+              {t("settings.downloadData")}
             </ButtonLink>
             <ButtonLink
               href="/settings/delete-account"
@@ -106,16 +109,15 @@ export default async function SettingsPage() {
               size="sm"
               className="w-full justify-center text-red-600"
             >
-              Delete account
+              {t("settings.deleteAccount")}
             </ButtonLink>
           </div>
         </Card>
 
         <Card variant="outline" padding="lg" className="space-y-3">
-          <h2 className="text-lg font-semibold text-forest">Password</h2>
+          <h2 className="text-lg font-semibold text-forest">{t("settings.passwordTitle")}</h2>
           <p className="text-sm text-charcoal-light">
-            Fore Beyond uses email and password sign-in. Change your password below, or request a
-            reset link sent to your account email.
+            {t("settings.passwordDesc")}
           </p>
           <PasswordSettingsActions email={user.email ?? typedProfile?.email ?? ""} />
         </Card>

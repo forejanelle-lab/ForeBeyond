@@ -5,6 +5,7 @@ import { HeaderProfileAvatar } from "@/components/layout/HeaderProfileAvatar";
 import { MobileNavMenu } from "@/components/layout/MobileNavMenu";
 import { NotificationBell } from "@/components/messaging/NotificationBell";
 import { Container } from "@/components/ui/Container";
+import { LanguageSelector } from "@/components/i18n/LanguageSelector";
 import { useTranslations } from "@/components/i18n/LocaleProvider";
 import { getTranslatedMainNav, getTranslatedNavForUser } from "@/lib/i18n/nav";
 import { isPlatformAdmin } from "@/lib/navigation-menu";
@@ -34,6 +35,7 @@ export function Navigation({ user }: NavigationProps) {
           <Logo size="xl" className="-my-8" />
 
           <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+            <LanguageSelector userId={user?.id} />
             {user && <NotificationBell userId={user.id} />}
             {user && (
               <HeaderProfileAvatar

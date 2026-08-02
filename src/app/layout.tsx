@@ -35,7 +35,7 @@ async function loadNavUser() {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role, is_admin, avatar_url, full_name, default_currency")
+      .select("role, is_admin, avatar_url, full_name, default_currency, preferred_language")
       .eq("id", user.id)
       .single();
 
@@ -52,6 +52,7 @@ async function loadNavUser() {
       avatarUrl: profileError ? null : profile?.avatar_url ?? null,
       fullName: profileError ? null : profile?.full_name ?? null,
       defaultCurrency: profileError ? "USD" : profile?.default_currency ?? "USD",
+      preferredLanguage: profileError ? "en" : profile?.preferred_language ?? "en",
     };
   } catch (error) {
     console.error("Layout nav user load failed:", error);
@@ -78,10 +79,10 @@ export default async function RootLayout({
     loadNavUser(),
     getExchangeRates(),
   ]);
-  const { locale, messages } = await getServerTranslations();
+  const { locale, messages } = await getServerTranslations(navUser?.preferredLanguage);
 
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang={locale} className={inter.variable}>
       <body className={`${inter.className} min-h-screen flex flex-col antialiased bg-cream text-charcoal`}>
         <AppProviders
           locale={locale}

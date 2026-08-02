@@ -3,14 +3,14 @@ import type { UserRole } from "@/types/database";
 export const TRUST_SCORE_MAX = 100;
 
 export const TRUST_SCORE_WEIGHTS = {
-  email_verified: 10,
-  phone_verified: 10,
-  government_id: 15,
-  address_verification: 10,
-  video_verification: 15,
-  profile_completion: 10,
-  completed_trips: 15,
-  positive_reviews: 15,
+  email_verified: 12,
+  phone_verified: 12,
+  government_id: 18,
+  address_verification: 12,
+  video_verification: 18,
+  profile_completion: 13,
+  completed_trips: 8,
+  positive_reviews: 7,
 } as const;
 
 export type TrustScoreFactor = keyof typeof TRUST_SCORE_WEIGHTS;

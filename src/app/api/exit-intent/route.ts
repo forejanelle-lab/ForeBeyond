@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { sendExitIntentNotificationEmail } from "@/lib/send-exit-intent-notification-email";
 import type { ExitIntentInterest } from "@/types/database";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,6 +48,12 @@ export async function POST(request: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    void sendExitIntentNotificationEmail({ email, interest }).then((result) => {
+      if (!result.sent) {
+        console.error("exit-intent notification email failed:", result.error);
+      }
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not save your email.";
     return NextResponse.json({ error: message }, { status: 500 });

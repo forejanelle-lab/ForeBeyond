@@ -6,8 +6,11 @@ import { AdminTable, AdminBadgeCell, AdminDateCell } from "@/components/admin/Ad
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminUserRoleLabel } from "@/lib/admin";
-import { getProfileVerificationStatusLabel } from "@/lib/verification-labels";
-import type { Profile, UserLoginEvent } from "@/types/database";
+import { formatAdminDateTime } from "@/lib/admin";
+import { formatDocumentType } from "@/lib/verification-documents";
+import { getDocumentVerificationStatusLabel, getProfileVerificationStatusLabel } from "@/lib/verification-labels";
+import { ViewVerificationDocumentButton } from "@/components/admin/ViewVerificationDocumentButton";
+import type { Profile, UserLoginEvent, VerificationDocument, VerificationStatus } from "@/types/database";
 
 interface TripSummary {
   id: string;
@@ -43,7 +46,18 @@ interface AdminUserDetailProps {
     "id" | "logged_in_at" | "ip_address" | "user_agent" | "auth_method"
   >[];
   trips: TripSummary[];
+  verificationDocuments: Pick<
+    VerificationDocument,
+    "id" | "document_type" | "file_url" | "status" | "created_at" | "reviewed_at" | "notes"
+  >[];
   showMessagePrompt?: boolean;
+}
+
+function verificationStatusBadgeVariant(status: VerificationStatus) {
+  if (status === "verified") return "success" as const;
+  if (status === "in_review") return "gold" as const;
+  if (status === "pending" || status === "rejected") return "warning" as const;
+  return "outline" as const;
 }
 
 function formatMoney(amount: number | null) {
@@ -69,7 +83,13 @@ function shortenUserAgent(userAgent: string | null) {
   return `${userAgent.slice(0, 69)}…`;
 }
 
-export function AdminUserDetail({ profile, loginEvents, trips, showMessagePrompt }: AdminUserDetailProps) {
+export function AdminUserDetail({
+  profile,
+  loginEvents,
+  trips,
+  verificationDocuments,
+  showMessagePrompt,
+}: AdminUserDetailProps) {
   const guestTrips = trips.filter((t) => t.role === "guest");
   const hostTrips = trips.filter((t) => t.role === "host");
   const messageTrip = trips.find((t) => t.conversationId);
@@ -132,6 +152,65 @@ export function AdminUserDetail({ profile, loginEvents, trips, showMessagePrompt
           </div>
         )}
       </Card>
+
+      <section>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h3 className="text-lg font-semibold text-forest">
+            Verification documents ({verificationDocuments.length})
+          </h3>
+          {verificationDocuments.some(
+            (doc) => doc.status === "pending" || doc.status === "in_review"
+          ) && (
+            <Link href="/admin/verifications" className="text-sm text-forest hover:underline font-medium">
+              Open verification queue
+            </Link>
+          )}
+        </div>
+        <AdminTable
+          rows={verificationDocuments}
+          emptyMessage="No verification documents submitted."
+          columns={[
+            {
+              key: "document_type",
+              label: "Document",
+              render: (r) => (
+                <span className="capitalize font-medium text-forest">
+                  {formatDocumentType(r.document_type)}
+                </span>
+              ),
+            },
+            {
+              key: "status",
+              label: "Status",
+              render: (r) => (
+                <Badge variant={verificationStatusBadgeVariant(r.status)}>
+                  {getDocumentVerificationStatusLabel(r.status)}
+                </Badge>
+              ),
+            },
+            {
+              key: "created_at",
+              label: "Submitted",
+              render: (r) => formatAdminDateTime(r.created_at),
+            },
+            {
+              key: "reviewed_at",
+              label: "Reviewed",
+              render: (r) => formatAdminDateTime(r.reviewed_at),
+            },
+            {
+              key: "file_url",
+              label: "",
+              render: (r) =>
+                r.file_url ? (
+                  <ViewVerificationDocumentButton fileUrl={r.file_url} />
+                ) : (
+                  <span className="text-sm text-charcoal-light">No file</span>
+                ),
+            },
+          ]}
+        />
+      </section>
 
       <section>
         <h3 className="text-lg font-semibold text-forest mb-3">

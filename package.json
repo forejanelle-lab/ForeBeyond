@@ -57,6 +57,7 @@
     "db:migration-055": "node scripts/run-sql.mjs supabase/migrations/055_traveler_stay_motivation.sql",
     "db:migration-056": "node scripts/run-sql.mjs supabase/migrations/056_listing_intro_video_and_host_motivation.sql",
     "db:migration-057": "node scripts/run-sql.mjs supabase/migrations/057_one_listing_per_host.sql",
+    "db:migration-072": "node scripts/run-sql.mjs supabase/migrations/072_trust_score_rebalance.sql",
     "supabase:auth-email": "node scripts/setup-auth-email.mjs",
     "resend:domain": "node scripts/setup-resend-domain.mjs",
     "brevo:backfill": "node scripts/backfill-brevo-contacts.mjs",

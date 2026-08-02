@@ -33,6 +33,8 @@ export const footer = {
     { label: "Search Families", href: "/search" },
     { label: "Destinations", href: "/destinations" },
     { label: "Travel Guides", href: "/guides" },
+    { label: "Host Guide", href: "/guides/host" },
+    { label: "Traveler Guide", href: "/guides/traveler" },
     { label: "Trust Center", href: "/trust-center" },
   ],
   company: [

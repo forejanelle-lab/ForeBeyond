@@ -115,6 +115,11 @@ export const catalogEn = {
   trips: {
     title: "My Trips",
     subtitle: "Upcoming and past stays with host families",
+    subtitleCounts: "{pending} pending request(s) · {confirmed} confirmed trip(s)",
+    pendingTitle: "Pending requests",
+    pendingDesc: "Stay requests waiting for host review or your confirmation.",
+    confirmedTitle: "Confirmed trips",
+    confirmedDesc: "Approved stays with booking details.",
     empty: "You don't have any trips yet.",
     browseFamilies: "Browse families",
   },
@@ -135,6 +140,15 @@ export const catalogEn = {
     changePasswordSubtitle: "Update your sign-in password",
     privacyTitle: "Privacy Settings",
     privacySubtitle: "Control your data and visibility",
+    accountPrivacyTitle: "Account & privacy",
+    accountPrivacyDesc:
+      "Update privacy preferences, download your data, or permanently delete your account.",
+    privacySettingsLink: "Privacy settings",
+    downloadData: "Download my data",
+    deleteAccount: "Delete account",
+    passwordTitle: "Password",
+    passwordDesc:
+      "Fore Beyond uses email and password sign-in. Change your password below, or request a reset link sent to your account email.",
   },
   trust: {
     dashboardTitle: "Trust Dashboard",

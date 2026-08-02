@@ -1,3 +1,6 @@
+/** Brevo contact attribute for host / traveler / admin / pending. */
+export const BREVO_USER_TYPE_ATTRIBUTE = "USERTYPE";
+
 interface SyncSignupContactInput {
   email: string;
   userId: string;
@@ -8,7 +11,7 @@ interface SyncSignupContactInput {
   isAdmin?: boolean;
 }
 
-function userTypeLabel(input: Pick<SyncSignupContactInput, "isAdmin" | "role">): string {
+export function brevoUserTypeLabel(input: Pick<SyncSignupContactInput, "isAdmin" | "role">): string {
   if (input.isAdmin) return "Admin";
   if (input.role === "host") return "Host";
   if (input.role === "traveler") return "Traveler";
@@ -91,7 +94,7 @@ export async function syncSignupContactToBrevo(
   const listIds = await resolveSignupListIds(apiKey);
 
   const attributes: Record<string, string> = {
-    USER_TYPE: userTypeLabel(input),
+    [BREVO_USER_TYPE_ATTRIBUTE]: brevoUserTypeLabel(input),
   };
   if (firstName) attributes.FIRSTNAME = firstName;
   if (lastName) attributes.LASTNAME = lastName;

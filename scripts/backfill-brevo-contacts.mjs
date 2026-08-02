@@ -8,6 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import { loadEnvLocal, requireEnv } from "./load-env-local.mjs";
 
 const DEFAULT_SIGNUP_LIST_NAME = "UsersSignedUp";
+const BREVO_USER_TYPE_ATTRIBUTE = "USERTYPE";
 
 function splitName(fullName) {
   const parts = fullName?.trim().split(/\s+/).filter(Boolean) ?? [];
@@ -61,7 +62,7 @@ async function resolveSignupListId(apiKey) {
 async function syncContact(apiKey, listId, profile) {
   const email = profile.email.trim().toLowerCase();
   const { firstName, lastName } = splitName(profile.full_name);
-  const attributes = { USER_TYPE: userTypeLabel(profile) };
+  const attributes = { [BREVO_USER_TYPE_ATTRIBUTE]: userTypeLabel(profile) };
   if (firstName) attributes.FIRSTNAME = firstName;
   if (lastName) attributes.LASTNAME = lastName;
 
