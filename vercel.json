@@ -1,3 +1,13 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/publish-social-posts",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/refresh-social-tokens",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }

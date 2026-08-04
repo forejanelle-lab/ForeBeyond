@@ -3,16 +3,22 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isPlatformAdmin } from "@/lib/navigation-menu";
 import type { Profile } from "@/types/database";
 
-export const ADMIN_NAV = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/listings", label: "Listings" },
-  { href: "/admin/verifications", label: "Verifications" },
-  { href: "/admin/reviews", label: "Reviews" },
-  { href: "/admin/reports", label: "Reports" },
-  { href: "/admin/support", label: "Support" },
-  { href: "/admin/trust-scores", label: "Trust Scores" },
-] as const;
+export type AdminNavEntry =
+  | { type: "link"; href: string; label: string }
+  | { type: "section"; label: string };
+
+export const ADMIN_NAV: AdminNavEntry[] = [
+  { type: "link", href: "/admin", label: "Overview" },
+  { type: "link", href: "/admin/users", label: "Users" },
+  { type: "link", href: "/admin/listings", label: "Listings" },
+  { type: "link", href: "/admin/verifications", label: "Verifications" },
+  { type: "link", href: "/admin/reviews", label: "Reviews" },
+  { type: "link", href: "/admin/reports", label: "Reports" },
+  { type: "link", href: "/admin/support", label: "Support" },
+  { type: "link", href: "/admin/trust-scores", label: "Trust Scores" },
+  { type: "section", label: "Marketing" },
+  { type: "link", href: "/admin/marketing/social-media", label: "Social Media" },
+];
 
 export async function requireAdmin(
   supabase: SupabaseClient,

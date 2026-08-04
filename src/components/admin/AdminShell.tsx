@@ -11,6 +11,7 @@ import {
   Flag,
   LifeBuoy,
   Gauge,
+  Share2,
 } from "lucide-react";
 import { ADMIN_NAV } from "@/lib/admin";
 import { Container } from "@/components/ui/Container";
@@ -25,7 +26,12 @@ const navIcons: Record<string, typeof LayoutDashboard> = {
   "/admin/reports": Flag,
   "/admin/support": LifeBuoy,
   "/admin/trust-scores": Gauge,
+  "/admin/marketing/social-media": Share2,
 };
+
+function isNavActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 interface AdminShellProps {
   title: string;
@@ -53,8 +59,19 @@ export function AdminShell({ title, description, children, wide = false }: Admin
               </div>
               <nav className="flex lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0">
                 {ADMIN_NAV.map((item) => {
+                  if (item.type === "section") {
+                    return (
+                      <p
+                        key={item.label}
+                        className="hidden lg:block px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-charcoal-light"
+                      >
+                        {item.label}
+                      </p>
+                    );
+                  }
+
                   const Icon = navIcons[item.href] ?? LayoutDashboard;
-                  const active = pathname === item.href;
+                  const active = isNavActive(pathname, item.href);
                   return (
                     <Link
                       key={item.href}

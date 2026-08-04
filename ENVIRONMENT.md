@@ -205,6 +205,47 @@ UPDATE profiles SET is_trust_moderator = true WHERE email = 'your@email.com';
 
 ---
 
+## Instagram API (Admin Social Media)
+
+Automated setup wizard:
+
+```bash
+npm run instagram:setup
+```
+
+### `INSTAGRAM_APP_ID` / `INSTAGRAM_APP_SECRET`
+
+From [Meta Developers](https://developers.facebook.com) → your app → **Instagram → API setup with Instagram Login**.
+
+```env
+INSTAGRAM_APP_ID=1234567890123456
+INSTAGRAM_APP_SECRET=your_app_secret
+INSTAGRAM_REDIRECT_URI=http://localhost:3000/api/admin/social-media/callback
+```
+
+**OAuth redirect URIs to register in Meta:**
+
+- `http://localhost:3000/api/admin/social-media/callback`
+- `https://forebeyond.com/api/admin/social-media/callback`
+
+Legacy aliases `META_APP_ID` / `META_APP_SECRET` also work.
+
+### `CRON_SECRET`
+
+Authorizes scheduled Instagram publishing cron. Generated automatically by `npm run instagram:setup`.
+
+### Database
+
+Apply migration 074 before connecting:
+
+```bash
+npm run db:migration-074
+```
+
+Or paste `supabase/migrations/074_social_platform_connections.sql` in Supabase SQL Editor.
+
+---
+
 ## Example `.env.local`
 
 ```env
