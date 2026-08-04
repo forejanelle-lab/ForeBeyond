@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getInstagramRedirectUri } from "@/lib/social-media/meta-oauth";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 import { upsertInstagramConnection } from "@/lib/social-media/connection";
 import {
@@ -67,7 +68,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { accessToken: shortToken } = await exchangeCodeForShortLivedToken(code);
+    const redirectUri = getInstagramRedirectUri(request);
+    const { accessToken: shortToken } = await exchangeCodeForShortLivedToken(code, redirectUri);
     const { accessToken, expiresIn } = await exchangeForLongLivedToken(shortToken);
     const igProfile = await getInstagramProfile(accessToken);
 

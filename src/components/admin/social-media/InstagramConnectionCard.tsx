@@ -9,6 +9,8 @@ import type { InstagramConnectionStatus } from "@/lib/social-media/types";
 interface InstagramConnectionCardProps {
   status: InstagramConnectionStatus;
   metaAppReady: boolean;
+  oauthRedirectUri?: string | null;
+  instagramAppId?: string | null;
   flashMessage?: string | null;
   flashError?: string | null;
 }
@@ -25,6 +27,8 @@ function formatDate(value: string | null | undefined): string | null {
 export function InstagramConnectionCard({
   status,
   metaAppReady,
+  oauthRedirectUri,
+  instagramAppId,
   flashMessage,
   flashError,
 }: InstagramConnectionCardProps) {
@@ -76,10 +80,24 @@ export function InstagramConnectionCard({
                 {status.expiresAt && <p>Token expires {formatDate(status.expiresAt)}</p>}
               </div>
             ) : (
-              <p className="mt-1 text-sm text-forest/70">
-                Sign in with your Instagram Business or Creator account to publish approved posts
-                automatically. No Facebook Page required.
-              </p>
+              <div className="mt-1 space-y-1 text-sm text-forest/70">
+                <p>
+                  Sign in with your Instagram Business or Creator account to publish approved posts
+                  automatically.
+                </p>
+                {oauthRedirectUri && (
+                  <p className="text-xs text-forest/60">
+                    Meta redirect URI must include:{" "}
+                    <code className="break-all rounded bg-sage/30 px-1">{oauthRedirectUri}</code>
+                  </p>
+                )}
+                {instagramAppId && (
+                  <p className="text-xs text-forest/60">
+                    Use the <strong>Instagram App ID</strong> from Meta (not Facebook App ID):{" "}
+                    <code>{instagramAppId}</code>
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>

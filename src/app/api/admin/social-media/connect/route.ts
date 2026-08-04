@@ -2,13 +2,17 @@ import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api-auth";
-import { buildInstagramOAuthUrl, isInstagramAppConfigured } from "@/lib/social-media/meta-oauth";
+import {
+  buildInstagramOAuthUrl,
+  getInstagramRedirectUri,
+  isInstagramAppConfigured,
+} from "@/lib/social-media/meta-oauth";
 
 export const dynamic = "force-dynamic";
 
 const STATE_COOKIE = "ig_oauth_state";
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdminApi();
   if ("error" in auth) return auth.error;
 
@@ -22,6 +26,7 @@ export async function GET() {
     );
   }
 
+  const redirectUri = getInstagramRedirectUri(request);
   const state = randomBytes(24).toString("hex");
   const cookieStore = await cookies();
   cookieStore.set(STATE_COOKIE, state, {
@@ -32,5 +37,5 @@ export async function GET() {
     path: "/",
   });
 
-  return NextResponse.redirect(buildInstagramOAuthUrl(state));
+  return NextResponse.redirect(buildInstagramOAuthUrl(state, redirectUri));
 }

@@ -7,12 +7,12 @@ export const INSTAGRAM_OAUTH_SCOPES = [
   "instagram_business_content_publish",
 ].join(",");
 
-export function getInstagramAppConfig() {
+export function getInstagramAppConfig(redirectUri?: string) {
   const appId =
     process.env.INSTAGRAM_APP_ID?.trim() ?? process.env.META_APP_ID?.trim();
   const appSecret =
     process.env.INSTAGRAM_APP_SECRET?.trim() ?? process.env.META_APP_SECRET?.trim();
-  const redirectUri = getInstagramRedirectUri();
+  const resolvedRedirect = redirectUri ?? getInstagramRedirectUri();
 
   if (!appId || !appSecret) {
     throw new Error(
@@ -20,7 +20,7 @@ export function getInstagramAppConfig() {
     );
   }
 
-  return { appId, appSecret, redirectUri };
+  return { appId, appSecret, redirectUri: resolvedRedirect };
 }
 
 export function isInstagramAppConfigured(): boolean {
@@ -40,10 +40,22 @@ export function getAppBaseUrl(): string {
   return url.replace(/\/$/, "");
 }
 
-export function getInstagramRedirectUri(): string {
+export function getInstagramRedirectUri(request?: Request): string {
   const override =
     process.env.INSTAGRAM_REDIRECT_URI?.trim() ?? process.env.META_REDIRECT_URI?.trim();
   if (override) return override;
+
+  if (request) {
+    const host =
+      request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+      request.headers.get("host")?.trim();
+    const proto =
+      request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
+    if (host && !host.includes("localhost")) {
+      return `${proto}://${host}/api/admin/social-media/callback`;
+    }
+  }
+
   const base = getAppBaseUrl();
   if (!base) {
     throw new Error("Set NEXT_PUBLIC_APP_URL or INSTAGRAM_REDIRECT_URI for Instagram OAuth.");
@@ -52,17 +64,19 @@ export function getInstagramRedirectUri(): string {
 }
 
 /** Opens Instagram login — no Facebook Page required. */
-export function buildInstagramOAuthUrl(state: string): string {
-  const { appId, redirectUri } = getInstagramAppConfig();
+export function buildInstagramOAuthUrl(state: string, redirectUri?: string): string {
+  const { appId } = getInstagramAppConfig();
+  const resolvedRedirect = redirectUri ?? getInstagramRedirectUri();
+
   const params = new URLSearchParams({
     client_id: appId,
-    redirect_uri: redirectUri,
+    redirect_uri: resolvedRedirect,
     scope: INSTAGRAM_OAUTH_SCOPES,
     response_type: "code",
     state,
-    enable_fb_login: "false",
   });
-  return `https://www.instagram.com/oauth/authorize?${params.toString()}`;
+
+  return `https://api.instagram.com/oauth/authorize?${params.toString()}`;
 }
 
 interface GraphError {
@@ -75,11 +89,14 @@ async function parseJson<T>(response: Response): Promise<T & { error?: GraphErro
   return (await response.json()) as T & { error?: GraphError };
 }
 
-export async function exchangeCodeForShortLivedToken(code: string): Promise<{
+export async function exchangeCodeForShortLivedToken(
+  code: string,
+  redirectUri?: string
+): Promise<{
   accessToken: string;
   userId: string;
 }> {
-  const { appId, appSecret, redirectUri } = getInstagramAppConfig();
+  const { appId, appSecret, redirectUri: resolvedRedirect } = getInstagramAppConfig(redirectUri);
 
   const response = await fetch("https://api.instagram.com/oauth/access_token", {
     method: "POST",
@@ -88,7 +105,7 @@ export async function exchangeCodeForShortLivedToken(code: string): Promise<{
       client_id: appId,
       client_secret: appSecret,
       grant_type: "authorization_code",
-      redirect_uri: redirectUri,
+      redirect_uri: resolvedRedirect,
       code,
     }),
   });

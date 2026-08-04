@@ -3,7 +3,8 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSocialMediaPanel } from "@/components/admin/social-media/AdminSocialMediaPanel";
 import { InstagramConnectionCard } from "@/components/admin/social-media/InstagramConnectionCard";
 import { getInstagramConnectionStatus } from "@/lib/social-media/connection";
-import { isInstagramAppConfigured } from "@/lib/social-media/meta-oauth";
+import { getInstagramRedirectUri, isInstagramAppConfigured } from "@/lib/social-media/meta-oauth";
+import { PRODUCTION_SITE_URL } from "@/lib/site-metadata";
 import type { SocialPost } from "@/lib/social-media/types";
 import { privatePageMetadata } from "@/lib/site-metadata";
 
@@ -43,6 +44,11 @@ export default async function AdminSocialMediaPage({ searchParams }: PageProps) 
 
   const connectionStatus = await getInstagramConnectionStatus(supabase, user?.email ?? null);
   const metaAppReady = isInstagramAppConfigured();
+  const oauthRedirectUri =
+    process.env.INSTAGRAM_REDIRECT_URI?.trim() ||
+    getInstagramRedirectUri() ||
+    `${PRODUCTION_SITE_URL}/api/admin/social-media/callback`;
+  const instagramAppId = process.env.INSTAGRAM_APP_ID?.trim() ?? null;
 
   const connected = params.connected === "1";
   const errorCode = typeof params.error === "string" ? params.error : null;
@@ -62,6 +68,8 @@ export default async function AdminSocialMediaPage({ searchParams }: PageProps) 
       <InstagramConnectionCard
         status={connectionStatus}
         metaAppReady={metaAppReady}
+        oauthRedirectUri={oauthRedirectUri}
+        instagramAppId={instagramAppId}
         flashMessage={flashMessage}
         flashError={flashError}
       />
