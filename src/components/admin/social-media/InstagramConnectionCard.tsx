@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Instagram, Link2, Unlink } from "lucide-react";
+import { Check, Copy, Instagram, Link2, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { InstagramConnectionStatus } from "@/lib/social-media/types";
 
 interface InstagramConnectionCardProps {
   status: InstagramConnectionStatus;
   metaAppReady: boolean;
-  oauthRedirectUri?: string | null;
+  oauthRedirectUris?: string[];
   instagramAppId?: string | null;
   flashMessage?: string | null;
   flashError?: string | null;
@@ -24,10 +24,31 @@ function formatDate(value: string | null | undefined): string | null {
   });
 }
 
+function CopyUriButton({ uri }: { uri: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    await navigator.clipboard.writeText(uri);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className="inline-flex items-center gap-1 rounded bg-sage/30 px-2 py-0.5 text-xs text-forest hover:bg-sage/50"
+    >
+      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
 export function InstagramConnectionCard({
   status,
   metaAppReady,
-  oauthRedirectUri,
+  oauthRedirectUris = [],
   instagramAppId,
   flashMessage,
   flashError,
@@ -85,11 +106,23 @@ export function InstagramConnectionCard({
                   Sign in with your Instagram Business or Creator account to publish approved posts
                   automatically.
                 </p>
-                {oauthRedirectUri && (
-                  <p className="text-xs text-forest/60">
-                    Meta redirect URI must include:{" "}
-                    <code className="break-all rounded bg-sage/30 px-1">{oauthRedirectUri}</code>
-                  </p>
+                {oauthRedirectUris.length > 0 && (
+                  <div className="rounded-lg border border-gold/30 bg-gold/5 p-3 text-xs text-forest/80">
+                    <p className="font-medium text-forest">
+                      Add these in Meta → Instagram → Business login settings → OAuth redirect URIs:
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {oauthRedirectUris.map((uri) => (
+                        <li key={uri} className="flex flex-wrap items-center gap-2">
+                          <code className="break-all rounded bg-white/80 px-1.5 py-0.5">{uri}</code>
+                          <CopyUriButton uri={uri} />
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-forest/60">
+                      Save in Meta, then click Connect Instagram again.
+                    </p>
+                  </div>
                 )}
                 {instagramAppId && (
                   <p className="text-xs text-forest/60">
