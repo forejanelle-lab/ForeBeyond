@@ -17,8 +17,16 @@ export const dynamic = "force-dynamic";
 const STATE_COOKIE = "ig_oauth_state";
 const ADMIN_SOCIAL_PATH = "/admin/marketing/social-media";
 
-function redirectWithMessage(params: Record<string, string>) {
-  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+function redirectWithMessage(request: Request, params: Record<string, string>) {
+  const host =
+    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    request.headers.get("host")?.trim();
+  const proto =
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
+  const base =
+    host && !host.includes("localhost")
+      ? `${proto}://${host}`
+      : process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://forebeyond.com";
   const url = new URL(`${base}${ADMIN_SOCIAL_PATH}`);
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
@@ -28,13 +36,13 @@ function redirectWithMessage(params: Record<string, string>) {
 
 export async function GET(request: Request) {
   if (!isInstagramAppConfigured()) {
-    return redirectWithMessage({ error: "meta_not_configured" });
+    return redirectWithMessage(request, { error: "meta_not_configured" });
   }
 
   const url = new URL(request.url);
   const error = url.searchParams.get("error");
   if (error) {
-    return redirectWithMessage({ error: "oauth_denied" });
+    return redirectWithMessage(request, { error: "oauth_denied" });
   }
 
   const code = url.searchParams.get("code");
@@ -44,7 +52,7 @@ export async function GET(request: Request) {
   cookieStore.delete(STATE_COOKIE);
 
   if (!code || !state || !savedState || state !== savedState) {
-    return redirectWithMessage({ error: "invalid_state" });
+    return redirectWithMessage(request, { error: "invalid_state" });
   }
 
   const supabase = await createClient();
@@ -53,7 +61,7 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirectWithMessage({ error: "unauthorized" });
+    return redirectWithMessage(request, { error: "unauthorized" });
   }
 
   const { data: profile } = await supabase
@@ -64,7 +72,7 @@ export async function GET(request: Request) {
 
   const typedProfile = profile as Pick<Profile, "id" | "email" | "is_admin"> | null;
   if (!isPlatformAdmin(user.email ?? "", typedProfile?.is_admin ?? false)) {
-    return redirectWithMessage({ error: "forbidden" });
+    return redirectWithMessage(request, { error: "forbidden" });
   }
 
   try {
@@ -87,9 +95,9 @@ export async function GET(request: Request) {
       connectedBy: user.id,
     });
 
-    return redirectWithMessage({ connected: "1" });
+    return redirectWithMessage(request, { connected: "1" });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Connection failed";
-    return redirectWithMessage({ error: "connect_failed", message });
+    return redirectWithMessage(request, { error: "connect_failed", message });
   }
 }

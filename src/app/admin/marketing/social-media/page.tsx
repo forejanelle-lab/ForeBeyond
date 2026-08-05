@@ -1,9 +1,10 @@
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSocialMediaPanel } from "@/components/admin/social-media/AdminSocialMediaPanel";
 import { InstagramConnectionCard } from "@/components/admin/social-media/InstagramConnectionCard";
 import { getInstagramConnectionStatus } from "@/lib/social-media/connection";
-import { getAppBaseUrl, isInstagramAppConfigured } from "@/lib/social-media/meta-oauth";
+import { getAppBaseUrl, getInstagramRedirectUri, isInstagramAppConfigured } from "@/lib/social-media/meta-oauth";
 import { PRODUCTION_SITE_URL } from "@/lib/site-metadata";
 import type { SocialPost } from "@/lib/social-media/types";
 import { privatePageMetadata } from "@/lib/site-metadata";
@@ -44,13 +45,21 @@ export default async function AdminSocialMediaPage({ searchParams }: PageProps) 
 
   const connectionStatus = await getInstagramConnectionStatus(supabase, user?.email ?? null);
   const metaAppReady = isInstagramAppConfigured();
+
+  const headersList = await headers();
+  const liveRedirect = getInstagramRedirectUri(
+    new Request("https://local", {
+      headers: {
+        host: headersList.get("x-forwarded-host")?.split(",")[0]?.trim() || headersList.get("host") || "",
+        "x-forwarded-proto": headersList.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https",
+      },
+    })
+  );
+
   const oauthRedirectUris = [
-    process.env.INSTAGRAM_REDIRECT_URI?.trim(),
+    liveRedirect,
     `${PRODUCTION_SITE_URL}/api/admin/social-media/callback`,
     `https://www.forebeyond.com/api/admin/social-media/callback`,
-    getAppBaseUrl() !== PRODUCTION_SITE_URL
-      ? `${getAppBaseUrl()}/api/admin/social-media/callback`
-      : null,
   ].filter((uri, index, all): uri is string => Boolean(uri) && all.indexOf(uri) === index);
   const instagramAppId = process.env.INSTAGRAM_APP_ID?.trim() ?? null;
 

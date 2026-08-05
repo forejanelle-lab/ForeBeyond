@@ -109,7 +109,12 @@ export function InstagramConnectionCard({
                 {oauthRedirectUris.length > 0 && (
                   <div className="rounded-lg border border-gold/30 bg-gold/5 p-3 text-xs text-forest/80">
                     <p className="font-medium text-forest">
-                      Add these in Meta → Instagram → Business login settings → OAuth redirect URIs:
+                      Add these in Meta → ForeBeyond-IG → Instagram → API setup → Business login
+                      settings → OAuth redirect URIs:
+                    </p>
+                    <p className="mt-1 text-forest/70">
+                      The <strong>first URI</strong> is what Connect sends right now — it must match
+                      Meta exactly.
                     </p>
                     <ul className="mt-2 space-y-2">
                       {oauthRedirectUris.map((uri) => (

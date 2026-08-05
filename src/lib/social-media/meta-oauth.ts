@@ -41,10 +41,6 @@ export function getAppBaseUrl(): string {
 }
 
 export function getInstagramRedirectUri(request?: Request): string {
-  const override =
-    process.env.INSTAGRAM_REDIRECT_URI?.trim() ?? process.env.META_REDIRECT_URI?.trim();
-  if (override) return override;
-
   if (request) {
     const host =
       request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
@@ -55,6 +51,10 @@ export function getInstagramRedirectUri(request?: Request): string {
       return `${proto}://${host}/api/admin/social-media/callback`;
     }
   }
+
+  const override =
+    process.env.INSTAGRAM_REDIRECT_URI?.trim() ?? process.env.META_REDIRECT_URI?.trim();
+  if (override) return override.replace(/\/$/, "");
 
   const base = getAppBaseUrl();
   if (!base) {
