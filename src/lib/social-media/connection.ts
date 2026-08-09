@@ -24,7 +24,10 @@ export async function getInstagramConnection(
     .eq("platform", "instagram")
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("getInstagramConnection failed:", error.message);
+    return null;
+  }
   return (data as SocialPlatformConnection | null) ?? null;
 }
 

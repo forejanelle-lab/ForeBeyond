@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Trash2, Check, CalendarClock } from "lucide-react";
+import { CalendarClock, Check, FileImage, Sparkles, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -39,6 +39,15 @@ export function AdminSocialMediaPanel({ posts: initial }: AdminSocialMediaPanelP
   const [bulkScheduleAt, setBulkScheduleAt] = useState("");
   const [error, setError] = useState("");
   const [generating, setGenerating] = useState(false);
+
+  const counts = useMemo(
+    () => ({
+      drafts: posts.filter((p) => p.status === "draft" || p.status === "failed").length,
+      scheduled: posts.filter((p) => p.status === "scheduled").length,
+      published: posts.filter((p) => p.status === "published").length,
+    }),
+    [posts]
+  );
 
   const filtered = useMemo(() => {
     const statuses = TABS.find((t) => t.id === tab)?.statuses ?? [];
@@ -269,8 +278,50 @@ export function AdminSocialMediaPanel({ posts: initial }: AdminSocialMediaPanelP
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="rounded-2xl border border-sage-dark/15 bg-gradient-to-br from-white via-white to-sage/20 p-5 shadow-sm">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-forest/60">
+              Content studio
+            </p>
+            <h2 className="mt-1 font-serif text-2xl text-forest">Instagram posts</h2>
+            <p className="mt-1 max-w-xl text-sm text-charcoal-light">
+              Generate, review, download, and publish premium travel content for Fore Beyond.
+            </p>
+          </div>
+          <Button variant="gold" size="lg" onClick={() => setShowGenerate(true)} disabled={generating} className="shadow-md">
+            <Sparkles className="h-4 w-4" />
+            Generate monthly content
+          </Button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-3 gap-3">
+          {[
+            { label: "Drafts", value: counts.drafts, tab: "drafts" as TabId },
+            { label: "Scheduled", value: counts.scheduled, tab: "scheduled" as TabId },
+            { label: "Published", value: counts.published, tab: "published" as TabId },
+          ].map((stat) => (
+            <button
+              key={stat.tab}
+              type="button"
+              onClick={() => setTab(stat.tab)}
+              className={`rounded-xl border px-4 py-3 text-left transition-all ${
+                tab === stat.tab
+                  ? "border-forest/20 bg-forest text-white shadow-sm"
+                  : "border-sage-dark/15 bg-white/80 hover:border-forest/15 hover:bg-white"
+              }`}
+            >
+              <p className={`text-2xl font-semibold ${tab === stat.tab ? "text-white" : "text-forest"}`}>
+                {stat.value}
+              </p>
+              <p className={`text-xs ${tab === stat.tab ? "text-white/80" : "text-charcoal-light"}`}>
+                {stat.label}
+              </p>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
           {TABS.map((item) => (
             <button
               key={item.id}
@@ -278,72 +329,76 @@ export function AdminSocialMediaPanel({ posts: initial }: AdminSocialMediaPanelP
               onClick={() => setTab(item.id)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 tab === item.id
-                  ? "bg-forest text-white"
-                  : "bg-white border border-sage-dark/30 text-charcoal-light hover:text-forest"
+                  ? "bg-forest text-white shadow-sm"
+                  : "border border-sage-dark/20 bg-white text-charcoal-light hover:border-forest/20 hover:text-forest"
               }`}
             >
               {item.label}
-              <span className="ml-2 opacity-70">
-                {posts.filter((p) => item.statuses.includes(p.status)).length}
-              </span>
             </button>
           ))}
         </div>
-
-        <Button variant="primary" onClick={() => setShowGenerate(true)} disabled={generating}>
-          <Sparkles className="h-4 w-4" />
-          Generate Monthly Content
-        </Button>
       </div>
 
       {selectedInView.length > 0 && (
-        <div className="rounded-xl border border-sage-dark/30 bg-white p-4 flex flex-col lg:flex-row lg:items-end gap-4">
-          <p className="text-sm text-forest font-medium">{selectedInView.length} selected</p>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="primary" onClick={bulkApprove} disabled={bulkLoading}>
-              <Check className="h-4 w-4" />
-              Approve
-            </Button>
-            <Button size="sm" variant="outline" onClick={bulkDelete} disabled={bulkLoading}>
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 lg:ml-auto">
-            <Input
-              type="datetime-local"
-              value={bulkScheduleAt}
-              onChange={(e) => setBulkScheduleAt(e.target.value)}
-              className="min-w-[220px]"
-            />
-            <Button size="sm" variant="outline" onClick={bulkReschedule} disabled={bulkLoading}>
-              <CalendarClock className="h-4 w-4" />
-              Reschedule
-            </Button>
+        <div className="rounded-2xl border border-forest/15 bg-forest/[0.03] p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+            <p className="text-sm font-medium text-forest">
+              {selectedInView.length} post{selectedInView.length === 1 ? "" : "s"} selected
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="primary" onClick={bulkApprove} disabled={bulkLoading}>
+                <Check className="h-4 w-4" />
+                Approve
+              </Button>
+              <Button size="sm" variant="outline" onClick={bulkDelete} disabled={bulkLoading}>
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row lg:ml-auto">
+              <Input
+                type="datetime-local"
+                value={bulkScheduleAt}
+                onChange={(e) => setBulkScheduleAt(e.target.value)}
+                className="min-w-[220px] bg-white"
+              />
+              <Button size="sm" variant="outline" onClick={bulkReschedule} disabled={bulkLoading}>
+                <CalendarClock className="h-4 w-4" />
+                Reschedule
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {generating && (
-        <div className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-forest">
+        <div className="rounded-xl border border-gold/30 bg-gradient-to-r from-gold/10 to-gold/5 px-4 py-3 text-sm text-forest">
           Generating your monthly content strategy, captions, and images. This may take a few minutes…
         </div>
       )}
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-sage-dark/40 bg-white/60 px-6 py-16 text-center">
-          <p className="text-charcoal-light">
-            No {tab} posts yet. Generate a month of premium Instagram content to get started.
+        <div className="rounded-2xl border border-dashed border-sage-dark/25 bg-gradient-to-b from-white to-sage/10 px-6 py-20 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-forest/10 text-forest">
+            <FileImage className="h-7 w-7" />
+          </div>
+          <h3 className="font-serif text-xl text-forest">No {tab} posts yet</h3>
+          <p className="mx-auto mt-2 max-w-md text-sm text-charcoal-light">
+            Generate a month of editorial Instagram content — images, captions, and hashtags — ready to review or download.
           </p>
-          <Button className="mt-4" variant="primary" onClick={() => setShowGenerate(true)}>
+          <Button className="mt-6" variant="primary" onClick={() => setShowGenerate(true)}>
             <Sparkles className="h-4 w-4" />
-            Generate Monthly Content
+            Generate monthly content
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((post) => (
             <SocialPostCard
               key={post.id}

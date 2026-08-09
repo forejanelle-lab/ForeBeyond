@@ -2,8 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Instagram, Link2, Unlink } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Instagram,
+  Link2,
+  ShieldCheck,
+  Unlink,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import type { InstagramConnectionStatus } from "@/lib/social-media/types";
 
 interface InstagramConnectionCardProps {
@@ -37,7 +46,7 @@ function CopyUriButton({ uri }: { uri: string }) {
     <button
       type="button"
       onClick={copy}
-      className="inline-flex items-center gap-1 rounded bg-sage/30 px-2 py-0.5 text-xs text-forest hover:bg-sage/50"
+      className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-forest shadow-sm hover:bg-sage/30"
     >
       {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
       {copied ? "Copied" : "Copy"}
@@ -56,6 +65,7 @@ export function InstagramConnectionCard({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(flashError ?? "");
+  const [setupOpen, setSetupOpen] = useState(!status.connected);
 
   async function handleDisconnect() {
     if (!confirm("Disconnect Instagram from Fore Beyond admin? Scheduled publishing will stop.")) {
@@ -77,114 +87,176 @@ export function InstagramConnectionCard({
   }
 
   return (
-    <div className="mb-6 rounded-xl border border-sage/60 bg-white/80 px-5 py-4 shadow-sm">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 text-white">
-            <Instagram className="h-5 w-5" />
+    <div className="overflow-hidden rounded-2xl border border-sage-dark/15 bg-white shadow-sm">
+      <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 px-5 py-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
+              <Instagram className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="font-serif text-xl text-white">Instagram publishing</h2>
+              <p className="text-sm text-white/85">
+                Connect once to auto-publish approved posts, or use manual download below.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-serif text-lg text-forest">Instagram Account</h2>
-            {status.connected ? (
-              <div className="mt-1 space-y-0.5 text-sm text-forest/80">
-                <p>
-                  Connected as{" "}
-                  <span className="font-medium text-forest">
-                    {status.username ? `@${status.username}` : status.accountName ?? "Instagram Business"}
-                  </span>
-                  {status.source === "env" && (
-                    <span className="ml-2 rounded bg-sage/40 px-1.5 py-0.5 text-xs">env vars</span>
-                  )}
-                </p>
-                {status.pageName && <p>Facebook Page: {status.pageName}</p>}
-                {status.connectedAt && <p>Connected {formatDate(status.connectedAt)}</p>}
-                {status.expiresAt && <p>Token expires {formatDate(status.expiresAt)}</p>}
-              </div>
-            ) : (
-              <div className="mt-1 space-y-1 text-sm text-forest/70">
-                <p>
-                  Sign in with your Instagram Business or Creator account to publish approved posts
-                  automatically.
-                </p>
-                {oauthRedirectUris.length > 0 && (
-                  <div className="rounded-lg border border-gold/30 bg-gold/5 p-3 text-xs text-forest/80">
-                    <p className="font-medium text-forest">
-                      Add these in Meta → ForeBeyond-IG → Instagram → API setup → Business login
-                      settings → OAuth redirect URIs:
-                    </p>
-                    <p className="mt-1 text-forest/70">
-                      The <strong>first URI</strong> is what Connect sends right now — it must match
-                      Meta exactly.
-                    </p>
-                    <ul className="mt-2 space-y-2">
-                      {oauthRedirectUris.map((uri) => (
-                        <li key={uri} className="flex flex-wrap items-center gap-2">
-                          <code className="break-all rounded bg-white/80 px-1.5 py-0.5">{uri}</code>
-                          <CopyUriButton uri={uri} />
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="mt-2 text-forest/60">
-                      Save in Meta, then click Connect Instagram again.
-                    </p>
-                  </div>
-                )}
-                {instagramAppId && (
-                  <p className="text-xs text-forest/60">
-                    Use the <strong>Instagram App ID</strong> from Meta (not Facebook App ID):{" "}
-                    <code>{instagramAppId}</code>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
 
-        <div className="flex shrink-0 gap-2">
-          {status.connected && status.source === "oauth" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDisconnect}
-              isLoading={loading}
-              disabled={loading}
-            >
-              <Unlink className="mr-1.5 h-4 w-4" />
-              Disconnect
-            </Button>
-          ) : !status.connected ? (
-            metaAppReady ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {status.connected ? (
+              <>
+                <Badge variant="success" className="border-0 bg-white/95 text-forest">
+                  <ShieldCheck className="h-3 w-3" />
+                  Connected
+                </Badge>
+                {status.source === "oauth" && (
+                  <Button
+                    variant="white"
+                    size="sm"
+                    onClick={handleDisconnect}
+                    isLoading={loading}
+                    disabled={loading}
+                  >
+                    <Unlink className="h-4 w-4" />
+                    Disconnect
+                  </Button>
+                )}
+              </>
+            ) : metaAppReady ? (
               <Button
-                variant="gold"
+                variant="white"
                 size="sm"
                 onClick={() => {
                   window.location.href = "/api/admin/social-media/connect";
                 }}
               >
-                <Link2 className="mr-1.5 h-4 w-4" />
+                <Link2 className="h-4 w-4" />
                 Connect Instagram
               </Button>
             ) : (
-              <p className="max-w-xs text-xs text-forest/60">
-                Set <code>INSTAGRAM_APP_ID</code> and <code>INSTAGRAM_APP_SECRET</code> to enable
-                Connect.
-              </p>
-            )
-          ) : null}
+              <span className="rounded-full bg-white/20 px-3 py-1.5 text-xs text-white">
+                App credentials not configured
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {flashMessage && (
-        <p className="mt-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-          {flashMessage}
-        </p>
-      )}
+      <div className="space-y-4 p-5">
+        {status.connected ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-sage-dark/10 bg-sage/10 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal-light">
+                Account
+              </p>
+              <p className="mt-1 font-medium text-forest">
+                {status.username ? `@${status.username}` : status.accountName ?? "Instagram Business"}
+              </p>
+            </div>
+            {status.pageName && (
+              <div className="rounded-xl border border-sage-dark/10 bg-sage/10 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal-light">
+                  Facebook Page
+                </p>
+                <p className="mt-1 font-medium text-forest">{status.pageName}</p>
+              </div>
+            )}
+            {status.connectedAt && (
+              <div className="rounded-xl border border-sage-dark/10 bg-sage/10 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal-light">
+                  Connected
+                </p>
+                <p className="mt-1 font-medium text-forest">{formatDate(status.connectedAt)}</p>
+              </div>
+            )}
+            {status.expiresAt && (
+              <div className="rounded-xl border border-sage-dark/10 bg-sage/10 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal-light">
+                  Token expires
+                </p>
+                <p className="mt-1 font-medium text-forest">{formatDate(status.expiresAt)}</p>
+              </div>
+            )}
+            {status.source === "env" && (
+              <div className="rounded-xl border border-gold/20 bg-gold/10 px-4 py-3 sm:col-span-2">
+                <p className="text-sm text-forest">
+                  Publishing via server environment variables (legacy mode).
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-charcoal-light">
+            Sign in with your Instagram Business or Creator account to publish approved posts
+            automatically. You can always download images and copy captions manually from each post card.
+          </p>
+        )}
 
-      {(error || flashError) && (
-        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error || flashError}
-        </p>
-      )}
+        {!status.connected && (oauthRedirectUris.length > 0 || instagramAppId) && (
+          <div className="rounded-xl border border-sage-dark/15 bg-sage/10">
+            <button
+              type="button"
+              onClick={() => setSetupOpen((open) => !open)}
+              className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-forest"
+            >
+              Meta app setup help
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${setupOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            {setupOpen && (
+              <div className="space-y-3 border-t border-sage-dark/10 px-4 pb-4 pt-3 text-sm text-charcoal-light">
+                {oauthRedirectUris.length > 0 && (
+                  <div>
+                    <p className="font-medium text-forest">
+                      Add these OAuth redirect URIs in Meta → ForeBeyond-IG → Instagram → Business login
+                    </p>
+                    <p className="mt-1 text-xs">
+                      The first URI is what Connect uses — it must match Meta exactly.
+                    </p>
+                    <ul className="mt-3 space-y-2">
+                      {oauthRedirectUris.map((uri, index) => (
+                        <li
+                          key={uri}
+                          className="flex flex-col gap-2 rounded-xl border border-white/80 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div>
+                            {index === 0 && (
+                              <span className="mb-1 inline-block rounded-full bg-forest/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-forest">
+                                Active
+                              </span>
+                            )}
+                            <p className="break-all font-mono text-xs text-forest">{uri}</p>
+                          </div>
+                          <CopyUriButton uri={uri} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {instagramAppId && (
+                  <p className="text-xs">
+                    Instagram App ID:{" "}
+                    <span className="font-mono text-forest">{instagramAppId}</span>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {flashMessage && (
+          <div className="rounded-xl border border-green-200/80 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {flashMessage}
+          </div>
+        )}
+
+        {(error || flashError) && (
+          <div className="rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {error || flashError}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

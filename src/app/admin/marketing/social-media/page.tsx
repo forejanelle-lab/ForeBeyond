@@ -4,9 +4,9 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSocialMediaPanel } from "@/components/admin/social-media/AdminSocialMediaPanel";
 import { InstagramConnectionCard } from "@/components/admin/social-media/InstagramConnectionCard";
 import { getInstagramConnectionStatus } from "@/lib/social-media/connection";
-import { getAppBaseUrl, getInstagramRedirectUri, isInstagramAppConfigured } from "@/lib/social-media/meta-oauth";
+import { getInstagramRedirectUri, isInstagramAppConfigured } from "@/lib/social-media/meta-oauth";
 import { PRODUCTION_SITE_URL } from "@/lib/site-metadata";
-import type { SocialPost } from "@/lib/social-media/types";
+import type { InstagramConnectionStatus, SocialPost } from "@/lib/social-media/types";
 import { privatePageMetadata } from "@/lib/site-metadata";
 
 export const metadata = privatePageMetadata({
@@ -43,24 +43,33 @@ export default async function AdminSocialMediaPage({ searchParams }: PageProps) 
     data: { user },
   } = await supabase.auth.getUser();
 
-  const connectionStatus = await getInstagramConnectionStatus(supabase, user?.email ?? null);
+  let connectionStatus: InstagramConnectionStatus = { connected: false };
+  try {
+    connectionStatus = await getInstagramConnectionStatus(supabase, user?.email ?? null);
+  } catch (err) {
+    console.error("Instagram connection status failed:", err);
+  }
   const metaAppReady = isInstagramAppConfigured();
 
   const headersList = await headers();
-  const liveRedirect = getInstagramRedirectUri(
-    new Request("https://local", {
-      headers: {
-        host: headersList.get("x-forwarded-host")?.split(",")[0]?.trim() || headersList.get("host") || "",
-        "x-forwarded-proto": headersList.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https",
-      },
-    })
-  );
-
-  const oauthRedirectUris = [
-    liveRedirect,
-    `${PRODUCTION_SITE_URL}/api/admin/social-media/callback`,
-    `https://www.forebeyond.com/api/admin/social-media/callback`,
-  ].filter((uri, index, all): uri is string => Boolean(uri) && all.indexOf(uri) === index);
+  let oauthRedirectUris: string[] = [];
+  try {
+    const liveRedirect = getInstagramRedirectUri(
+      new Request("https://local", {
+        headers: {
+          host: headersList.get("x-forwarded-host")?.split(",")[0]?.trim() || headersList.get("host") || "",
+          "x-forwarded-proto": headersList.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https",
+        },
+      })
+    );
+    oauthRedirectUris = [
+      liveRedirect,
+      `${PRODUCTION_SITE_URL}/api/admin/social-media/callback`,
+      `https://www.forebeyond.com/api/admin/social-media/callback`,
+    ].filter((uri, index, all): uri is string => Boolean(uri) && all.indexOf(uri) === index);
+  } catch (err) {
+    console.error("Instagram redirect URI resolution failed:", err);
+  }
   const instagramAppId = process.env.INSTAGRAM_APP_ID?.trim() ?? null;
 
   const connected = params.connected === "1";
@@ -73,11 +82,8 @@ export default async function AdminSocialMediaPage({ searchParams }: PageProps) 
     : null;
 
   return (
-    <AdminShell
-      wide
-      title="Social Media"
-      description="Generate, review, approve, and schedule premium Instagram content for Fore Beyond."
-    >
+    <AdminShell wide title="Social Media">
+      <div className="space-y-6">
       <InstagramConnectionCard
         status={connectionStatus}
         metaAppReady={metaAppReady}
@@ -87,6 +93,7 @@ export default async function AdminSocialMediaPage({ searchParams }: PageProps) 
         flashError={flashError}
       />
       <AdminSocialMediaPanel posts={(posts as SocialPost[]) ?? []} />
+      </div>
     </AdminShell>
   );
 }
