@@ -1,7 +1,16 @@
 import { resolveCatalogListingPhoto } from "@/lib/listing-photo-catalog";
 
-/** Fore Beyond logo shown when a listing has no uploaded photo or video */
-export const LISTING_IMAGE_FALLBACK = "/logo-fore-beyond.png";
+/** Neutral placeholder when a listing has no uploaded photo or video */
+export const LISTING_IMAGE_FALLBACK = "/listing-photo-placeholder.svg";
+
+const LISTING_LOGO_FALLBACK_PATHS = [
+  LISTING_IMAGE_FALLBACK,
+  "/logo-listing-fallback.png",
+  "/fore-beyond-logo.svg",
+  "/logo-fore-beyond.png",
+  "/logo-fore-beyond-sage.png",
+  "/logo-tree-mark.png",
+] as const;
 
 const FALLBACK_INDEX_BY_CITY = new Map<string, number>();
 
@@ -26,11 +35,21 @@ export function getListingPlaceholderImage(country?: string | null, city?: strin
   return resolveCatalogListingPhoto(city, country, fallbackIndex(city, country));
 }
 
+export function isListingLogoFallbackUrl(url?: string | null): boolean {
+  if (!url?.trim()) return false;
+  const value = url.trim();
+  return LISTING_LOGO_FALLBACK_PATHS.some(
+    (path) => value === path || value.endsWith(path)
+  );
+}
+
 export function resolveListingImage(
   coverPhotoUrl: string | null | undefined,
   _country?: string | null,
-  _city?: string | null
-): string {
+  _city?: string | null,
+  options?: { fallback?: "logo" | "none" }
+): string | null {
   if (isUsableImageUrl(coverPhotoUrl)) return coverPhotoUrl.trim();
+  if (options?.fallback === "none") return null;
   return LISTING_IMAGE_FALLBACK;
 }

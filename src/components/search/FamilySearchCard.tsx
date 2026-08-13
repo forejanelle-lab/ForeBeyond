@@ -69,19 +69,17 @@ export function FamilySearchCard({
 
   const imageBlock = (
     <div
-      className={`relative shrink-0 overflow-hidden bg-sage ${
+      className={`relative shrink-0 overflow-hidden bg-gray-200 ${
         layout === "list"
-          ? "h-36 w-full rounded-xl sm:h-40 sm:w-44 md:h-44 md:w-52"
-          : "mb-4 aspect-[16/10] w-full rounded-xl"
-      } bg-black`}
+          ? "h-[4.5rem] w-[4.5rem] rounded-lg sm:h-20 sm:w-20"
+          : "mb-3 aspect-[4/3] w-full rounded-xl"
+      }`}
     >
       <ListingPreviewMedia
         listing={listing}
         coverPhotoUrl={coverPhotoUrl}
-        className={`object-cover transition-transform duration-300 group-hover:scale-[1.02] ${
-          layout === "list" ? "object-left" : "object-center"
-        }`}
-        sizes={layout === "list" ? "208px" : "(max-width: 768px) 100vw, 400px"}
+        className="object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]"
+        sizes={layout === "list" ? "80px" : "(max-width: 768px) 100vw, 320px"}
       />
       {showSaveButton && layout === "grid" && (
         <button
@@ -106,9 +104,13 @@ export function FamilySearchCard({
   );
 
   const contentBlock = (
-    <div className={`space-y-2 ${layout === "list" ? "flex-1 py-1" : ""}`}>
+    <div className={`min-w-0 ${layout === "list" ? "flex-1 space-y-1" : "space-y-2"}`}>
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-forest line-clamp-2 group-hover:text-forest-light transition-colors">
+        <h3
+          className={`font-semibold text-forest line-clamp-2 group-hover:text-forest-light transition-colors ${
+            layout === "list" ? "text-sm sm:text-base leading-snug" : ""
+          }`}
+        >
           {listing.title ?? "Family Home"}
         </h3>
         {showSaveButton && layout === "list" && (
@@ -127,18 +129,18 @@ export function FamilySearchCard({
       </div>
 
       {(listing.city || listing.country) && (
-        <p className="flex items-center gap-1 text-sm text-charcoal-light">
+        <p className={`flex items-center gap-1 text-charcoal-light ${layout === "list" ? "text-xs" : "text-sm"}`}>
           <MapPin className="h-3.5 w-3.5 shrink-0" />
           {[listing.city, listing.country].filter(Boolean).join(", ")}
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="gold">
+      <div className={`flex flex-wrap items-center gap-1.5 ${layout === "list" ? "pt-0.5" : "gap-2"}`}>
+        <Badge variant="gold" className={layout === "list" ? "text-[10px] px-1.5 py-0" : ""}>
           <Star className="h-3 w-3" />
           {listing.trust_score}
         </Badge>
-        <span className="text-sm font-medium text-forest">
+        <span className={`font-medium text-forest ${layout === "list" ? "text-xs sm:text-sm" : "text-sm"}`}>
           <DisplayBudget nightlyRateUsd={listing.budget_per_night} listing={listing} />
         </span>
         {listing.verification_status === "verified" && layout === "list" && (
@@ -150,18 +152,18 @@ export function FamilySearchCard({
       </div>
 
       {(hostDisplayName ?? listing.host_first_name) && (
-        <p className="text-xs text-charcoal-light">
+        <p className={`text-charcoal-light ${layout === "list" ? "text-[11px]" : "text-xs"}`}>
           Hosted by {hostDisplayName ?? listing.host_first_name}
         </p>
       )}
 
-      <div className="flex flex-wrap gap-1.5 pt-1">
-        {listing.meals?.slice(0, 2).map((meal) => (
+      <div className={`flex flex-wrap gap-1 ${layout === "list" ? "pt-0.5" : "gap-1.5 pt-1"}`}>
+        {listing.meals?.slice(0, layout === "list" ? 1 : 2).map((meal) => (
           <Badge key={meal} variant="outline" className="text-[10px]">
             {meal}
           </Badge>
         ))}
-        {listing.languages?.slice(0, 3).map((lang) => (
+        {listing.languages?.slice(0, layout === "list" ? 2 : 3).map((lang) => (
           <Badge key={lang} variant="default" className="text-[10px]">
             {lang}
           </Badge>
@@ -176,11 +178,11 @@ export function FamilySearchCard({
         variant="outline"
         padding="sm"
         className={`overflow-hidden h-full hover:shadow-lg transition-shadow ${
-          layout === "list" ? "!p-3" : ""
+          layout === "list" ? "!p-2.5 sm:!p-3" : ""
         }`}
       >
         {layout === "list" ? (
-          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-start gap-3">
             {imageBlock}
             {contentBlock}
           </div>

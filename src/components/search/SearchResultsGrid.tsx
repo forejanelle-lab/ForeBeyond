@@ -33,7 +33,7 @@ export function SearchResultsGrid({
 
   return (
     <SearchResultsAudioScope>
-      <div className={layout === "list" ? "space-y-4" : "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6"}>
+      <div className={layout === "list" ? "space-y-2.5" : "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6"}>
         {listings.map((listing) => (
           <FamilySearchCard
             key={listing.id}

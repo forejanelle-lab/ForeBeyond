@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Upload, X, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { isListingLogoFallbackUrl } from "@/lib/listing-images";
 import { Button } from "@/components/ui/Button";
 import type { ListingPhoto } from "@/types/database";
 
@@ -27,7 +28,9 @@ export function PhotoUpload({
   uploadHint = "JPEG, PNG, WebP up to 5MB each",
 }: PhotoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [photos, setPhotos] = useState<ListingPhoto[]>(existingPhotos);
+  const [photos, setPhotos] = useState(
+    existingPhotos.filter((photo) => !isListingLogoFallbackUrl(photo.file_url))
+  );
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 

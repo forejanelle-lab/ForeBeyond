@@ -20,6 +20,7 @@ import { buildHomePageJsonLd } from "@/lib/json-ld";
 import { getServerTranslations } from "@/lib/i18n/server";
 import { createPageMetadata } from "@/lib/site-metadata";
 import { TRAVELER_ACCOUNT_SEARCH_MESSAGE } from "@/lib/traveler-verification";
+import { isPlatformAdmin } from "@/lib/navigation-menu";
 import type { Profile } from "@/types/database";
 
 export const metadata = createPageMetadata({
@@ -36,8 +37,8 @@ export default async function HomePage() {
   const { t } = await getServerTranslations();
   const popularDestinations = await getPopularDestinations();
 
-  let isHostUser = false;
   let isLoggedIn = false;
+  let searchDisabled = false;
   try {
     const supabase = await createClient();
     const {
@@ -47,10 +48,13 @@ export default async function HomePage() {
       isLoggedIn = true;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, is_admin")
         .eq("id", user.id)
         .single();
-      isHostUser = (profile as Pick<Profile, "role"> | null)?.role === "host";
+      const typedProfile = profile as Pick<Profile, "role" | "is_admin"> | null;
+      const isHostUser = typedProfile?.role === "host";
+      const isAdmin = isPlatformAdmin(user.email ?? "", typedProfile?.is_admin ?? false);
+      searchDisabled = isHostUser && !isAdmin;
     }
   } catch (error) {
     console.error("Homepage auth check failed:", error);
@@ -103,7 +107,7 @@ export default async function HomePage() {
           </p>
           <div className="mt-8 relative z-20">
             <HeroSearchBar
-              disabled={isHostUser}
+              disabled={searchDisabled}
               disabledMessage={TRAVELER_ACCOUNT_SEARCH_MESSAGE}
             />
             {!isLoggedIn && (

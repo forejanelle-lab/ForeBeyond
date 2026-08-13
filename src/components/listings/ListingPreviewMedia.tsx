@@ -29,14 +29,16 @@ export function ListingPreviewMedia({
         src={listing.intro_video_url}
         variant="preview"
         listingId={listing.id}
-        className={`absolute inset-0 h-full w-full ${className}`}
+        className={`absolute inset-0 h-full w-full object-cover object-center ${className}`}
         ariaLabel={listing.title ?? "Family intro video"}
       />
     );
   }
 
   if (!isUsableListingImageUrl(coverPhotoUrl)) {
-    return <ListingCoverFallback />;
+    return (
+      <ListingCoverFallback sizes={sizes} priority={priority} />
+    );
   }
 
   return (

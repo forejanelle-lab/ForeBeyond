@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Globe, Utensils, Home, Sparkles, Shield } from "lucide-react";
 import { HostIntroVideo } from "@/components/listings/HostIntroVideo";
 import { ListingImage } from "@/components/listings/ListingImage";
+import { isListingLogoFallbackUrl } from "@/lib/listing-images";
 import { ProfileTabs } from "@/components/design/ProfileTabs";
 import { ListingReviewAction } from "@/components/reviews/ListingReviewAction";
 import { ReviewList } from "@/components/reviews/ReviewList";
@@ -57,6 +58,8 @@ export function FamilyProfileContent({
     { icon: Sparkles, label: "Family Activities", items: listing.family_activities },
     { icon: Shield, label: "House Rules", items: listing.house_rules },
   ];
+
+  const uploadedPhotos = photos.filter((photo) => !isListingLogoFallbackUrl(photo.file_url));
 
   return (
     <div className="space-y-8">
@@ -128,9 +131,9 @@ export function FamilyProfileContent({
 
       {activeTab === "photos" && (
         <div className="pt-4">
-          {photos.length > 0 ? (
+          {uploadedPhotos.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {photos.map((photo) => (
+              {uploadedPhotos.map((photo) => (
                 <div key={photo.id} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-sage">
                   <ListingImage
                     src={photo.file_url}
@@ -138,6 +141,7 @@ export function FamilyProfileContent({
                     city={listing.city}
                     alt={photo.caption ?? "Family photo"}
                     fill
+                    showLogoFallback={false}
                     className="object-cover"
                     sizes="300px"
                   />
