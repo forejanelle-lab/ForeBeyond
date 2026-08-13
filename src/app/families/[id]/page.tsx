@@ -3,7 +3,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { FamilyProfileView } from "@/components/search/FamilyProfileView";
 import { ListingAuthGate } from "@/components/listings/ListingAuthGate";
-import { LISTING_IMAGE_FALLBACK } from "@/lib/listing-images";
 import { TrackPageEvent } from "@/components/analytics/TrackPageEvent";
 import { AnalyticsEvents } from "@/lib/analytics";
 import { createPageMetadata, privatePageMetadata } from "@/lib/site-metadata";
@@ -365,7 +364,7 @@ export default async function FamilyProfilePage({
             image:
               (photos as ListingPhoto[] | null)?.find((photo) => photo.is_cover)?.file_url ??
               (photos as ListingPhoto[] | null)?.[0]?.file_url ??
-              LISTING_IMAGE_FALLBACK,
+              undefined,
             price: typedListing.budget_per_night,
             priceCurrency: typedListing.pricing_currency ?? "USD",
             ratingValue: hostAvgRating,

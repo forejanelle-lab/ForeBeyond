@@ -36,12 +36,7 @@ export function ListingPreviewMedia({
   }
 
   if (!isUsableListingImageUrl(coverPhotoUrl)) {
-    return (
-      <ListingCoverFallback
-        sizes={sizes}
-        priority={priority}
-      />
-    );
+    return <ListingCoverFallback />;
   }
 
   return (

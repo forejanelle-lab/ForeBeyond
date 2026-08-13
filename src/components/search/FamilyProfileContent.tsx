@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Globe, Utensils, Home, Sparkles, Shield } from "lucide-react";
 import { HostIntroVideo } from "@/components/listings/HostIntroVideo";
-import { ListingCoverFallback } from "@/components/listings/ListingCoverFallback";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { ProfileTabs } from "@/components/design/ProfileTabs";
 import { ListingReviewAction } from "@/components/reviews/ListingReviewAction";
@@ -151,9 +150,7 @@ export function FamilyProfileContent({
               ))}
             </div>
           ) : (
-            <div className="relative aspect-[16/10] max-w-lg rounded-xl overflow-hidden bg-black">
-              <ListingCoverFallback sizes="512px" />
-            </div>
+            <p className="text-charcoal-light">No photos yet.</p>
           )}
         </div>
       )}

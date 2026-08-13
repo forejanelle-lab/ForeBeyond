@@ -7,7 +7,6 @@ import { DisplayExperiencePrice } from "@/components/i18n/DisplayMoney";
 import {
   formatDuration,
   getCategoryLabel,
-  getExperienceHeroImage,
 } from "@/lib/experiences";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
@@ -31,22 +30,10 @@ export function ExperienceProfileView({
   isSaved = false,
   profileBio = null,
 }: ExperienceProfileViewProps) {
-  const coverPhoto = photos.find((p) => p.is_cover) ?? photos[0];
-  const heroImage = coverPhoto?.file_url ?? getExperienceHeroImage(experience.category);
-
   return (
     <>
       <Section background="cream" className="!py-0">
-        <div className="relative h-64 md:h-96 bg-sage">
-          <Image
-            src={heroImage}
-            alt={experience.title ?? "Experience"}
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="relative h-64 md:h-96 bg-forest">
           <Container className="absolute bottom-0 left-0 right-0 pb-6 md:pb-8">
             <Badge variant="gold" className="mb-3">
               {getCategoryLabel(experience.category)}

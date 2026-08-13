@@ -11,7 +11,11 @@ import {
   Flag,
   LifeBuoy,
   Gauge,
-  Share2,
+  Search,
+  GitBranch,
+  BarChart3,
+  History,
+  Radio,
 } from "lucide-react";
 import { ADMIN_NAV } from "@/lib/admin";
 import { Container } from "@/components/ui/Container";
@@ -26,7 +30,11 @@ const navIcons: Record<string, typeof LayoutDashboard> = {
   "/admin/reports": Flag,
   "/admin/support": LifeBuoy,
   "/admin/trust-scores": Gauge,
-  "/admin/marketing/social-media": Share2,
+  "/admin/host-growth/finder": Search,
+  "/admin/host-growth/pipeline": GitBranch,
+  "/admin/host-growth/analytics": BarChart3,
+  "/admin/host-growth/search-history": History,
+  "/admin/host-growth/signals": Radio,
 };
 
 function isNavActive(pathname: string, href: string) {

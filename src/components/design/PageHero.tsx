@@ -30,7 +30,7 @@ export function PageHero({
   height = "lg",
   align = "left",
   priority = false,
-  variant = "image",
+  variant = "solid",
 }: PageHeroProps) {
   const useSolid = variant === "solid" || !image;
 

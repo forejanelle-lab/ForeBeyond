@@ -7,7 +7,6 @@ import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
 import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
-import { ListingPreviewMedia } from "@/components/listings/ListingPreviewMedia";
 import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
 import { DisplayStayRateFromPricing } from "@/components/i18n/DisplayMoney";
 import { pickListingPricing } from "@/lib/stay-requests";
@@ -88,7 +87,6 @@ export function FamilyProfileView({
   hostAvatarUrl = null,
   hostDisplayName = null,
 }: FamilyProfileViewProps) {
-  const coverPhoto = photos.find((p) => p.is_cover) ?? photos[0];
   const listingPricing = pickListingPricing(listing);
   const isVerified = verificationStatus === "verified";
   const locationLabel = [listing.city, listing.country].filter(Boolean).join(", ");
@@ -102,17 +100,12 @@ export function FamilyProfileView({
 
   return (
     <>
-      <section className="relative h-64 md:h-[28rem] bg-black">
-        <ListingPreviewMedia
-          listing={listing}
-          coverPhotoUrl={coverPhoto?.file_url}
-          fill
-          className="object-cover"
-          priority
-          sizes="100vw"
+      <section className="relative h-64 md:h-[28rem] overflow-hidden bg-gradient-to-br from-forest-light via-forest to-forest-dark">
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest-dark/35 via-transparent to-white/10"
+          aria-hidden
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        <Container className="absolute bottom-0 left-0 right-0 pb-6 md:pb-10">
+        <Container className="absolute bottom-0 left-0 right-0 z-10 pb-6 md:pb-10">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-gold mb-2 uppercase tracking-wide">

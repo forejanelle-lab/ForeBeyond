@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image, { type ImageProps } from "next/image";
-import { LISTING_IMAGE_FALLBACK, resolveListingImage } from "@/lib/listing-images";
+import { isUsableListingImageUrl } from "@/lib/listing-images";
 
 type ListingImageProps = Omit<ImageProps, "src" | "alt"> & {
   src?: string | null;
@@ -14,44 +14,40 @@ type ListingImageProps = Omit<ImageProps, "src" | "alt"> & {
 export function ListingImage({
   src,
   alt,
-  country,
-  city,
+  country: _country,
+  city: _city,
   unoptimized,
   onError,
+  className = "",
+  fill,
   ...props
 }: ListingImageProps) {
-  const resolved = resolveListingImage(src, country, city);
-  const isLogoFallback = resolved === LISTING_IMAGE_FALLBACK;
-  const [imgSrc, setImgSrc] = useState(resolved);
-  const [useLogo, setUseLogo] = useState(isLogoFallback);
+  const [failed, setFailed] = useState(false);
+  const usable = isUsableListingImageUrl(src) && !failed;
 
-  useEffect(() => {
-    const next = resolveListingImage(src, country, city);
-    setImgSrc(next);
-    setUseLogo(next === LISTING_IMAGE_FALLBACK);
-  }, [src, country, city]);
-
-  function handleError(event: React.SyntheticEvent<HTMLImageElement, Event>) {
-    if (!useLogo && imgSrc !== LISTING_IMAGE_FALLBACK) {
-      setUseLogo(true);
-      setImgSrc(LISTING_IMAGE_FALLBACK);
-      return;
-    }
-    onError?.(event);
+  if (!usable) {
+    return (
+      <div
+        aria-hidden
+        className={`bg-sage ${fill ? "absolute inset-0" : ""} ${className}`.trim()}
+      />
+    );
   }
+
+  const imageSrc = src!.trim();
 
   return (
     <Image
       {...props}
-      src={imgSrc}
+      fill={fill}
+      src={imageSrc}
       alt={alt}
-      unoptimized={unoptimized ?? imgSrc.startsWith("http")}
-      onError={handleError}
-      className={
-        useLogo
-          ? `${props.className ?? ""} object-cover bg-black`.trim()
-          : props.className
-      }
+      unoptimized={unoptimized ?? imageSrc.startsWith("http")}
+      onError={(event) => {
+        setFailed(true);
+        onError?.(event);
+      }}
+      className={className}
     />
   );
 }

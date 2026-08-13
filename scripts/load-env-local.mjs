@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 /** Load .env.local into process.env (does not overwrite existing vars). */
-export function loadEnvLocal(cwd = process.cwd()) {
+export function loadEnvLocal(cwd = process.cwd(), { force = false } = {}) {
   const envPath = path.join(cwd, ".env.local");
   if (!fs.existsSync(envPath)) return false;
 
@@ -19,7 +19,7 @@ export function loadEnvLocal(cwd = process.cwd()) {
     ) {
       value = value.slice(1, -1);
     }
-    if (!(key in process.env)) {
+    if (force || !(key in process.env)) {
       process.env[key] = value;
     }
   }
