@@ -13,7 +13,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: colors.forest,
     icons: [
       {
-        src: "/logo-tree-mark.png",
+        src: "/logo-tree-mark-512.png",
         sizes: "512x512",
         type: "image/png",
       },
