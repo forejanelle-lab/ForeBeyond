@@ -22,7 +22,31 @@ function loadEnvLocal() {
 
 loadEnvLocal();
 
+function resolveDatabaseUrl() {
+  const existing = process.env.DATABASE_URL?.trim();
+  if (existing) return existing;
+
+  const password =
+    process.env.SUPABASE_DB_PASSWORD?.trim() || process.env.DATABASE_PASSWORD?.trim();
+  if (!password) return null;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/^["']|["']$/g, "");
+  const ref = supabaseUrl?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+  if (!ref) return null;
+
+  const host = process.env.DATABASE_HOST?.trim() || "aws-1-us-east-1.pooler.supabase.com";
+  const user = process.env.DATABASE_USER?.trim() || `postgres.${ref}`;
+  const port = process.env.DATABASE_PORT?.trim() || "5432";
+
+  return `postgresql://${user}:${encodeURIComponent(password)}@${host}:${port}/postgres`;
+}
+
 function getConfig() {
+  const resolvedUrl = resolveDatabaseUrl();
+  if (resolvedUrl && !process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = resolvedUrl;
+  }
+
   if (process.env.DATABASE_HOST) {
     return {
       host: process.env.DATABASE_HOST,
@@ -36,7 +60,7 @@ function getConfig() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error(
-      "Set DATABASE_URL or DATABASE_HOST/USER/PASSWORD in .env.local"
+      "Set DATABASE_URL, SUPABASE_DB_PASSWORD, or DATABASE_HOST/USER/PASSWORD in .env.local"
     );
   }
 

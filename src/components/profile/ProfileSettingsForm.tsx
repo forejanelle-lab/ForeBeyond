@@ -35,6 +35,7 @@ interface ProfileSettingsFormProps {
   };
   showRolePicker?: boolean;
   redirectAfterSave?: string;
+  genderSupported?: boolean;
 }
 
 export function ProfileSettingsForm({
@@ -43,6 +44,7 @@ export function ProfileSettingsForm({
   initial,
   showRolePicker = false,
   redirectAfterSave,
+  genderSupported = true,
 }: ProfileSettingsFormProps) {
   const router = useRouter();
   const initialNames = splitFullName(initial.full_name);
@@ -98,18 +100,30 @@ export function ProfileSettingsForm({
     const supabase = createClient();
     const updates: Record<string, unknown> = {
       full_name: joinFullName(firstName, lastName),
-      gender: gender || null,
       bio: bio.trim() || null,
       location,
       phone,
     };
+
+    if (genderSupported) {
+      updates.gender = gender || null;
+    }
 
     if (!lockedRole) {
       updates.role = effectiveRole;
       updates.onboarding_step = "preferences";
     }
 
-    const { error: updateError } = await supabase.from("profiles").update(updates).eq("id", userId);
+    let { error: updateError } = await supabase.from("profiles").update(updates).eq("id", userId);
+
+    if (
+      updateError &&
+      (updateError.code === "42703" ||
+        /column profiles\.gender does not exist/i.test(updateError.message ?? ""))
+    ) {
+      delete updates.gender;
+      ({ error: updateError } = await supabase.from("profiles").update(updates).eq("id", userId));
+    }
 
     if (updateError) {
       setError(updateError.message);
@@ -195,7 +209,9 @@ export function ProfileSettingsForm({
             autoComplete="family-name"
           />
         </div>
-        <GenderSelect label="Gender" value={gender} onChange={setGender} />
+        {genderSupported && (
+          <GenderSelect label="Gender" value={gender} onChange={setGender} />
+        )}
         <div>
           <p className="text-sm font-medium text-charcoal mb-1">Email</p>
           <p className="text-sm text-charcoal-light">{email}</p>

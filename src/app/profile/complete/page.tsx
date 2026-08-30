@@ -6,54 +6,65 @@ import { createClient } from "@/lib/supabase/client";
 import { brand } from "@/lib/brand";
 import { ProfileSettingsForm } from "@/components/profile/ProfileSettingsForm";
 import { Container } from "@/components/ui/Container";
-import type { Profile } from "@/types/database";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import {
+  loadProfileSettingsFields,
+  type ProfileSettingsFields,
+} from "@/lib/profile-settings-query";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
-  const [profile, setProfile] = useState<Pick<
-    Profile,
-    | "full_name"
-    | "gender"
-    | "bio"
-    | "location"
-    | "phone"
-    | "role"
-    | "avatar_url"
-    | "onboarding_complete"
-  > | null>(null);
+  const [profile, setProfile] = useState<ProfileSettingsFields | null>(null);
+  const [genderSupported, setGenderSupported] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     async function load() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
         router.replace("/auth/sign-in?redirect=/profile/complete");
         return;
       }
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, gender, bio, location, phone, role, avatar_url, onboarding_complete")
-        .eq("id", user.id)
-        .single();
+      const result = await loadProfileSettingsFields(supabase, user.id);
 
       setUserId(user.id);
       setEmail(user.email ?? "");
-      setProfile(data as typeof profile);
+      setProfile(result.data);
+      setGenderSupported(result.genderSupported);
+      setLoadError(result.error ?? "");
       setLoading(false);
     }
 
-    load();
+    void load();
   }, [router]);
 
-  if (loading || !userId || !profile) {
+  if (loading) {
     return (
       <Container size="sm" className="py-16 md:py-24">
         <p className="text-center text-charcoal-light">Loading profile...</p>
+      </Container>
+    );
+  }
+
+  if (loadError || !userId || !profile) {
+    return (
+      <Container size="sm" className="py-16 md:py-24">
+        <div className="text-center space-y-4">
+          <p className="text-charcoal-light">
+            {loadError || "We could not load your profile. Please try again."}
+          </p>
+          <ButtonLink href="/auth/sign-in" variant="primary" size="md">
+            Back to sign in
+          </ButtonLink>
+        </div>
       </Container>
     );
   }
@@ -71,6 +82,7 @@ export default function CompleteProfilePage() {
         userId={userId}
         email={email}
         initial={profile}
+        genderSupported={genderSupported}
         showRolePicker={!profile.role}
         redirectAfterSave={
           profile.onboarding_complete

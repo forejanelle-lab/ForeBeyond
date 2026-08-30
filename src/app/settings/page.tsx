@@ -7,6 +7,7 @@ import { DisplayPreferencesForm } from "@/components/settings/DisplayPreferences
 import { Card } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { PasswordSettingsActions } from "@/components/settings/PasswordSettingsActions";
+import { loadProfileSettingsFields } from "@/lib/profile-settings-query";
 import type { Profile } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
 import { getServerTranslations } from "@/lib/i18n/server";
@@ -25,16 +26,19 @@ export default async function SettingsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/sign-in?redirect=/settings");
 
-  const { data: profile } = await supabase
+  const { data: profileFields, genderSupported } = await loadProfileSettingsFields(
+    supabase,
+    user.id
+  );
+
+  const { data: profileExtras } = await supabase
     .from("profiles")
-    .select(
-      "full_name, gender, email, phone, bio, location, role, avatar_url, onboarding_complete, default_currency"
-    )
+    .select("email, default_currency")
     .eq("id", user.id)
     .single();
 
   const travelerProfile =
-    profile?.role === "traveler"
+    profileFields?.role === "traveler"
       ? (
           await supabase
             .from("traveler_profiles")
@@ -44,19 +48,8 @@ export default async function SettingsPage() {
         ).data
       : null;
 
-  const typedProfile = profile as Pick<
-    Profile,
-    | "full_name"
-    | "gender"
-    | "email"
-    | "phone"
-    | "bio"
-    | "location"
-    | "role"
-    | "avatar_url"
-    | "onboarding_complete"
-    | "default_currency"
-  > | null;
+  const typedProfile = profileFields;
+  const typedExtras = profileExtras as Pick<Profile, "email" | "default_currency"> | null;
 
   const { t } = await getServerTranslations();
 
@@ -66,7 +59,7 @@ export default async function SettingsPage() {
         <div className="lg:col-span-2">
           <ProfileSettingsForm
             userId={user.id}
-            email={user.email ?? typedProfile?.email ?? ""}
+            email={user.email ?? typedExtras?.email ?? ""}
             initial={{
               full_name: typedProfile?.full_name ?? null,
               gender: typedProfile?.gender ?? null,
@@ -77,6 +70,7 @@ export default async function SettingsPage() {
               avatar_url: typedProfile?.avatar_url ?? null,
               onboarding_complete: typedProfile?.onboarding_complete ?? false,
             }}
+            genderSupported={genderSupported}
           />
         </div>
 
@@ -89,7 +83,7 @@ export default async function SettingsPage() {
         <div className="lg:col-span-2">
           <DisplayPreferencesForm
             userId={user.id}
-            initialCurrency={typedProfile?.default_currency ?? "USD"}
+            initialCurrency={typedExtras?.default_currency ?? "USD"}
           />
         </div>
 
@@ -121,7 +115,7 @@ export default async function SettingsPage() {
           <p className="text-sm text-charcoal-light">
             {t("settings.passwordDesc")}
           </p>
-          <PasswordSettingsActions email={user.email ?? typedProfile?.email ?? ""} />
+          <PasswordSettingsActions email={user.email ?? typedExtras?.email ?? ""} />
         </Card>
       </div>
     </PageShell>

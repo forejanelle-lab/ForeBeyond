@@ -53,15 +53,29 @@ export default async function HostGuestProfilePage({
   const canView = await hostHasGuestRequest(supabase, user.id, guestId);
   if (!canView) notFound();
 
-  const [{ data: guestProfile }, { data: guestRequests }, { data: badges }, { data: reviews }, { data: travelerOnboarding }] =
+  const guestSelectWithGender =
+    "full_name, email, gender, bio, location, languages, avatar_url, trust_score, trust_score_breakdown, profile_completion, verification_status, role, created_at";
+  const guestSelectBase =
+    "full_name, email, bio, location, languages, avatar_url, trust_score, trust_score_breakdown, profile_completion, verification_status, role, created_at";
+
+  const guestProfileQuery = await supabase
+    .from("profiles")
+    .select(guestSelectWithGender)
+    .eq("id", guestId)
+    .single();
+
+  let guestProfile = guestProfileQuery.data;
+  if (guestProfileQuery.error && guestProfileQuery.error.code === "42703") {
+    const fallback = await supabase
+      .from("profiles")
+      .select(guestSelectBase)
+      .eq("id", guestId)
+      .single();
+    guestProfile = fallback.data ? { ...fallback.data, gender: null } : null;
+  }
+
+  const [{ data: guestRequests }, { data: badges }, { data: reviews }, { data: travelerOnboarding }] =
     await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "full_name, email, gender, bio, location, languages, avatar_url, trust_score, trust_score_breakdown, profile_completion, verification_status, role, created_at"
-        )
-        .eq("id", guestId)
-        .single(),
       supabase
         .from("stay_requests")
         .select("id, status, traveler_display_name")
