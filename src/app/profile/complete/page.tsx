@@ -16,6 +16,7 @@ export default function CompleteProfilePage() {
   const [profile, setProfile] = useState<Pick<
     Profile,
     | "full_name"
+    | "gender"
     | "bio"
     | "location"
     | "phone"
@@ -36,7 +37,7 @@ export default function CompleteProfilePage() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, bio, location, phone, role, avatar_url, onboarding_complete")
+        .select("full_name, gender, bio, location, phone, role, avatar_url, onboarding_complete")
         .eq("id", user.id)
         .single();
 

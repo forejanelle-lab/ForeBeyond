@@ -58,7 +58,7 @@ export default async function HostGuestProfilePage({
       supabase
         .from("profiles")
         .select(
-          "full_name, email, bio, location, languages, avatar_url, trust_score, trust_score_breakdown, profile_completion, verification_status, role, created_at"
+          "full_name, email, gender, bio, location, languages, avatar_url, trust_score, trust_score_breakdown, profile_completion, verification_status, role, created_at"
         )
         .eq("id", guestId)
         .single(),
@@ -88,6 +88,7 @@ export default async function HostGuestProfilePage({
     Profile,
     | "full_name"
     | "email"
+    | "gender"
     | "bio"
     | "location"
     | "languages"

@@ -78,10 +78,13 @@ export type BadgeType =
   | "address_verified"
   | "trusted_member";
 
+export type ProfileGender = "female" | "male" | "non_binary" | "prefer_not_to_say";
+
 export interface Profile {
   id: string;
   email: string;
   full_name: string | null;
+  gender: ProfileGender | null;
   avatar_url: string | null;
   bio: string | null;
   role: UserRole | null;

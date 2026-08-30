@@ -19,6 +19,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { GenderSelect } from "@/components/profile/GenderSelect";
+import type { ProfileGender } from "@/lib/gender";
 import type { Profile } from "@/types/database";
 
 export default function SignUpPage() {
@@ -28,6 +30,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [gender, setGender] = useState<ProfileGender | "">("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
@@ -63,6 +66,11 @@ export default function SignUpPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!gender) {
+      setError("Please select your gender");
+      return;
+    }
+
     setError("");
     setIsLoading(true);
 
@@ -97,6 +105,7 @@ export default function SignUpPage() {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
             full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+            gender,
           },
           emailRedirectTo,
         },
@@ -192,6 +201,12 @@ export default function SignUpPage() {
               required
             />
           </div>
+          <GenderSelect
+            label={t("common.gender")}
+            value={gender}
+            onChange={setGender}
+            required
+          />
           <Input
             label={t("common.email")}
             type="email"

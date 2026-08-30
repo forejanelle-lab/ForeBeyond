@@ -6,7 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import { AnalyticsEvents, trackEvent } from "@/lib/analytics";
 import { notifyNewSignup } from "@/lib/notify-signup";
 import { ProfilePhotoUpload } from "@/components/profile/ProfilePhotoUpload";
+import { GenderSelect } from "@/components/profile/GenderSelect";
 import { joinFullName, splitFullName } from "@/lib/profile";
+import type { ProfileGender } from "@/lib/gender";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -23,6 +25,7 @@ interface ProfileSettingsFormProps {
   email: string;
   initial: {
     full_name: string | null;
+    gender: ProfileGender | null;
     bio: string | null;
     location: string | null;
     phone: string | null;
@@ -45,6 +48,7 @@ export function ProfileSettingsForm({
   const initialNames = splitFullName(initial.full_name);
   const [firstName, setFirstName] = useState(initialNames.firstName);
   const [lastName, setLastName] = useState(initialNames.lastName);
+  const [gender, setGender] = useState<ProfileGender | "">(initial.gender ?? "");
   const [bio, setBio] = useState(initial.bio ?? "");
   const [location, setLocation] = useState(initial.location ?? "");
   const [phone, setPhone] = useState(initial.phone ?? "");
@@ -94,6 +98,7 @@ export function ProfileSettingsForm({
     const supabase = createClient();
     const updates: Record<string, unknown> = {
       full_name: joinFullName(firstName, lastName),
+      gender: gender || null,
       bio: bio.trim() || null,
       location,
       phone,
@@ -190,6 +195,7 @@ export function ProfileSettingsForm({
             autoComplete="family-name"
           />
         </div>
+        <GenderSelect label="Gender" value={gender} onChange={setGender} />
         <div>
           <p className="text-sm font-medium text-charcoal mb-1">Email</p>
           <p className="text-sm text-charcoal-light">{email}</p>

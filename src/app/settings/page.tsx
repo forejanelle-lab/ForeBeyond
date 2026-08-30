@@ -28,7 +28,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, email, phone, bio, location, role, avatar_url, onboarding_complete, default_currency"
+      "full_name, gender, email, phone, bio, location, role, avatar_url, onboarding_complete, default_currency"
     )
     .eq("id", user.id)
     .single();
@@ -47,6 +47,7 @@ export default async function SettingsPage() {
   const typedProfile = profile as Pick<
     Profile,
     | "full_name"
+    | "gender"
     | "email"
     | "phone"
     | "bio"
@@ -68,6 +69,7 @@ export default async function SettingsPage() {
             email={user.email ?? typedProfile?.email ?? ""}
             initial={{
               full_name: typedProfile?.full_name ?? null,
+              gender: typedProfile?.gender ?? null,
               bio: typedProfile?.bio ?? null,
               location: typedProfile?.location ?? null,
               phone: typedProfile?.phone ?? null,

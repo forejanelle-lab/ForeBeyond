@@ -8,6 +8,7 @@ import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { getVerificationStatusLabel } from "@/lib/trust-score-detail";
+import { formatGender } from "@/lib/gender";
 import type { TrustScoreBreakdown as Breakdown } from "@/lib/trust-score";
 import type { Profile, PublicReview, TrustBadge, UserRole } from "@/types/database";
 import { TravelerOnboardingDetails } from "@/components/profile/TravelerOnboardingDetails";
@@ -18,6 +19,7 @@ interface GuestTrustProfileProps {
   profile: Pick<
     Profile,
     | "bio"
+    | "gender"
     | "location"
     | "languages"
     | "avatar_url"
@@ -43,6 +45,7 @@ export function GuestTrustProfile({
   const breakdown = (profile.trust_score_breakdown ?? {}) as Breakdown;
   const isVerified = profile.verification_status === "verified";
   const hasAvatar = Boolean(profile.avatar_url?.trim());
+  const genderLabel = formatGender(profile.gender);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -80,6 +83,9 @@ export function GuestTrustProfile({
                   <MapPin className="h-4 w-4 shrink-0" />
                   {profile.location}
                 </p>
+              )}
+              {genderLabel && (
+                <p className="text-sm text-charcoal-light">Gender: {genderLabel}</p>
               )}
             </div>
           </div>
