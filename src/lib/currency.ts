@@ -180,6 +180,24 @@ export function formatMoneyAmount(
   return options?.suffix ? `${formatted}${options.suffix}` : formatted;
 }
 
+/** Whole-dollar nightly rates when the amount has no cents (e.g. $120/night). */
+export function formatNightlyMoneyAmount(
+  amount: number,
+  currency: SupportedCurrencyCode,
+  options?: { locale?: string }
+): string {
+  const locale = options?.locale ?? "en-US";
+  const fractionDigits =
+    currency === "JPY" || currency === "KRW" || amount % 1 === 0 ? 0 : 2;
+
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(amount);
+}
+
 export function formatStoredAmount(
   amount: number | null | undefined,
   sourceCurrency: SupportedCurrencyCode,

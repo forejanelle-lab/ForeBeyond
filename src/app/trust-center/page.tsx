@@ -29,13 +29,13 @@ const trustLayers = [
     icon: FileCheck,
     title: "Identity Verification",
     description:
-      "Every member verifies their government-issued ID. We use industry-leading document verification to confirm authenticity.",
+      "Every member verifies their identification. We use industry-leading document verification to confirm authenticity.",
   },
   {
     icon: BadgeCheck,
     title: "Multi-Step Verification",
     description:
-      "Phone, government ID, selfie, and optional video verification help confirm members are who they say they are.",
+      "Phone, identification, selfie, and optional video verification help confirm members are who they say they are.",
   },
   {
     icon: Users,

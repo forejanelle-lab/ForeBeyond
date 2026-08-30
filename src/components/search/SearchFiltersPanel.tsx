@@ -55,11 +55,13 @@ function SelectField({
 function FilterFields({
   filters,
   countries,
+  resultCount,
   onChange,
   onSubmit,
 }: {
   filters: SearchFilters;
   countries: string[];
+  resultCount: number;
   onChange: (key: keyof SearchFilters, value: string | boolean) => void;
   onSubmit: () => void;
 }) {
@@ -144,9 +146,9 @@ function FilterFields({
         <span className="text-sm font-medium text-charcoal">Verified hosts only</span>
       </label>
 
-      <Button type="submit" variant="primary" size="md" className="w-full justify-center gap-2">
+      <Button type="submit" variant="primary" size="md" className="w-full justify-center gap-2 mt-2">
         <Search className="h-4 w-4" />
-        Search families
+        Show {resultCount} {resultCount === 1 ? "host" : "hosts"}
       </Button>
     </form>
   );
@@ -212,6 +214,7 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
       <FilterFields
         filters={draftFilters}
         countries={countries}
+        resultCount={resultCount}
         onChange={updateDraft}
         onSubmit={handleSearch}
       />
@@ -223,10 +226,10 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
 
   return (
     <>
-      <Card variant="outline" padding="md" className="hidden lg:block sticky top-24 mb-6">
-        <div className="flex items-center gap-2 text-forest font-medium mb-4">
+      <Card variant="outline" padding="md" className="hidden lg:block sticky top-24 mb-6 shadow-sm">
+        <div className="flex items-center gap-2 text-forest font-medium mb-5">
           <SlidersHorizontal className="h-4 w-4" />
-          Filters &amp; search
+          Filters
           {hasActiveFilters && (
             <span className="text-xs font-normal text-gold">(active)</span>
           )}

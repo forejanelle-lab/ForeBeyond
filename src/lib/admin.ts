@@ -16,12 +16,6 @@ export const ADMIN_NAV: AdminNavEntry[] = [
   { type: "link", href: "/admin/reports", label: "Reports" },
   { type: "link", href: "/admin/support", label: "Support" },
   { type: "link", href: "/admin/trust-scores", label: "Trust Scores" },
-  { type: "section", label: "Host Growth" },
-  { type: "link", href: "/admin/host-growth/finder", label: "Host Finder" },
-  { type: "link", href: "/admin/host-growth/pipeline", label: "Pipeline" },
-  { type: "link", href: "/admin/host-growth/analytics", label: "Analytics" },
-  { type: "link", href: "/admin/host-growth/search-history", label: "Search History" },
-  { type: "link", href: "/admin/host-growth/signals", label: "Signal Library" },
 ];
 
 export async function requireAdmin(

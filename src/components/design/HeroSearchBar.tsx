@@ -30,11 +30,13 @@ function formatDisplayDate(iso: string) {
 interface HeroSearchBarProps {
   disabled?: boolean;
   disabledMessage?: string;
+  variant?: "hero" | "page";
 }
 
 export function HeroSearchBar({
   disabled = false,
   disabledMessage = TRAVELER_ACCOUNT_SEARCH_MESSAGE,
+  variant = "hero",
 }: HeroSearchBarProps) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -121,13 +123,15 @@ export function HeroSearchBar({
     router.push(qs ? `/search?${qs}` : "/search");
   }
 
+  const isHero = variant === "hero";
+
   return (
     <div className="relative w-full max-w-4xl group">
       <div
         ref={rootRef}
-        className={`relative w-full overflow-visible rounded-2xl bg-white shadow-xl border border-sage-dark/20 p-2 md:p-3 transition-opacity ${
-          disabled ? "opacity-50 select-none [&_input]:pointer-events-none [&_button]:pointer-events-none" : ""
-        }`}
+        className={`relative w-full overflow-visible bg-white shadow-lg p-2 md:p-2.5 transition-opacity ${
+          isHero ? "rounded-2xl border border-sage-dark/20 shadow-xl" : "rounded-full border border-sage-dark/25"
+        } ${disabled ? "opacity-50 select-none [&_input]:pointer-events-none [&_button]:pointer-events-none" : ""}`}
       >
         <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_0.9fr_auto] gap-2 md:gap-0 md:divide-x divide-sage-dark/30 overflow-visible">
           <div
@@ -315,9 +319,14 @@ export function HeroSearchBar({
               onClick={handleSearch}
               disabled={disabled}
               aria-label="Search families"
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-forest text-white hover:bg-forest-light transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+              className={`flex items-center justify-center gap-2 bg-forest text-white hover:bg-forest-light transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed ${
+                isHero
+                  ? "h-12 w-12 rounded-full"
+                  : "h-11 md:h-12 rounded-full md:rounded-full px-5 md:px-6 w-full md:w-auto text-sm font-medium"
+              }`}
             >
               <Search className="h-5 w-5" />
+              {!isHero && <span className="hidden md:inline">Search</span>}
             </button>
           </div>
         </div>

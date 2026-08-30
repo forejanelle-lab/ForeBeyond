@@ -102,6 +102,8 @@ export const catalogFr = {
     subtitleInLocation:
       "Hôtes locaux vérifiés proposant immersion culturelle et séjours chez l'habitant à {location}.",
     filterHint: "Filtrer par budget, langue, repas et statut de vérification",
+    hostsFound: "{count} hôtes trouvés",
+    sortRecommended: "Recommandé",
   },
   host: {
     requestsTitle: "Demandes",

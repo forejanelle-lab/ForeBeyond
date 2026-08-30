@@ -15,6 +15,7 @@ import { getHostReviewEligibility } from "@/lib/listing-review-eligibility";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { hostHasMessagedStayRequest, isStayMessagingOpen } from "@/lib/messaging";
 import { resolveListingForProfilePage } from "@/lib/listing-profile-load";
+import { getHostAvatarUrlsByHostId } from "@/lib/search-card-data";
 import type { DocumentType, HostListing, ListingPhoto, Profile, PublicListing, PublicReview, StayRequest, TrustBadge, VerificationStatus } from "@/types/database";
 import { normalizeTrustScoreBreakdown, type TrustScoreBreakdown } from "@/lib/trust-score";
 import { getRequestStayEligibility, documentsMapFromRows } from "@/lib/traveler-verification";
@@ -181,7 +182,7 @@ export default async function FamilyProfilePage({
       hostProfileData?.full_name ?? typedListing.host_first_name,
       { fallback: "Host" }
     );
-    hostAvatarUrl = hostProfileData?.avatar_url ?? null;
+    hostAvatarUrl = typedListing.host_avatar_url ?? hostProfileData?.avatar_url ?? null;
     hostFirstName = hostDisplayName;
     hostMemberSince = hostProfileData?.created_at ?? null;
     trustScore = typedListing.trust_score;
@@ -307,6 +308,14 @@ export default async function FamilyProfilePage({
     );
     travelerCanRequestStay = eligibility.canRequest;
     requestStayDisabledReason = eligibility.disabledReason;
+  }
+
+  if (!hostAvatarUrl?.trim()) {
+    const avatarMap = await getHostAvatarUrlsByHostId(
+      [hostId],
+      typedListing ? { [hostId]: typedListing.host_avatar_url ?? null } : {}
+    );
+    hostAvatarUrl = avatarMap[hostId] ?? null;
   }
 
   const showAuthGate = !user && Boolean(typedListing);

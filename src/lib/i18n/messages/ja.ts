@@ -6,7 +6,9 @@ const ja = {
     menuHint: "Fore Beyond サイトの表示言語を選択してください。",
   },
   nav: {
+    findHosts: "ホストを探す",
     howItWorks: "使い方",
+    becomeHost: "ホストになる",
     about: "概要",
     contact: "お問い合わせ",
     signIn: "ログイン",
@@ -53,7 +55,17 @@ const ja = {
     heroTitleLine1: "もっと深く旅する。",
     heroTitleLine2: "どこでも自分の場所に。",
     heroSubtitle:
-      "認証済みのローカルホストと文化体験の旅 — 本物の体験、ホームステイ、意味のあるつながり。観光客ではなく、ローカルのように旅しましょう。",
+      "信頼できるホストファミリー。本物のつながり。忘れられない旅。",
+    findAHost: "ホストを探す",
+    valueVerifiedTitle: "認証済みファミリー",
+    valueVerifiedDesc: "すべてのホストは安全と信頼のために認証されています。",
+    valueImmersionTitle: "文化体験",
+    valueImmersionDesc: "地元の人々と日常を体験しましょう。",
+    valueSupportedTitle: "安全でサポートあり",
+    valueSupportedDesc: "旅の全過程で私たちがサポートします。",
+    featuredHosts: "注目のホストファミリー",
+    featuredHostsDesc:
+      "世界中の旅行者に自宅を開いている、認証済みファミリーに会いましょう。",
     alreadyMember: "すでに会員ですか？",
     travelerLogin: "旅行者ログイン",
     hostLogin: "ホストログイン",
@@ -87,7 +99,7 @@ const ja = {
     trustDesc:
       "すべてのメンバーが厳格な本人確認を受けます。意味のあるつながりには本物の信頼が必要です。",
     exploreTrustCenter: "トラストセンターを見る",
-    trustPillarId: "政府発行IDの確認",
+    trustPillarId: "本人確認",
     trustPillarVideo: "動画・住所確認",
     trustPillarCommunity: "コミュニティ推薦システム",
     trustPillarSafety: "24時間安全サポート",

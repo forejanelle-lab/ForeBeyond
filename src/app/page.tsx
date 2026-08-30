@@ -30,8 +30,8 @@ export const metadata = createPageMetadata({
   path: "/",
 });
 
-const homeSectionTitle = "!text-3xl md:!text-5xl lg:!text-[3.25rem]";
-const homeSectionDescription = "text-lg md:text-xl leading-relaxed";
+const homeSectionTitle = "!text-3xl md:!text-5xl lg:!text-[3.25rem] !font-serif";
+const homeSectionDescription = "text-lg md:text-xl leading-relaxed text-muted";
 
 export default async function HomePage() {
   const { t } = await getServerTranslations();
@@ -85,27 +85,43 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={buildHomePageJsonLd()} />
-      <section className="relative min-h-[92vh] flex flex-col justify-end">
+      <section className="relative min-h-[92vh] flex flex-col justify-end overflow-hidden">
         <Image
           src={sampleImages.homeHeroOutdoorMeal}
-          alt="Travelers and hosts laughing together while sharing a home-cooked meal"
+          alt="Outdoor dining on a stone terrace overlooking the Tuscan countryside at sunset"
           fill
-          className="object-cover object-center"
+          className="object-cover object-[72%_center] md:object-[68%_center]"
           priority
           unoptimized
           sizes="100vw"
         />
-        <div className="absolute inset-0 hero-overlay-dark pointer-events-none" />
-        <Container className="relative z-10 pb-20 md:pb-28 pt-32">
-          <h1 className="hero-text-shadow text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight max-w-2xl text-balance">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/15 pointer-events-none" />
+        <Container className="relative z-10 pb-16 md:pb-24 pt-28 md:pt-36">
+          <h1 className="hero-text-shadow text-4xl md:text-5xl lg:text-[3.5rem] font-serif font-semibold text-white leading-[1.1] max-w-2xl text-balance">
             {t("home.heroTitleLine1")}
             <br />
             {t("home.heroTitleLine2")}
           </h1>
-          <p className="hero-text-shadow mt-5 text-base md:text-lg text-white/90 leading-relaxed max-w-xl">
+          <p className="hero-text-shadow mt-5 text-base md:text-lg text-white/90 leading-relaxed max-w-lg">
             {t("home.heroSubtitle")}
           </p>
-          <div className="mt-8 relative z-20">
+          <div className="mt-8 flex flex-wrap gap-3">
+            <ButtonLink
+              href="/search"
+              variant="primary"
+              size="lg"
+              className="shadow-lg"
+            >
+              {t("home.findAHost")}
+              <ArrowRight className="h-4 w-4" />
+            </ButtonLink>
+            <BecomeHostButton
+              isLoggedIn={isLoggedIn}
+              className="!mt-0 bg-white/95 !text-forest hover:!bg-white shadow-lg"
+            />
+          </div>
+          <div className="mt-8 relative z-20 max-w-4xl">
             <HeroSearchBar
               disabled={searchDisabled}
               disabledMessage={TRAVELER_ACCOUNT_SEARCH_MESSAGE}
@@ -139,14 +155,17 @@ export default async function HomePage() {
               </div>
             )}
           </div>
-          <div className="mt-8 pb-4">
-            <TrustIndicators variant="hero" />
-          </div>
         </Container>
       </section>
 
+      <Section background="white" className="!py-14 md:!py-20">
+        <Container>
+          <TrustIndicators variant="values" />
+        </Container>
+      </Section>
+
       {popularDestinations.length > 0 && (
-      <Section background="cream" className="!pt-16 md:!pt-24 !pb-16 md:!pb-24">
+      <Section background="white" className="!pt-16 md:!pt-24 !pb-16 md:!pb-24">
         <Container>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
             <SectionHeader
@@ -260,8 +279,8 @@ export default async function HomePage() {
       <Section background="cream">
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto">
-            <div className="rounded-3xl overflow-hidden shadow-2xl bg-white hover-lift p-10 md:p-12 lg:p-14 text-center flex flex-col">
-              <h2 className="text-3xl md:text-4xl font-bold text-forest leading-tight text-balance">
+            <div className="rounded-3xl surface-card hover-lift p-10 md:p-12 lg:p-14 text-center flex flex-col">
+              <h2 className="text-3xl md:text-4xl font-serif font-semibold text-forest leading-tight text-balance">
                 {t("home.travelTitleLine1")}
                 <br />
                 {t("home.travelTitleLine2")}
@@ -280,8 +299,8 @@ export default async function HomePage() {
               </ButtonLink>
             </div>
 
-            <div className="rounded-3xl overflow-hidden shadow-2xl bg-white hover-lift p-10 md:p-12 lg:p-14 text-center flex flex-col">
-              <h2 className="text-3xl md:text-4xl font-bold text-forest leading-tight text-balance">
+            <div className="rounded-3xl surface-card hover-lift p-10 md:p-12 lg:p-14 text-center flex flex-col">
+              <h2 className="text-3xl md:text-4xl font-serif font-semibold text-forest leading-tight text-balance">
                 {t("home.hostTitleLine1")}
                 <br />
                 {t("home.hostTitleLine2")}

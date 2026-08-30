@@ -9,12 +9,14 @@
   --color-cream: #f9f7f2;
   --color-charcoal: #333333;
   --color-charcoal-light: #555555;
-  --color-gold: #c9a227;
-  --color-gold-light: #ddb956;
-  --color-gold-dark: #a6841f;
+  --color-muted: #6b6b6b;
+  --color-gold: #d4af37;
+  --color-gold-light: #e0c35a;
+  --color-gold-dark: #b8962e;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -40,8 +42,12 @@
     @apply bg-cream text-charcoal font-sans;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display text-forest tracking-tight;
+  h1, h2, h3 {
+    @apply font-serif text-forest tracking-tight font-semibold;
+  }
+
+  h4, h5, h6 {
+    @apply font-sans text-forest tracking-tight font-semibold;
   }
 
   ::selection {
@@ -126,7 +132,28 @@
   }
 
   .card-premium {
-    @apply rounded-2xl bg-white shadow-lg border border-sage-dark/20;
+    @apply rounded-2xl bg-white shadow-md;
+  }
+
+  .surface-card {
+    @apply rounded-2xl bg-white shadow-sm;
+  }
+
+  .font-editorial {
+    font-family: var(--font-serif);
+  }
+
+  .text-editorial {
+    @apply font-serif text-forest leading-tight tracking-tight;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   .hero-overlay {

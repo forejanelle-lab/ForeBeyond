@@ -52,7 +52,7 @@ const verificationSteps: VerificationStep[] = [
   },
   {
     type: "government_id",
-    title: "Government ID",
+    title: "Identification",
     description: "Upload a valid passport, driver's license, or national ID card.",
     icon: FileText,
     required: true,
@@ -429,13 +429,13 @@ export default function VerificationCenterPage() {
               <p className="text-sm text-charcoal-light">
                 {isHost
                   ? stayRequestVerificationComplete
-                    ? "Create your family listing once your government ID and selfie are submitted."
-                    : "Submit government ID and selfie verification above before creating your listing."
+                    ? "Create your family listing once your identification and selfie are submitted."
+                    : "Submit identification and selfie verification above before creating your listing."
                   : canContinueOnboarding
-                    ? "Browse host families anytime. Government ID and selfie verification are required before you request a stay."
+                    ? "Browse host families anytime. Identification and selfie verification are required before you request a stay."
                     : stayRequestVerificationComplete
                       ? "You're cleared to request stays with host families."
-                      : "Submit government ID and selfie verification above to request a stay."}
+                      : "Submit identification and selfie verification above to request a stay."}
               </p>
             </Card>
           )}
@@ -469,9 +469,9 @@ export default function VerificationCenterPage() {
             {isHost
               ? stayRequestVerificationComplete
                 ? "You're cleared to create your listing. Other verification items can be completed anytime."
-                : "Submit government ID and selfie verification above to unlock listing creation."
+                : "Submit identification and selfie verification above to unlock listing creation."
               : canContinueOnboarding && !stayRequestVerificationComplete
-                ? "You can browse Search Families now. Submit government ID and selfie verification before requesting a stay."
+                ? "You can browse Search Families now. Submit identification and selfie verification before requesting a stay."
                 : "Browse verified host families and send your first stay request once ID and selfie verification are submitted."}
           </p>
         </div>

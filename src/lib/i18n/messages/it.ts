@@ -6,7 +6,9 @@ const it = {
     menuHint: "Scegli la lingua del sito Fore Beyond.",
   },
   nav: {
+    findHosts: "Trova host",
     howItWorks: "Come funziona",
+    becomeHost: "Diventa host",
     about: "Chi siamo",
     contact: "Contatti",
     signIn: "Accedi",
@@ -53,7 +55,17 @@ const it = {
     heroTitleLine1: "Viaggia più a fondo.",
     heroTitleLine2: "Sentiti a casa ovunque.",
     heroSubtitle:
-      "Viaggi di immersione culturale con host locali verificati — esperienze autentiche, soggiorni in famiglia e connessioni significative. Viaggia come un local, non come un turista.",
+      "Famiglie ospitanti affidabili. Connessioni autentiche. Viaggi indimenticabili.",
+    findAHost: "Trova un host",
+    valueVerifiedTitle: "Famiglie verificate",
+    valueVerifiedDesc: "Ogni host è verificato per sicurezza e fiducia.",
+    valueImmersionTitle: "Immersione culturale",
+    valueImmersionDesc: "Vivi la vita quotidiana con persone del posto.",
+    valueSupportedTitle: "Sicuro e supportato",
+    valueSupportedDesc: "Siamo con te per tutto il viaggio.",
+    featuredHosts: "Famiglie ospitanti in evidenza",
+    featuredHostsDesc:
+      "Scopri famiglie verificate che aprono le loro case ai viaggiatori di tutto il mondo.",
     alreadyMember: "Sei già membro?",
     travelerLogin: "Accesso viaggiatore",
     hostLogin: "Accesso host",
@@ -88,7 +100,7 @@ const it = {
     trustDesc:
       "Ogni membro passa attraverso una verifica rigorosa. Una connessione significativa richiede fiducia autentica.",
     exploreTrustCenter: "Esplora Centro fiducia",
-    trustPillarId: "Verifica documento d'identità",
+    trustPillarId: "Verifica identificazione",
     trustPillarVideo: "Verifica video e indirizzo",
     trustPillarCommunity: "Sistema di referenze community",
     trustPillarSafety: "Supporto sicurezza 24/7",

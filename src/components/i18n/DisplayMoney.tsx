@@ -6,11 +6,35 @@ import {
   formatCurrency,
   type ListingPricing,
 } from "@/lib/stay-requests";
-import { formatStoredAmount, resolveListingPricingCurrency } from "@/lib/currency";
+import {
+  convertBetweenCurrencies,
+  formatNightlyMoneyAmount,
+  formatStoredAmount,
+  resolveListingPricingCurrency,
+  type SupportedCurrencyCode,
+} from "@/lib/currency";
 
 interface DisplayBudgetProps {
   nightlyRateUsd: number | null | undefined;
   listing?: Partial<ListingPricing & { country?: string | null; pricing_currency?: string | null }>;
+}
+
+function formatNightlyRate(
+  amount: number,
+  source: SupportedCurrencyCode,
+  currency: ReturnType<typeof useCurrencyOptional>
+): string {
+  if (currency) {
+    const converted = convertBetweenCurrencies(
+      amount,
+      source,
+      currency.displayCurrency,
+      currency.rates
+    );
+    return formatNightlyMoneyAmount(converted, currency.displayCurrency);
+  }
+
+  return formatCurrency(amount).replace(/\.00(?=\D|$)/, "");
 }
 
 export function DisplayBudget({ nightlyRateUsd, listing }: DisplayBudgetProps) {
@@ -19,11 +43,7 @@ export function DisplayBudget({ nightlyRateUsd, listing }: DisplayBudgetProps) {
 
   if (nightlyRateUsd == null) return <>Rate on request</>;
 
-  const formatted = currency
-    ? currency.formatAmount(nightlyRateUsd, source)
-    : formatStoredAmount(nightlyRateUsd, source, source, { [source]: 1 });
-
-  return <>{formatted}/night</>;
+  return <>{formatNightlyRate(nightlyRateUsd, source, currency)}/night</>;
 }
 
 interface DisplayStayRateProps {
@@ -37,11 +57,7 @@ export function DisplayStayRate({ nightlyRateUsd, listing }: DisplayStayRateProp
 
   if (nightlyRateUsd == null) return <>Price on request</>;
 
-  const formatted = currency
-    ? currency.formatAmount(nightlyRateUsd, source)
-    : formatCurrency(nightlyRateUsd);
-
-  return <>{formatted}/night</>;
+  return <>{formatNightlyRate(nightlyRateUsd, source, currency)}/night</>;
 }
 
 interface DisplayExperiencePriceProps {

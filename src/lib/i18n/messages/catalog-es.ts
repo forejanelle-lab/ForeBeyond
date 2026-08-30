@@ -102,6 +102,8 @@ export const catalogEs = {
     subtitleInLocation:
       "Anfitriones locales verificados que ofrecen inmersión cultural y experiencias de homestay en {location}.",
     filterHint: "Filtra por presupuesto, idioma, comidas y estado de verificación",
+    hostsFound: "{count} anfitriones encontrados",
+    sortRecommended: "Recomendado",
   },
   host: {
     requestsTitle: "Solicitudes",

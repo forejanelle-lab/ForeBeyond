@@ -37,7 +37,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       },
       {
         heading: "Complete verification",
-        body: "Verified hosts earn traveler confidence. Upload your government ID, selfie, and address proof in the Verification Center. Our team reviews submissions and your trust score reflects completed checks. Verification protects both hosts and guests.",
+        body: "Verified hosts earn traveler confidence. Upload your identification, selfie, and address proof in the Verification Center. Our team reviews submissions and your trust score reflects completed checks. Verification protects both hosts and guests.",
       },
       {
         heading: "Build your listing",
@@ -80,7 +80,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       },
       {
         heading: "Get verified before you request a stay",
-        body: "Submit government ID and selfie verification in the Verification Center. Verified travelers signal trust to hosts and unlock stay requests. Verification is a core part of how Fore Beyond keeps the community safe.",
+        body: "Submit identification and selfie verification in the Verification Center. Verified travelers signal trust to hosts and unlock stay requests. Verification is a core part of how Fore Beyond keeps the community safe.",
       },
       {
         heading: "Search families and read listings carefully",

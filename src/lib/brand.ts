@@ -12,14 +12,16 @@ export const colors = {
   cream: "#F9F7F2",
   white: "#FFFFFF",
   charcoal: "#333333",
-  gold: "#C9A227",
+  gold: "#D4AF37",
+  muted: "#6B6B6B",
 } as const;
 
 export const navigation = {
   main: [
+    { label: "Find Hosts", href: "/search" },
     { label: "How It Works", href: "/#how-it-works" },
-    { label: "About", href: "/#mission" },
-    { label: "Contact", href: "mailto:hello@forebeyond.com" },
+    { label: "Become a Host", href: "/onboarding/host" },
+    { label: "About Us", href: "/#mission" },
   ],
   auth: [
     { label: "Sign In", href: "/auth/sign-in" },

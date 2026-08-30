@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
         <h2>Information We Collect</h2>
         <ul>
           <li>Account information: name, email, phone, profile details</li>
-          <li>Verification documents: government ID, address proof, video verification</li>
+          <li>Verification documents: identification, address proof, video verification</li>
           <li>Usage data: how you interact with the platform (with consent)</li>
           <li>Communications: messages related to stay requests</li>
         </ul>

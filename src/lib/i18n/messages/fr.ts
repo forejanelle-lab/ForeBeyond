@@ -6,7 +6,9 @@ const fr = {
     menuHint: "Choisissez la langue du site Fore Beyond.",
   },
   nav: {
+    findHosts: "Trouver des hôtes",
     howItWorks: "Comment ça marche",
+    becomeHost: "Devenir hôte",
     about: "À propos",
     contact: "Contact",
     signIn: "Se connecter",
@@ -53,7 +55,17 @@ const fr = {
     heroTitleLine1: "Voyagez plus profondément.",
     heroTitleLine2: "Chez vous, partout.",
     heroSubtitle:
-      "Voyage d'immersion culturelle avec des hôtes locaux vérifiés — expériences authentiques, séjours en famille et connexions significatives. Voyagez comme un local, pas comme un touriste.",
+      "Familles hôtes de confiance. Connexions authentiques. Voyages inoubliables.",
+    findAHost: "Trouver un hôte",
+    valueVerifiedTitle: "Familles vérifiées",
+    valueVerifiedDesc: "Chaque hôte est vérifié pour la sécurité et la confiance.",
+    valueImmersionTitle: "Immersion culturelle",
+    valueImmersionDesc: "Vivez la vie quotidienne avec des habitants locaux.",
+    valueSupportedTitle: "Sécurisé et accompagné",
+    valueSupportedDesc: "Nous sommes là tout au long de votre voyage.",
+    featuredHosts: "Familles hôtes à la une",
+    featuredHostsDesc:
+      "Rencontrez des familles vérifiées qui ouvrent leur maison aux voyageurs du monde entier.",
     alreadyMember: "Déjà membre ?",
     travelerLogin: "Connexion voyageur",
     hostLogin: "Connexion hôte",
@@ -88,7 +100,7 @@ const fr = {
     trustDesc:
       "Chaque membre passe par une vérification rigoureuse. Une connexion significative exige une confiance authentique.",
     exploreTrustCenter: "Explorer le Centre de confiance",
-    trustPillarId: "Vérification d'identité officielle",
+    trustPillarId: "Vérification d'identification",
     trustPillarVideo: "Vérification vidéo et adresse",
     trustPillarCommunity: "Système de recommandation communautaire",
     trustPillarSafety: "Support sécurité 24h/24",

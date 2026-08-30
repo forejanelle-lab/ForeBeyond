@@ -1,12 +1,15 @@
 import Link from "next/link";
-import Image from "next/image";
-import { MapPin, DollarSign, MessageSquare, Lock, CalendarCheck, Clock, User, Users } from "lucide-react";
+import { ArrowLeft, MapPin, MessageSquare, Lock, CalendarCheck, Clock, Users, Star, Shield } from "lucide-react";
 import { FamilyProfileContent } from "@/components/search/FamilyProfileContent";
 import { RequestStayButton } from "@/components/stays/RequestStayButton";
 import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
 import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
+import { ListingPhotoGallery } from "@/components/listings/ListingPhotoGallery";
+import { ShareListingButton } from "@/components/listings/ShareListingButton";
+import { HostAvatar } from "@/components/design/HostAvatar";
+import { AutoTranslatableText } from "@/components/i18n/AutoTranslatableText";
 import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
 import { DisplayStayRateFromPricing } from "@/components/i18n/DisplayMoney";
 import { pickListingPricing } from "@/lib/stay-requests";
@@ -89,39 +92,105 @@ export function FamilyProfileView({
 }: FamilyProfileViewProps) {
   const listingPricing = pickListingPricing(listing);
   const isVerified = verificationStatus === "verified";
-  const locationLabel = [listing.city, listing.country].filter(Boolean).join(", ");
   const hostNameForDisplay = hostDisplayName ?? hostFirstName;
-  const hostInitials = hostNameForDisplay
-    ?.split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const resolvedAvatarUrl =
+    hostAvatarUrl ??
+    ("host_avatar_url" in listing ? listing.host_avatar_url : null) ??
+    null;
+
+  const responseRate =
+    totalStayRequests > 0
+      ? Math.round((respondedStayRequests / totalStayRequests) * 100)
+      : null;
 
   return (
-    <>
-      <section className="relative h-64 md:h-[28rem] overflow-hidden bg-gradient-to-br from-forest-light via-forest to-forest-dark">
-        <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest-dark/35 via-transparent to-white/10"
-          aria-hidden
-        />
-        <Container className="absolute bottom-0 left-0 right-0 z-10 pb-6 md:pb-10">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-gold mb-2 uppercase tracking-wide">
-                Fore Beyond Family
+    <Container className="py-6 md:py-10">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6 md:mb-8">
+        <Link
+          href="/search"
+          className="inline-flex items-center gap-2 text-sm font-medium text-charcoal hover:text-forest transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to search
+        </Link>
+        <div className="flex items-center gap-2">
+          <ShareListingButton listingId={listing.id} title={listing.title} />
+          {showSaveButton && (
+            <SaveFamilyButton listingId={listing.id} initialSaved={isSaved} variant="icon" />
+          )}
+        </div>
+      </div>
+
+      <ListingPhotoGallery
+        photos={photos}
+        country={listing.country}
+        city={listing.city}
+        title={listing.title}
+      />
+
+      <div className="mt-8 md:mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="lg:col-span-2 space-y-6">
+          <div>
+            <AutoTranslatableText
+              as="h1"
+              text={listing.title ?? "Family Home"}
+              className="text-3xl md:text-4xl lg:text-[2.5rem] font-serif font-semibold text-forest leading-tight text-balance"
+            />
+
+            {isVerified && (
+              <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-forest">
+                <Shield className="h-4 w-4" />
+                Verified Host
               </p>
-              <h1 className="text-3xl md:text-5xl font-bold text-white">
-                {listing.title ?? "Family Home"}
-              </h1>
-              {(listing.city || listing.country) && (
-                <p className="flex items-center gap-1.5 text-white/85 mt-2">
-                  <MapPin className="h-4 w-4" />
-                  {[listing.city, listing.country].filter(Boolean).join(", ")}
-                </p>
+            )}
+
+            {(listing.city || listing.country) && (
+              <p className="flex items-center gap-1.5 text-muted mt-2">
+                <MapPin className="h-4 w-4 shrink-0" />
+                <AutoTranslatableText
+                  text={[listing.city, listing.country].filter(Boolean).join(", ")}
+                />
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-4 mt-3 text-sm">
+              {hostAvgRating && (
+                <span className="inline-flex items-center gap-1 text-charcoal">
+                  <Star className="h-4 w-4 fill-gold text-gold" />
+                  <span className="font-medium">{hostAvgRating}</span>
+                  {hostReviewCount > 0 && (
+                    <span className="text-muted">({hostReviewCount} reviews)</span>
+                  )}
+                </span>
               )}
-              <p className="flex items-center gap-1.5 text-white/85 mt-2 text-sm md:text-base">
-                <DollarSign className="h-4 w-4" />
+              <span className="inline-flex items-center gap-1 text-forest font-medium">
+                Trust score {trustScore}/100
+              </span>
+            </div>
+
+            <div className="mt-4">
+              <VerificationBadgeRow verified={isVerified} />
+            </div>
+          </div>
+
+          <FamilyProfileContent
+            listing={listing}
+            photos={photos}
+            reviews={reviews}
+            reviewUserId={showBookingActions ? userId : null}
+            canLeaveReview={canLeaveReview}
+            canEditReview={canEditReview}
+            reviewExisting={reviewExisting}
+            reviewTarget={reviewTarget}
+            hostName={hostFirstName}
+            hostMotivation={hostMotivation}
+          />
+        </div>
+
+        <div className="lg:sticky lg:top-24 lg:self-start space-y-5">
+          <Card variant="outline" padding="md" className="space-y-4 shadow-md">
+            <div>
+              <p className="text-2xl font-serif font-semibold text-forest">
                 <DisplayStayRateFromPricing
                   pricing={listingPricing}
                   guestCount={1}
@@ -129,174 +198,143 @@ export function FamilyProfileView({
                 />
               </p>
             </div>
-            {showSaveButton && (
-              <div className="md:min-w-[220px]">
-                <SaveFamilyButton listingId={listing.id} initialSaved={isSaved} />
+
+            {showBookingActions ? (
+              <>
+                {listing.max_capacity != null && listing.max_capacity > 0 && (
+                  <p className="text-sm text-muted flex items-center gap-1.5">
+                    <Users className="h-4 w-4 shrink-0 text-forest" />
+                    Hosts up to {formatListingMaxCapacityLabel(listing.max_capacity)}
+                  </p>
+                )}
+
+                {userId ? (
+                  <>
+                    <RequestStayButton
+                      listingId={listing.id}
+                      enabled={canRequestStay}
+                      disabledReason={requestStayDisabledReason}
+                    />
+                    {canMessageHost && messageConversationId ? (
+                      <Link
+                        href={`/messages/${messageConversationId}`}
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-forest/20 bg-white px-5 py-3 text-sm font-medium text-forest hover:bg-sage/40 transition-colors w-full"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Message Family
+                      </Link>
+                    ) : (
+                      <span
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-sage-dark/40 bg-sage/20 px-5 py-3 text-sm font-medium text-muted w-full cursor-not-allowed"
+                        title={messageLockReason}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Message Family
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={`/auth/sign-in?redirect=/families/${listing.id}/request`}
+                    className="inline-flex items-center justify-center rounded-full bg-forest px-5 py-3.5 text-sm font-medium text-white hover:bg-forest-light transition-colors w-full"
+                  >
+                    Request to stay
+                  </Link>
+                )}
+
+                <p className="text-xs text-muted text-center">
+                  You won&apos;t be charged yet.
+                </p>
+                <p className="flex items-center justify-center gap-1.5 text-xs text-muted">
+                  <Lock className="h-3.5 w-3.5" />
+                  Host contact details shared once your stay is confirmed
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted text-center">
+                This is your listing preview. Travelers will see request and message options here.
+              </p>
+            )}
+          </Card>
+
+          <TrustScorePanel
+            score={trustScore}
+            reviewCount={hostReviewCount}
+            avgRating={hostAvgRating}
+            listingReviewCount={listingReviewCount}
+            listingId={listing.id}
+            hostName={hostNameForDisplay}
+            breakdown={trustScoreBreakdown}
+          />
+
+          <Card variant="outline" padding="md" className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-forest">Host reliability</h3>
+              {hostId && userId && userId !== hostId && (
+                <ReportUserButton
+                  reportedUserId={hostId}
+                  reportedListingId={listing.id}
+                  label="Report"
+                />
+              )}
+            </div>
+
+            {hostNameForDisplay && (
+              <div className="flex items-center gap-3">
+                <HostAvatar
+                  avatarUrl={resolvedAvatarUrl}
+                  firstName={hostFirstName}
+                  hostName={hostNameForDisplay}
+                  sizeClass="h-12 w-12"
+                />
+                <div>
+                  <AutoTranslatableText
+                    as="p"
+                    text={hostNameForDisplay}
+                    className="text-sm font-medium text-charcoal"
+                  />
+                  <p className="text-xs text-muted">Your host</p>
+                </div>
               </div>
             )}
-          </div>
-        </Container>
-      </section>
 
-      <Container className="py-10 md:py-14">
-        <div className="mb-8">
-          <VerificationBadgeRow verified={isVerified} />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
-          <div className="lg:col-span-2">
-            <FamilyProfileContent
-              listing={listing}
-              photos={photos}
-              reviews={reviews}
-              reviewUserId={showBookingActions ? userId : null}
-              canLeaveReview={canLeaveReview}
-              canEditReview={canEditReview}
-              reviewExisting={reviewExisting}
-              reviewTarget={reviewTarget}
-              hostName={hostFirstName}
-              hostMotivation={hostMotivation}
-            />
-          </div>
-
-          <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
-            <TrustScorePanel
-              score={trustScore}
-              reviewCount={hostReviewCount}
-              avgRating={hostAvgRating}
-              listingReviewCount={listingReviewCount}
-              listingId={listing.id}
-              hostName={hostNameForDisplay}
-              breakdown={trustScoreBreakdown}
-            />
-
-            <Card variant="outline" padding="md" className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-forest">Host reliability</h3>
-                {hostId && userId && userId !== hostId && (
-                  <ReportUserButton
-                    reportedUserId={hostId}
-                    reportedListingId={listing.id}
-                    label="Report host"
-                  />
-                )}
-              </div>
-              {hostNameForDisplay && (
-                <div className="flex items-center gap-3">
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-sage-dark/40 bg-sage">
-                    {hostAvatarUrl ? (
-                      <Image
-                        src={hostAvatarUrl}
-                        alt={`${hostNameForDisplay} — verified local host`}
-                        fill
-                        className="object-cover"
-                        sizes="56px"
-                        unoptimized
-                      />
-                    ) : hostInitials ? (
-                      <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-forest">
-                        {hostInitials}
-                      </span>
-                    ) : (
-                      <span className="flex h-full w-full items-center justify-center text-forest">
-                        <User className="h-6 w-6" />
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-forest">{hostNameForDisplay}</p>
-                    <p className="text-xs text-charcoal-light">Your host</p>
-                  </div>
+            <div className="space-y-3 text-sm">
+              {responseRate != null && (
+                <div className="flex items-center justify-between gap-3 py-2 border-b border-sage-dark/20">
+                  <span className="text-muted">Response rate</span>
+                  <span className="font-medium text-forest">{responseRate}%</span>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-xl bg-sage/40 px-3 py-2.5">
-                  <p className="flex items-center gap-1.5 text-xs text-charcoal-light mb-0.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    Avg. response time
-                  </p>
-                  <p className="font-semibold text-forest">
-                    {formatAverageResponseTime(
-                      avgResponseTimeMinutes,
-                      totalStayRequests,
-                      respondedStayRequests
-                    )}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-sage/40 px-3 py-2.5">
-                  <p className="flex items-center gap-1.5 text-xs text-charcoal-light mb-0.5">
-                    <CalendarCheck className="h-3.5 w-3.5" />
-                    Bookings
-                  </p>
-                  <p className="font-semibold text-forest">{bookingCount}</p>
-                </div>
-              </div>
-              {memberSince && (
-                <p className="text-sm text-charcoal-light">
-                  Member since {formatMemberSince(memberSince)}
-                </p>
-              )}
-            </Card>
-
-            <Card variant="outline" padding="md" className="space-y-4">
-              {showBookingActions ? (
-                <>
-                  {listing.max_capacity != null && listing.max_capacity > 0 && (
-                    <p className="text-sm text-charcoal-light text-center flex items-center justify-center gap-1.5">
-                      <Users className="h-4 w-4 shrink-0 text-forest" />
-                      Hosts up to {formatListingMaxCapacityLabel(listing.max_capacity)}
-                    </p>
+              <div className="flex items-center justify-between gap-3 py-2 border-b border-sage-dark/20">
+                <span className="text-muted inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  Avg. response time
+                </span>
+                <span className="font-medium text-forest">
+                  {formatAverageResponseTime(
+                    avgResponseTimeMinutes,
+                    totalStayRequests,
+                    respondedStayRequests
                   )}
-                  <p className="text-sm text-charcoal-light text-center">
-                    Interested in staying with {hostFirstName ?? "this family"}?
-                  </p>
-                  {userId ? (
-                    <>
-                      <RequestStayButton
-                        listingId={listing.id}
-                        enabled={canRequestStay}
-                        disabledReason={requestStayDisabledReason}
-                      />
-                      {canMessageHost && messageConversationId ? (
-                        <Link
-                          href={`/messages/${messageConversationId}`}
-                          className="inline-flex items-center justify-center gap-2 rounded-full border border-forest/30 bg-white px-5 py-3 text-sm font-medium text-forest hover:bg-sage/40 transition-colors w-full"
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          Message Family
-                        </Link>
-                      ) : (
-                        <span
-                          className="inline-flex items-center justify-center gap-2 rounded-full border border-sage-dark/50 bg-sage/20 px-5 py-3 text-sm font-medium text-charcoal-light w-full cursor-not-allowed"
-                          title={messageLockReason}
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          Message Family
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <Link
-                      href={`/auth/sign-in?redirect=/families/${listing.id}/request`}
-                      className="inline-flex items-center justify-center rounded-full bg-forest px-5 py-3 text-sm font-medium text-white hover:bg-forest-light transition-colors w-full"
-                    >
-                      Sign in to request stay
-                    </Link>
-                  )}
-                  <p className="flex items-center justify-center gap-1.5 text-xs text-charcoal-light">
-                    <Lock className="h-3.5 w-3.5" />
-                    Host contact details are shared once your stay is confirmed
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm text-charcoal-light text-center">
-                  This is your listing preview. Travelers will see request and message options here.
-                </p>
-              )}
-            </Card>
-          </div>
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3 py-2">
+                <span className="text-muted inline-flex items-center gap-1.5">
+                  <CalendarCheck className="h-3.5 w-3.5" />
+                  Completed stays
+                </span>
+                <span className="font-medium text-forest">{bookingCount}</span>
+              </div>
+            </div>
+
+            {memberSince && (
+              <p className="text-xs text-muted pt-1">
+                Member since {formatMemberSince(memberSince)}
+              </p>
+            )}
+          </Card>
         </div>
-      </Container>
-    </>
+      </div>
+    </Container>
   );
 }

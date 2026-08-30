@@ -6,7 +6,9 @@ const de = {
     menuHint: "Wählen Sie die Sprache der Fore-Beyond-Website.",
   },
   nav: {
+    findHosts: "Gastgeber finden",
     howItWorks: "So funktioniert's",
+    becomeHost: "Gastgeber werden",
     about: "Über uns",
     contact: "Kontakt",
     signIn: "Anmelden",
@@ -53,7 +55,17 @@ const de = {
     heroTitleLine1: "Reise tiefer.",
     heroTitleLine2: "Gehör überall hin.",
     heroSubtitle:
-      "Kulturelle Immersionsreisen mit verifizierten lokalen Gastgebern — authentische Erlebnisse, Gastfamilien-Aufenthalte und bedeutungsvolle Verbindungen. Reise wie ein Local, nicht wie ein Tourist.",
+      "Vertrauenswürdige Gastfamilien. Echte Verbindungen. Unvergessliche Reisen.",
+    findAHost: "Gastgeber finden",
+    valueVerifiedTitle: "Verifizierte Familien",
+    valueVerifiedDesc: "Jeder Gastgeber wird auf Sicherheit und Vertrauen geprüft.",
+    valueImmersionTitle: "Kulturelle Immersion",
+    valueImmersionDesc: "Erleben Sie den Alltag mit Einheimischen.",
+    valueSupportedTitle: "Sicher und begleitet",
+    valueSupportedDesc: "Wir sind während Ihrer gesamten Reise für Sie da.",
+    featuredHosts: "Ausgewählte Gastfamilien",
+    featuredHostsDesc:
+      "Lernen Sie verifizierte Familien kennen, die Reisenden weltweit ihre Türen öffnen.",
     alreadyMember: "Bereits Mitglied?",
     travelerLogin: "Reisenden-Login",
     hostLogin: "Gastgeber-Login",
@@ -88,7 +100,7 @@ const de = {
     trustDesc:
       "Jedes Mitglied durchläuft eine gründliche Verifizierung. Bedeutungsvolle Verbindung erfordert echtes Vertrauen.",
     exploreTrustCenter: "Vertrauenszentrum entdecken",
-    trustPillarId: "Amtlicher Ausweis",
+    trustPillarId: "Identifikationsprüfung",
     trustPillarVideo: "Video- und Adressverifizierung",
     trustPillarCommunity: "Community-Bestätigungssystem",
     trustPillarSafety: "24/7-Sicherheitsunterstützung",

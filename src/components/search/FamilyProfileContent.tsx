@@ -9,6 +9,7 @@ import { ProfileTabs } from "@/components/design/ProfileTabs";
 import { ListingReviewAction } from "@/components/reviews/ListingReviewAction";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
+import { AutoTranslatableText } from "@/components/i18n/AutoTranslatableText";
 import { Badge } from "@/components/ui/Badge";
 import type { HostListing, ListingPhoto, PublicListing, PublicReview } from "@/types/database";
 
@@ -93,25 +94,31 @@ export function FamilyProfileContent({
           {listing.family_story && (
             <section>
               <h2 className="text-xl font-semibold text-forest mb-3">Our Family Story</h2>
-              <p className="text-charcoal-light leading-relaxed whitespace-pre-wrap">
-                {listing.family_story}
-              </p>
+              <AutoTranslatableText
+                as="p"
+                text={listing.family_story}
+                className="text-charcoal-light leading-relaxed"
+              />
             </section>
           )}
           {motivation && (
             <section>
               <h2 className="text-xl font-semibold text-forest mb-3">Why We Host</h2>
-              <p className="text-charcoal-light leading-relaxed whitespace-pre-wrap">
-                {motivation}
-              </p>
+              <AutoTranslatableText
+                as="p"
+                text={motivation}
+                className="text-charcoal-light leading-relaxed"
+              />
             </section>
           )}
           {listing.stay_details && (
             <section>
               <h2 className="text-xl font-semibold text-forest mb-3">Details</h2>
-              <p className="text-charcoal-light leading-relaxed whitespace-pre-wrap">
-                {listing.stay_details}
-              </p>
+              <AutoTranslatableText
+                as="p"
+                text={listing.stay_details}
+                className="text-charcoal-light leading-relaxed"
+              />
             </section>
           )}
           {listing.languages && listing.languages.length > 0 && (

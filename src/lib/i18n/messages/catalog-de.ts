@@ -102,6 +102,8 @@ export const catalogDe = {
     subtitleInLocation:
       "Verifizierte lokale Gastgeber mit kultureller Immersion und Gastfamilien-Aufenthalten in {location}.",
     filterHint: "Filtern nach Budget, Sprache, Mahlzeiten und Verifizierungsstatus",
+    hostsFound: "{count} Gastgeber gefunden",
+    sortRecommended: "Empfohlen",
   },
   host: {
     requestsTitle: "Anfragen",

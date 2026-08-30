@@ -102,6 +102,8 @@ export const catalogJa = {
     subtitleInLocation:
       "{location}の認証済みローカルホストによる文化体験とホームステイ。",
     filterHint: "予算、言語、食事、認証ステータスで絞り込み",
+    hostsFound: "{count}件のホストが見つかりました",
+    sortRecommended: "おすすめ",
   },
   host: {
     requestsTitle: "リクエスト",

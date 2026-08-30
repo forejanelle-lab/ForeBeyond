@@ -6,9 +6,9 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: "bg-white shadow-md",
-  elevated: "bg-white shadow-xl",
-  outline: "bg-white border border-sage-dark",
+  default: "bg-white shadow-sm",
+  elevated: "bg-white shadow-lg",
+  outline: "bg-white shadow-sm ring-1 ring-sage-dark/25",
 };
 
 const paddingStyles = {

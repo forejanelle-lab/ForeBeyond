@@ -1,9 +1,6 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { sampleImages } from "@/lib/sample-images";
-import { PageHero } from "@/components/design/PageHero";
+import { HeroSearchBar } from "@/components/design/HeroSearchBar";
 import { SearchFiltersPanel } from "@/components/search/SearchFiltersPanel";
 import { SearchResultsGrid } from "@/components/search/SearchResultsGrid";
 import { SearchAnalyticsTracker } from "@/components/analytics/SearchAnalyticsTracker";
@@ -14,7 +11,12 @@ import {
   parseSearchParams,
 } from "@/lib/search";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
-import type { ListingPhoto, PublicListing } from "@/types/database";
+import {
+  getHostAvatarUrlsByHostId,
+  getHostReviewStatsByHostId,
+  getListingPhotoGalleries,
+} from "@/lib/search-card-data";
+import type { PublicListing } from "@/types/database";
 import { createPageMetadata } from "@/lib/site-metadata";
 import { getDestinationCountries } from "@/lib/seo/destination-catalog";
 import { getServerTranslations } from "@/lib/i18n/server";
@@ -60,33 +62,12 @@ export async function generateMetadata({
   });
 }
 
-async function getCoverPhotos(listingIds: string[]) {
-  if (listingIds.length === 0) return {};
-
-  const supabase = await createClient();
-  const { data: photos } = await supabase
-    .from("listing_photos")
-    .select("listing_id, file_url, is_cover, sort_order")
-    .in("listing_id", listingIds)
-    .order("sort_order");
-
-  const coverMap: Record<string, string> = {};
-  (photos as Pick<ListingPhoto, "listing_id" | "file_url" | "is_cover">[] | null)?.forEach(
-    (photo) => {
-      if (photo.is_cover || !coverMap[photo.listing_id]) {
-        coverMap[photo.listing_id] = photo.file_url;
-      }
-    }
-  );
-
-  return coverMap;
-}
-
 async function SearchResults({
   searchParams,
 }: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
+  const { t } = await getServerTranslations();
   const supabase = await createClient();
   const filters = parseSearchParams(searchParams);
 
@@ -99,11 +80,18 @@ async function SearchResults({
   const filtered = filterListingsClientSide(allListings, filters);
   const countries = getUniqueCountries(allListings);
   const hostIds = [...new Set(filtered.map((listing) => listing.host_id))];
-  const [{ data: hostProfiles }, coverPhotos] = await Promise.all([
+  const listingIds = filtered.map((listing) => listing.id);
+  const listingAvatarByHostId = Object.fromEntries(
+    filtered.map((listing) => [listing.host_id, listing.host_avatar_url ?? null])
+  );
+  const [{ data: hostProfiles }, listingPhotoGalleries, hostReviewStatsById, hostAvatarUrls] =
+    await Promise.all([
     hostIds.length > 0
       ? supabase.from("profiles").select("id, full_name").in("id", hostIds)
       : Promise.resolve({ data: [] }),
-    getCoverPhotos(filtered.map((listing) => listing.id)),
+    getListingPhotoGalleries(listingIds),
+    getHostReviewStatsByHostId(hostIds),
+    getHostAvatarUrlsByHostId(hostIds, listingAvatarByHostId),
   ]);
 
   const hostDisplayNameById = Object.fromEntries(
@@ -124,16 +112,21 @@ async function SearchResults({
     savedListingIds = saved?.map((row) => row.listing_id) ?? [];
   }
 
+  const resultLabel = t("search.hostsFound", { count: String(filtered.length) });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8">
       <SearchFiltersPanel countries={countries} resultCount={filtered.length} />
       <div className="min-w-0 space-y-6">
         <SearchResultsGrid
           listings={filtered}
-          coverPhotos={coverPhotos}
+          listingPhotoGalleries={listingPhotoGalleries}
           hostDisplayNames={hostDisplayNameById}
+          hostAvatarUrls={hostAvatarUrls}
+          hostReviewStatsById={hostReviewStatsById}
           savedListingIds={savedListingIds}
           layout="list"
+          resultLabel={resultLabel}
         />
       </div>
     </div>
@@ -147,47 +140,48 @@ export default async function SearchFamiliesPage({
 }) {
   const params = await searchParams;
   const filters = parseSearchParams(params);
-  const locationLabel = [filters.city, filters.country].filter(Boolean).join(", ");
   const { t } = await getServerTranslations();
 
   return (
     <>
-      <PageHero
-        image={sampleImages.searchFamilies}
-        imageAlt="Friends and travelers sharing time together outdoors during a cultural homestay"
-        eyebrow={t("search.eyebrow")}
-        title={
-          locationLabel
-            ? t("search.titleInLocation", { location: locationLabel })
-            : t("search.title")
-        }
-        subtitle={
-          locationLabel
-            ? t("search.subtitleInLocation", { location: locationLabel })
-            : t("search.subtitle")
-        }
-        height="md"
-      />
+      <section className="bg-cream border-b border-sage-dark/15">
+        <Container className="py-10 md:py-14 lg:py-16">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold text-gold uppercase tracking-[0.15em] mb-3">
+              {t("search.eyebrow")}
+            </p>
+            <h1 className="text-3xl md:text-4xl lg:text-[2.75rem] font-serif font-semibold text-forest leading-[1.15] text-balance">
+              {filters.city || filters.country
+                ? t("search.titleInLocation", {
+                    location: [filters.city, filters.country].filter(Boolean).join(", "),
+                  })
+                : t("search.title")}
+            </h1>
+            <p className="mt-4 text-base md:text-lg text-muted leading-relaxed max-w-2xl">
+              {filters.city || filters.country
+                ? t("search.subtitleInLocation", {
+                    location: [filters.city, filters.country].filter(Boolean).join(", "),
+                  })
+                : t("search.subtitle")}
+            </p>
+          </div>
 
-      <Container className="py-10 md:py-14">
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <p className="text-sm text-charcoal-light hidden md:block">
-            {t("search.filterHint")}
-          </p>
-          <Link
-            href="/saved"
-            className="inline-flex items-center gap-2 text-sm font-medium text-forest hover:underline"
-          >
-            <Heart className="h-4 w-4" />
-            {t("common.savedFamilies")}
-          </Link>
-        </div>
+          <div className="mt-8 md:mt-10">
+            <HeroSearchBar variant="page" />
+          </div>
+        </Container>
+      </section>
 
+      <Container className="py-8 md:py-12">
         <Suspense fallback={null}>
           <SearchAnalyticsTracker />
         </Suspense>
 
-        <Suspense fallback={<p className="text-sm text-charcoal-light">{t("common.loadingFamilies")}</p>}>
+        <Suspense
+          fallback={
+            <p className="text-sm text-muted">{t("common.loadingFamilies")}</p>
+          }
+        >
           <SearchResults searchParams={params} />
         </Suspense>
       </Container>

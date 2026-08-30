@@ -94,14 +94,16 @@ export const catalogEn = {
     updatePassword: "Update password",
   },
   search: {
-    eyebrow: "Search Families",
-    title: "Find your host family",
+    eyebrow: "Find your host",
+    title: "Stay with someone who calls it home.",
     titleInLocation: "Host families in {location}",
     subtitle:
-      "Discover verified families offering authentic cultural immersion and homestay experiences worldwide.",
+      "Discover verified host families and experience a destination through local people, culture, and everyday life.",
     subtitleInLocation:
       "Verified local hosts offering cultural immersion and homestay experiences in {location}.",
-    filterHint: "Filter by budget, language, meals, and verification status",
+    filterHint: "Refine by location, budget, language, meals, and trust score",
+    hostsFound: "{count} hosts found",
+    sortRecommended: "Recommended",
   },
   host: {
     requestsTitle: "Requests",

@@ -32,7 +32,7 @@ export async function loadPublishedListingFallback(
   const [{ data: profile }, { data: hostProfile }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("trust_score, trust_score_breakdown, profile_completion, verification_status, full_name")
+      .select("trust_score, trust_score_breakdown, profile_completion, verification_status, full_name, avatar_url")
       .eq("id", hostListing.host_id)
       .maybeSingle(),
     supabase
@@ -44,7 +44,12 @@ export async function loadPublishedListingFallback(
 
   const typedProfile = profile as Pick<
     Profile,
-    "trust_score" | "trust_score_breakdown" | "profile_completion" | "verification_status" | "full_name"
+    | "trust_score"
+    | "trust_score_breakdown"
+    | "profile_completion"
+    | "verification_status"
+    | "full_name"
+    | "avatar_url"
   > | null;
 
   return {
@@ -75,6 +80,7 @@ export async function loadPublishedListingFallback(
     profile_completion: typedProfile?.profile_completion ?? 0,
     verification_status: typedProfile?.verification_status ?? "unverified",
     host_first_name: typedProfile?.full_name?.trim().split(/\s+/)[0] ?? null,
+    host_avatar_url: typedProfile?.avatar_url?.trim() || null,
     host_motivation:
       (hostProfile as { host_motivation: string | null } | null)?.host_motivation ?? null,
   };

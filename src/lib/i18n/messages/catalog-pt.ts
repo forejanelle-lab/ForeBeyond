@@ -102,6 +102,8 @@ export const catalogPt = {
     subtitleInLocation:
       "Anfitriões locais verificados oferecendo imersão cultural e estadias em família em {location}.",
     filterHint: "Filtrar por orçamento, idioma, refeições e status de verificação",
+    hostsFound: "{count} anfitriões encontrados",
+    sortRecommended: "Recomendado",
   },
   host: {
     requestsTitle: "Solicitações",

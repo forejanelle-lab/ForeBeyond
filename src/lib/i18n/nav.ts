@@ -3,12 +3,17 @@ import type { NavItem } from "@/lib/navigation-menu";
 import type { UserRole } from "@/types/database";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 
-export function getTranslatedMainNav(t: Translator): NavItem[] {
+export function getTranslatedPublicNav(t: Translator): NavItem[] {
   return [
+    { label: t("nav.findHosts"), href: "/search" },
     { label: t("nav.howItWorks"), href: "/#how-it-works" },
+    { label: t("nav.becomeHost"), href: "/onboarding/host" },
     { label: t("nav.about"), href: "/#mission" },
-    { label: t("nav.contact"), href: "mailto:hello@forebeyond.com" },
   ];
+}
+
+export function getTranslatedMainNav(t: Translator): NavItem[] {
+  return getTranslatedPublicNav(t);
 }
 
 export function getTranslatedTravelerNav(t: Translator): NavItem[] {

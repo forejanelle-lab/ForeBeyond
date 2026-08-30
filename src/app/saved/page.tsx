@@ -5,7 +5,12 @@ import { SearchResultsGrid } from "@/components/search/SearchResultsGrid";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
-import type { ListingPhoto, PublicListing } from "@/types/database";
+import {
+  getHostAvatarUrlsByHostId,
+  getHostReviewStatsByHostId,
+  getListingPhotoGalleries,
+} from "@/lib/search-card-data";
+import type { PublicListing } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
 
 export const metadata = privatePageMetadata({
@@ -13,28 +18,6 @@ export const metadata = privatePageMetadata({
   description: "Your saved host families and listings on Fore Beyond.",
   path: "/saved",
 });
-
-async function getCoverPhotos(listingIds: string[]) {
-  if (listingIds.length === 0) return {};
-
-  const supabase = await createClient();
-  const { data: photos } = await supabase
-    .from("listing_photos")
-    .select("listing_id, file_url, is_cover, sort_order")
-    .in("listing_id", listingIds)
-    .order("sort_order");
-
-  const coverMap: Record<string, string> = {};
-  (photos as Pick<ListingPhoto, "listing_id" | "file_url" | "is_cover">[] | null)?.forEach(
-    (photo) => {
-      if (photo.is_cover || !coverMap[photo.listing_id]) {
-        coverMap[photo.listing_id] = photo.file_url;
-      }
-    }
-  );
-
-  return coverMap;
-}
 
 export default async function SavedFamiliesPage() {
   const supabase = await createClient();
@@ -61,7 +44,15 @@ export default async function SavedFamiliesPage() {
     );
   }
 
-  const coverPhotos = await getCoverPhotos(listingIds);
+  const listingPhotoGalleries = await getListingPhotoGalleries(listingIds);
+  const hostIds = [...new Set(listings.map((listing) => listing.host_id))];
+  const listingAvatarByHostId = Object.fromEntries(
+    listings.map((listing) => [listing.host_id, listing.host_avatar_url ?? null])
+  );
+  const [hostReviewStatsById, hostAvatarUrls] = await Promise.all([
+    getHostReviewStatsByHostId(hostIds),
+    getHostAvatarUrlsByHostId(hostIds, listingAvatarByHostId),
+  ]);
 
   return (
     <Container className="py-10 md:py-16 lg:py-20">
@@ -94,7 +85,9 @@ export default async function SavedFamiliesPage() {
       ) : (
         <SearchResultsGrid
           listings={listings}
-          coverPhotos={coverPhotos}
+          listingPhotoGalleries={listingPhotoGalleries}
+          hostAvatarUrls={hostAvatarUrls}
+          hostReviewStatsById={hostReviewStatsById}
           savedListingIds={listingIds}
         />
       )}

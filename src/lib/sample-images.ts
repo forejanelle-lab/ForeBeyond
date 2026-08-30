@@ -2,7 +2,7 @@
 
 export const sampleImages = {
   heroFamily: "/hero-family-guest.png",
-  /** Homepage hero — family sharing a meal together (2048px, public/home-hero.jpg) */
+  /** Homepage hero — Tuscan terrace dining at golden hour */
   homeHeroOutdoorMeal: "/home-hero.jpg",
   heroTravel:
     "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1920&q=80",

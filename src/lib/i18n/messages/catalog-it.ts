@@ -102,6 +102,8 @@ export const catalogIt = {
     subtitleInLocation:
       "Host locali verificati che offrono immersione culturale e soggiorni in famiglia a {location}.",
     filterHint: "Filtra per budget, lingua, pasti e stato di verifica",
+    hostsFound: "{count} host trovati",
+    sortRecommended: "Consigliati",
   },
   host: {
     requestsTitle: "Richieste",

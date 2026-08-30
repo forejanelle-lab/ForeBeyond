@@ -1,10 +1,9 @@
-import { Shield, MapPin, Users } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { Check } from "lucide-react";
 
 const defaultBadges = [
-  { icon: Shield, label: "Verified Identity" },
-  { icon: MapPin, label: "Address Verified" },
-  { icon: Users, label: "Community Reviewed" },
+  "Verified Identity",
+  "Address Verified",
+  "Community Reviewed",
 ];
 
 interface VerificationBadgeRowProps {
@@ -15,12 +14,15 @@ export function VerificationBadgeRow({ verified = true }: VerificationBadgeRowPr
   if (!verified) return null;
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {defaultBadges.map(({ icon: Icon, label }) => (
-        <Badge key={label} variant="outline" className="gap-1.5 py-1.5 px-3">
-          <Icon className="h-3.5 w-3.5 text-forest" />
+    <div className="flex flex-wrap gap-x-6 gap-y-2">
+      {defaultBadges.map((label) => (
+        <span
+          key={label}
+          className="inline-flex items-center gap-1.5 text-sm text-charcoal-light"
+        >
+          <Check className="h-4 w-4 text-forest shrink-0" strokeWidth={2.5} />
           {label}
-        </Badge>
+        </span>
       ))}
     </div>
   );

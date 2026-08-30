@@ -6,8 +6,10 @@ const en = {
     menuHint: "Choose the language for the Fore Beyond website.",
   },
   nav: {
+    findHosts: "Find Hosts",
     howItWorks: "How It Works",
-    about: "About",
+    becomeHost: "Become a Host",
+    about: "About Us",
     contact: "Contact",
     signIn: "Sign In",
     getStarted: "Get Started",
@@ -50,10 +52,11 @@ const en = {
       "This is not a vacation rental platform. This is a trust-first cultural immersion platform.",
   },
   home: {
-    heroTitleLine1: "Travel deeper.",
-    heroTitleLine2: "Belong anywhere.",
+    heroTitleLine1: "Experience the world",
+    heroTitleLine2: "through local families.",
     heroSubtitle:
-      "Cultural immersion travel with verified local hosts and travelers — authentic experiences, homestay stays, and meaningful connection. Explore like a local or welcome the world into your home.",
+      "Trusted host families. Real connections. Unforgettable journeys.",
+    findAHost: "Find a Host",
     alreadyMember: "Already a member?",
     travelerLogin: "Traveler login",
     hostLogin: "Host login",
@@ -64,6 +67,18 @@ const en = {
     missionTitle: "Not a vacation rental. A cultural bridge.",
     missionDesc:
       "Fore Beyond is a trust-first platform for cultural exchange — connecting verified local hosts and travelers for homestay experiences rooted in authenticity, not transactions.",
+    valueVerifiedTitle: "Verified Families",
+    valueVerifiedDesc:
+      "Every host is verified for safety and trust.",
+    valueImmersionTitle: "Cultural Immersion",
+    valueImmersionDesc:
+      "Experience everyday life through local people.",
+    valueSupportedTitle: "Secure & Supported",
+    valueSupportedDesc:
+      "We're here throughout your journey.",
+    featuredHosts: "Featured host families",
+    featuredHostsDesc:
+      "Meet verified families opening their homes to travelers around the world.",
     pillarHostsTitle: "Verified Hosts & Travelers",
     pillarHostsDesc:
       "Identity-verified hosts and travelers who welcome genuine cultural immersion and exchange.",
@@ -76,21 +91,19 @@ const en = {
     howItWorksTitle: "How It Works",
     howItWorksDesc:
       "Whether you're traveling or hosting — your path to authentic cultural connection with verified local hosts and travelers.",
-    step1Title: "Create Your Profile",
-    step1Desc: "Share your interests and what you hope to discover as a traveler, or what you want to offer as a host.",
-    step2Title: "Get Verified",
-    step2Desc: "Complete trust verification so hosts and travelers know you're genuine.",
-    step3Title: "Find Your Match",
-    step3Desc:
-      "Browse verified host families and experiences, or review stay requests from travelers looking for the right cultural fit.",
-    step4Title: "Immerse & Connect",
-    step4Desc:
-      "Live with a local family as a traveler, or open your home and share your culture as a host — create memories that last.",
+    step1Title: "Discover",
+    step1Desc: "Browse verified host families and destinations that match your travel interests.",
+    step2Title: "Connect",
+    step2Desc: "Send a stay request and message hosts to find the right cultural fit.",
+    step3Title: "Stay",
+    step3Desc: "Live with a local family and experience everyday life in your destination.",
+    step4Title: "Experience",
+    step4Desc: "Share meals, stories, and traditions — create memories that last beyond the trip.",
     trustTitle: "Built on trust, not transactions",
     trustDesc:
       "Every member goes through rigorous verification. Meaningful connection requires genuine trust.",
     exploreTrustCenter: "Explore Trust Center",
-    trustPillarId: "Government ID verification",
+    trustPillarId: "Identification verification",
     trustPillarVideo: "Video and address verification",
     trustPillarCommunity: "Community vouching system",
     trustPillarSafety: "24/7 safety support",
@@ -102,9 +115,9 @@ const en = {
       "Stay with verified local hosts for cultural immersion travel. Browse homestay experiences, local host profiles, and meaningful travel that lasts beyond your trip.",
     findYourStay: "Find Your Stay",
     hostTitleLine1: "Open your home.",
-    hostTitleLine2: "Share your world.",
+    hostTitleLine2: "Open your world.",
     hostDesc:
-      "Welcome travelers into your daily life — share your culture, your cooking, and your neighborhood stories. Hosting on Fore Beyond is about connection, not commerce.",
+      "Share your culture, welcome travelers, and create connections that last beyond the trip.",
     becomeHost: "Become a Host",
     trustVerifiedFamilies: "Verified Families",
     trustSecurePrivate: "Secure & Private",

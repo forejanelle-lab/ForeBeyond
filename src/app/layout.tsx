@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import { Navigation } from "@/components/layout/Navigation";
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
@@ -18,6 +18,12 @@ import "./globals.css";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-cormorant",
 });
 
 export const metadata = rootMetadata;
@@ -67,7 +73,7 @@ export default async function RootLayout({
 }>) {
   if (!isSupabaseConfigured()) {
     return (
-      <html lang="en" className={inter.variable}>
+      <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
         <body className={`${inter.className} min-h-screen antialiased bg-cream text-charcoal`}>
           <SupabaseConfigNotice />
         </body>
@@ -82,7 +88,7 @@ export default async function RootLayout({
   const { locale, messages } = await getServerTranslations(navUser?.preferredLanguage);
 
   return (
-    <html lang={locale} className={inter.variable}>
+    <html lang={locale} className={`${inter.variable} ${cormorant.variable}`}>
       <body className={`${inter.className} min-h-screen flex flex-col antialiased bg-cream text-charcoal`}>
         <AppProviders
           locale={locale}

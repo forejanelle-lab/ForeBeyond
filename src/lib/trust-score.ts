@@ -35,8 +35,8 @@ export const TRUST_SCORE_FACTORS: {
   },
   {
     key: "government_id",
-    label: "Government ID",
-    description: "Submit a valid government-issued ID",
+    label: "Identification",
+    description: "Submit valid identification",
     maxPoints: TRUST_SCORE_WEIGHTS.government_id,
   },
   {
@@ -76,7 +76,7 @@ export type TrustScoreBreakdown = Partial<Record<TrustScoreFactor, number>>;
 const HOST_PUBLIC_FACTOR_DESCRIPTIONS: Record<TrustScoreFactor, string> = {
   email_verified: "Host confirmed their email address",
   phone_verified: "Host verified their phone number",
-  government_id: "Host submitted a verified government ID",
+  government_id: "Host submitted verified identification",
   address_verification: "Host verified their home address",
   video_verification: "Host completed video identity verification",
   profile_completion: "Host profile completeness",
@@ -160,7 +160,7 @@ export const VERIFICATION_WORKFLOWS = [
   },
   {
     id: "government_id",
-    title: "Government ID",
+    title: "Identification",
     description: "Upload a passport, driver's license, or national ID.",
     href: "/verification-center?step=government_id",
     documentType: "government_id",

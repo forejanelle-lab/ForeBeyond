@@ -478,6 +478,7 @@ export interface PublicListing {
   profile_completion: number;
   verification_status: VerificationStatus;
   host_first_name: string | null;
+  host_avatar_url?: string | null;
 }
 
 export interface SavedListing {

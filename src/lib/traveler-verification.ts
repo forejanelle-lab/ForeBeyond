@@ -8,7 +8,7 @@ export const STAY_REQUEST_REQUIRED_DOCUMENTS = [
 export type StayRequestRequiredDocument = (typeof STAY_REQUEST_REQUIRED_DOCUMENTS)[number];
 
 export const STAY_REQUEST_VERIFICATION_MESSAGE =
-  "Submit government ID and selfie verification in the Verification Center to request a stay.";
+  "Submit identification and selfie verification in the Verification Center to request a stay.";
 
 export const TRAVELER_ACCOUNT_REQUIRED_MESSAGE =
   "Please create a traveler account to request a stay.";
@@ -22,7 +22,7 @@ export interface RequestStayEligibility {
 }
 
 export const HOST_LISTING_VERIFICATION_MESSAGE =
-  "Submit government ID and selfie verification in the Verification Center to create a listing.";
+  "Submit identification and selfie verification in the Verification Center to create a listing.";
 
 export interface HostListingEligibility {
   canCreate: boolean;
