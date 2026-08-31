@@ -26,6 +26,10 @@ import { PhotoUpload } from "@/components/listings/PhotoUpload";
 import { IntroVideoUpload } from "@/components/listings/IntroVideoUpload";
 import { ListingBlockedDatesEditor } from "@/components/listings/ListingBlockedDatesEditor";
 import {
+  HouseholdCompositionEditor,
+  type DraftHouseholdMember,
+} from "@/components/listings/HouseholdCompositionEditor";
+import {
   syncListingBlockedDates,
   type EditableBlockedDateRange,
 } from "@/lib/listing-blocked-dates";
@@ -36,6 +40,16 @@ import {
   normalizeCurrencyCode,
   type SupportedCurrencyCode,
 } from "@/lib/currency";
+import {
+  defaultHouseholdMemberLabel,
+  formatHouseholdMember,
+  formatPreferredGuestGender,
+  isMissingHouseholdColumnsError,
+  parseHouseholdMembers,
+  parsePreferredGuestGender,
+  type HouseholdMember,
+  type PreferredGuestGender,
+} from "@/lib/household";
 
 interface ListingWizardProps {
   userId: string;
@@ -104,6 +118,33 @@ function formatLanguagesField(languages: string[] | null | undefined): string {
   return languages?.filter(Boolean).join(", ") ?? "";
 }
 
+function draftHouseholdMembersFromListing(
+  listing?: HostListing
+): DraftHouseholdMember[] {
+  return parseHouseholdMembers(listing?.household_members).map((member, index) => ({
+    key: `existing-${index}-${member.label}`,
+    label: member.label,
+    gender: member.gender,
+    age_group: member.age_group ?? "",
+  }));
+}
+
+function serializeHouseholdMembers(members: DraftHouseholdMember[]): HouseholdMember[] {
+  return members.flatMap((member, index) => {
+    if (member.gender !== "female" && member.gender !== "male") return [];
+    if (member.age_group !== "adult" && member.age_group !== "child" && member.age_group !== "teen") {
+      return [];
+    }
+    return [
+      {
+        label: member.label.trim() || defaultHouseholdMemberLabel(index),
+        gender: member.gender,
+        age_group: member.age_group,
+      },
+    ];
+  });
+}
+
 export function ListingWizard({
   userId,
   hostName,
@@ -133,6 +174,12 @@ export function ListingWizard({
   const [amenities, setAmenities] = useState<string[]>(listing?.amenities ?? []);
   const [activities, setActivities] = useState<string[]>(listing?.family_activities ?? []);
   const [houseRules, setHouseRules] = useState<string[]>(listing?.house_rules ?? []);
+  const [householdMembers, setHouseholdMembers] = useState<DraftHouseholdMember[]>(() =>
+    draftHouseholdMembersFromListing(listing)
+  );
+  const [preferredGuestGender, setPreferredGuestGender] = useState<PreferredGuestGender>(() =>
+    parsePreferredGuestGender(listing?.preferred_guest_gender)
+  );
   const [budgetPerNight, setBudgetPerNight] = useState(priceFieldValue(listing?.budget_per_night));
   const [budget3Guests, setBudget3Guests] = useState(priceFieldValue(listing?.budget_per_night_3_guests));
   const [budget4Guests, setBudget4Guests] = useState(priceFieldValue(listing?.budget_per_night_4_guests));
@@ -168,6 +215,10 @@ export function ListingWizard({
   const ratePlaceholder =
     hostCurrency === "JPY" || hostCurrency === "KRW" ? "12000" : "85.00";
   const parsedMaxCapacity = useMemo(() => parseListingMaxCapacity(maxCapacity), [maxCapacity]);
+  const serializedHouseholdMembers = useMemo(
+    () => serializeHouseholdMembers(householdMembers),
+    [householdMembers]
+  );
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -292,6 +343,10 @@ export function ListingWizard({
 
     const supabase = createClient();
     const listingTitle = title.trim() || defaultFamilyListingTitle(hostName);
+    const householdPayload = {
+      household_members: serializedHouseholdMembers,
+      preferred_guest_gender: preferredGuestGender,
+    };
     const payload = {
       title: listingTitle,
       family_story: familyStory,
@@ -303,6 +358,7 @@ export function ListingWizard({
       amenities,
       family_activities: activities,
       house_rules: houseRules,
+      ...householdPayload,
       budget_per_night: parsePrice(budgetPerNight),
       budget_per_night_3_guests: isListingPricingTierEnabled(parsedMaxCapacity, "3")
         ? parsePrice(budget3Guests)
@@ -324,14 +380,30 @@ export function ListingWizard({
       }),
     };
 
+    function withoutHousehold<T extends Record<string, unknown>>(row: T) {
+      const { household_members, preferred_guest_gender, ...rest } = row;
+      void household_members;
+      void preferred_guest_gender;
+      return rest;
+    }
+
     let activeListingId = listingId;
 
     if (listingId) {
-      const { error: updateError } = await supabase
+      let { error: updateError } = await supabase
         .from("host_listings")
         .update(payload)
         .eq("id", listingId)
         .eq("host_id", userId);
+
+      if (updateError && isMissingHouseholdColumnsError(updateError.message)) {
+        const retry = await supabase
+          .from("host_listings")
+          .update(withoutHousehold(payload))
+          .eq("id", listingId)
+          .eq("host_id", userId);
+        updateError = retry.error;
+      }
 
       if (updateError) {
         setError(updateError.message);
@@ -353,22 +425,34 @@ export function ListingWizard({
         return false;
       }
 
-      const { data, error: insertError } = await supabase
+      const insertRow = {
+        host_id: userId,
+        ...payload,
+        status: publishStatus ?? "draft",
+        published_at: publishStatus === "published" ? new Date().toISOString() : null,
+      };
+
+      let { data, error: insertError } = await supabase
         .from("host_listings")
-        .insert({
-          host_id: userId,
-          ...payload,
-          status: publishStatus ?? "draft",
-          published_at: publishStatus === "published" ? new Date().toISOString() : null,
-        })
+        .insert(insertRow)
         .select("id")
         .single();
 
-      if (insertError) {
+      if (insertError && isMissingHouseholdColumnsError(insertError.message)) {
+        const retry = await supabase
+          .from("host_listings")
+          .insert(withoutHousehold(insertRow))
+          .select("id")
+          .single();
+        data = retry.data;
+        insertError = retry.error;
+      }
+
+      if (insertError || !data) {
         setError(
-          isOneListingPerHostError(insertError.message)
+          isOneListingPerHostError(insertError?.message ?? "")
             ? ONE_LISTING_PER_HOST_MESSAGE
-            : insertError.message
+            : insertError?.message ?? "Could not save listing"
         );
         setIsLoading(false);
         return false;
@@ -444,6 +528,10 @@ export function ListingWizard({
         setError("Please select at least one meals option");
         return;
       }
+      if (householdMembers.some((member) => !member.gender || !member.age_group)) {
+        setError("Please select gender and age (adult, teen, or child) for each household member");
+        return;
+      }
       if (!hasContactDetails(contactEmail, contactAddress)) {
         setError("Contact email and address are required");
         return;
@@ -471,6 +559,11 @@ export function ListingWizard({
 
     if (meals.length === 0) {
       setError("Please select at least one meals option");
+      return;
+    }
+
+    if (householdMembers.some((member) => !member.gender || !member.age_group)) {
+      setError("Please select gender and age (adult, teen, or child) for each household member");
       return;
     }
 
@@ -653,6 +746,12 @@ export function ListingWizard({
               placeholder="Parking instructions, check-in times, accessibility notes, neighborhood tips..."
               hint="Any additional details you want your guests to know about the stay"
             />
+            <HouseholdCompositionEditor
+              members={householdMembers}
+              onMembersChange={setHouseholdMembers}
+              preferredGuestGender={preferredGuestGender}
+              onPreferredGuestGenderChange={setPreferredGuestGender}
+            />
             {[
               { label: "Meals", items: LISTING_MEALS, selected: meals, set: setMeals, toggle: toggleMeal },
               { label: "Amenities", items: LISTING_AMENITIES, selected: amenities, set: setAmenities, toggle: toggleItem },
@@ -780,6 +879,16 @@ export function ListingWizard({
               <p><strong className="text-forest">Contact email:</strong> {contactEmail.trim() || "Required — not set"}</p>
               <p><strong className="text-forest">Contact address:</strong> {contactAddress.trim() ? "Provided" : "Required — not set"}</p>
               <p><strong className="text-forest">Details:</strong> {stayDetails.trim() ? "Provided" : "Not set"}</p>
+              <p>
+                <strong className="text-forest">Household:</strong>{" "}
+                {serializedHouseholdMembers.length > 0
+                  ? serializedHouseholdMembers.map((member) => formatHouseholdMember(member)).join(", ")
+                  : "Not set"}
+              </p>
+              <p>
+                <strong className="text-forest">Guest gender preference:</strong>{" "}
+                {formatPreferredGuestGender(preferredGuestGender)}
+              </p>
               <p><strong className="text-forest">Meals:</strong> {meals.length} selected</p>
               <p><strong className="text-forest">Blocked-out dates:</strong> {blockedDates.length} range{blockedDates.length !== 1 ? "s" : ""}</p>
             </div>

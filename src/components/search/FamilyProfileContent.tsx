@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, Utensils, Home, Sparkles, Shield } from "lucide-react";
+import { Globe, Utensils, Home, Sparkles, Shield, Users } from "lucide-react";
 import { HostIntroVideo } from "@/components/listings/HostIntroVideo";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { isListingLogoFallbackUrl } from "@/lib/listing-images";
@@ -12,6 +12,12 @@ import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-
 import { AutoTranslatableText } from "@/components/i18n/AutoTranslatableText";
 import { Badge } from "@/components/ui/Badge";
 import type { HostListing, ListingPhoto, PublicListing, PublicReview } from "@/types/database";
+import {
+  formatHouseholdMember,
+  formatPreferredGuestGender,
+  parseHouseholdMembers,
+  parsePreferredGuestGender,
+} from "@/lib/household";
 
 interface FamilyProfileContentProps {
   listing: HostListing | PublicListing;
@@ -61,6 +67,8 @@ export function FamilyProfileContent({
   ];
 
   const uploadedPhotos = photos.filter((photo) => !isListingLogoFallbackUrl(photo.file_url));
+  const householdMembers = parseHouseholdMembers(listing.household_members);
+  const preferredGuestGender = parsePreferredGuestGender(listing.preferred_guest_gender);
 
   return (
     <div className="space-y-8">
@@ -101,6 +109,26 @@ export function FamilyProfileContent({
               />
             </section>
           )}
+          <section>
+            <h2 className="text-xl font-semibold text-forest mb-3 flex items-center gap-2">
+              <Users className="h-5 w-5" /> Household
+            </h2>
+            {householdMembers.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {householdMembers.map((member, index) => (
+                  <Badge key={`${member.label}-${member.gender}-${index}`} variant="default">
+                    {formatHouseholdMember(member)}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <p className="text-sm text-charcoal-light">
+              Prefers to host:{" "}
+              <span className="font-medium text-charcoal">
+                {formatPreferredGuestGender(preferredGuestGender)}
+              </span>
+            </p>
+          </section>
           {motivation && (
             <section>
               <h2 className="text-xl font-semibold text-forest mb-3">Why We Host</h2>

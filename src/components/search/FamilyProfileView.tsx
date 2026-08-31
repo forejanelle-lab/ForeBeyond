@@ -14,6 +14,10 @@ import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
 import { DisplayStayRateFromPricing } from "@/components/i18n/DisplayMoney";
 import { pickListingPricing } from "@/lib/stay-requests";
 import { formatListingMaxCapacityLabel } from "@/lib/listings";
+import {
+  formatPreferredGuestGender,
+  parsePreferredGuestGender,
+} from "@/lib/household";
 import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
@@ -93,6 +97,7 @@ export function FamilyProfileView({
   const listingPricing = pickListingPricing(listing);
   const isVerified = verificationStatus === "verified";
   const hostNameForDisplay = hostDisplayName ?? hostFirstName;
+  const preferredGuestGender = parsePreferredGuestGender(listing.preferred_guest_gender);
   const resolvedAvatarUrl =
     hostAvatarUrl ??
     ("host_avatar_url" in listing ? listing.host_avatar_url : null) ??
@@ -199,15 +204,18 @@ export function FamilyProfileView({
               </p>
             </div>
 
+            {listing.max_capacity != null && listing.max_capacity > 0 && (
+              <p className="text-sm text-muted flex items-center gap-1.5">
+                <Users className="h-4 w-4 shrink-0 text-forest" />
+                Hosts up to {formatListingMaxCapacityLabel(listing.max_capacity)}
+              </p>
+            )}
+            <p className="text-sm text-muted">
+              Prefers to host {formatPreferredGuestGender(preferredGuestGender).toLowerCase()}
+            </p>
+
             {showBookingActions ? (
               <>
-                {listing.max_capacity != null && listing.max_capacity > 0 && (
-                  <p className="text-sm text-muted flex items-center gap-1.5">
-                    <Users className="h-4 w-4 shrink-0 text-forest" />
-                    Hosts up to {formatListingMaxCapacityLabel(listing.max_capacity)}
-                  </p>
-                )}
-
                 {userId ? (
                   <>
                     <RequestStayButton

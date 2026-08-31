@@ -156,6 +156,8 @@ export default async function FamilyProfilePage({
       amenities: typedListing.amenities,
       family_activities: typedListing.family_activities,
       house_rules: typedListing.house_rules,
+      household_members: typedListing.household_members ?? [],
+      preferred_guest_gender: typedListing.preferred_guest_gender ?? "all",
       budget_per_night: typedListing.budget_per_night,
       budget_per_night_3_guests: typedListing.budget_per_night_3_guests,
       budget_per_night_4_guests: typedListing.budget_per_night_4_guests,

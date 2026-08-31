@@ -80,6 +80,18 @@ export type BadgeType =
 
 export type ProfileGender = "female" | "male" | "non_binary" | "prefer_not_to_say";
 
+export type HouseholdGender = "female" | "male";
+
+export type HouseholdAgeGroup = "adult" | "teen" | "child";
+
+export type PreferredGuestGender = "female" | "male" | "all";
+
+export interface HouseholdMember {
+  label: string;
+  gender: HouseholdGender;
+  age_group?: HouseholdAgeGroup;
+}
+
 export interface Profile {
   id: string;
   email: string;
@@ -411,6 +423,8 @@ export interface HostListing {
   amenities: string[] | null;
   family_activities: string[] | null;
   house_rules: string[] | null;
+  household_members?: HouseholdMember[] | null;
+  preferred_guest_gender?: PreferredGuestGender | null;
   budget_per_night: number | null;
   budget_per_night_3_guests: number | null;
   budget_per_night_4_guests: number | null;
@@ -467,6 +481,8 @@ export interface PublicListing {
   amenities: string[] | null;
   family_activities: string[] | null;
   house_rules: string[] | null;
+  household_members?: HouseholdMember[] | null;
+  preferred_guest_gender?: PreferredGuestGender | null;
   budget_per_night: number | null;
   budget_per_night_3_guests: number | null;
   budget_per_night_4_guests: number | null;

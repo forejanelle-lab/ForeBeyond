@@ -66,6 +66,8 @@ export async function loadPublishedListingFallback(
     amenities: hostListing.amenities,
     family_activities: hostListing.family_activities,
     house_rules: hostListing.house_rules,
+    household_members: hostListing.household_members ?? [],
+    preferred_guest_gender: hostListing.preferred_guest_gender ?? "all",
     budget_per_night: hostListing.budget_per_night,
     budget_per_night_3_guests: hostListing.budget_per_night_3_guests,
     budget_per_night_4_guests: hostListing.budget_per_night_4_guests,
