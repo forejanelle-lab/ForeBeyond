@@ -1,10 +1,6 @@
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { getMessages } from "@/lib/i18n/messages";
-import {
-  LOCALE_COOKIE_NAME,
-  normalizeLocale,
-  resolveLocaleFromAcceptLanguage,
-} from "@/lib/i18n/locale-cookie";
+import { LOCALE_COOKIE_NAME, normalizeLocale } from "@/lib/i18n/locale-cookie";
 import { createTranslator, type Translator } from "@/lib/i18n/translator";
 import { DEFAULT_LANGUAGE, type SupportedLanguageCode } from "@/lib/languages";
 
@@ -21,8 +17,7 @@ export async function getServerLocale(
     return normalizeLocale(profileLanguage);
   }
 
-  const headerStore = await headers();
-  return resolveLocaleFromAcceptLanguage(headerStore.get("accept-language"));
+  return DEFAULT_LANGUAGE;
 }
 
 export async function getServerTranslations(profileLanguage?: string | null): Promise<{

@@ -3,6 +3,11 @@ import {
   LISTING_MEALS,
 } from "@/lib/listings";
 import { formatCurrency } from "@/lib/stay-requests";
+import {
+  countrySearchText,
+  displayCountryName,
+  normalizeCountryKey,
+} from "@/lib/listing-map-coords";
 import type { PublicListing } from "@/types/database";
 
 export const BUDGET_RANGES = [
@@ -112,7 +117,10 @@ export function filterListingsClientSide(
   const query = filters.q.trim().toLowerCase();
 
   return listings.filter((listing) => {
-    if (filters.country && listing.country?.toLowerCase() !== filters.country.toLowerCase()) {
+    if (
+      filters.country &&
+      normalizeCountryKey(listing.country) !== normalizeCountryKey(filters.country)
+    ) {
       return false;
     }
     if (filters.city && !listing.city?.toLowerCase().includes(filters.city.toLowerCase())) {
@@ -147,6 +155,7 @@ export function filterListingsClientSide(
         listing.family_story,
         listing.city,
         listing.country,
+        countrySearchText(listing.country),
         listing.host_first_name,
         ...(listing.languages ?? []),
         ...(listing.meals ?? []),
@@ -162,7 +171,13 @@ export function filterListingsClientSide(
 }
 
 export function getUniqueCountries(listings: PublicListing[]) {
-  return [...new Set(listings.map((l) => l.country).filter(Boolean) as string[])].sort();
+  return [
+    ...new Set(
+      listings
+        .map((listing) => displayCountryName(listing.country))
+        .filter(Boolean)
+    ),
+  ].sort();
 }
 
 export { LISTING_MEALS, LISTING_ACTIVITIES };

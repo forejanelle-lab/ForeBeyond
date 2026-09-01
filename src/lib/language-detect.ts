@@ -67,7 +67,13 @@ export function detectSourceLanguage(text: string): string | null {
   if (/\b(el|la|los|las|gracias|hola|por favor|está|también)\b/i.test(trimmed)) return "es";
   if (/\b(le|les|merci|bonjour|nous|vous|très|être)\b/i.test(trimmed)) return "fr";
   if (/\b(der|die|das|und|ich|nicht|danke)\b/i.test(trimmed)) return "de";
-  if (/\b(il|gli|che|grazie|ciao|perché)\b/i.test(trimmed)) return "it";
+  if (
+    /\b(il|gli|che|grazie|ciao|perché|della|nella|sono|siamo|abitiamo|marito|anni|casa|paese)\b/i.test(
+      trimmed
+    )
+  ) {
+    return "it";
+  }
   if (/\b(não|obrigado|você|como|também)\b/i.test(trimmed)) return "pt";
 
   if (looksLikeEnglish(trimmed)) return "en";

@@ -174,7 +174,7 @@ export function FamilySearchCard({
               {locationLabel && (
                 <p className="flex items-center gap-1.5 text-sm text-muted">
                   <MapPin className="h-3.5 w-3.5 shrink-0" />
-                  <AutoTranslatableText text={locationLabel} />
+                  {locationLabel}
                 </p>
               )}
 
@@ -232,11 +232,7 @@ export function FamilySearchCard({
                   expandable={false}
                 />
                 <p className="text-sm text-charcoal-light">
-                  Hosted by{" "}
-                  <AutoTranslatableText
-                    text={hostName}
-                    className="font-medium text-charcoal"
-                  />
+                  Hosted by <span className="font-medium text-charcoal">{hostName}</span>
                 </p>
               </div>
             )}
@@ -275,7 +271,7 @@ export function FamilySearchCard({
         {locationLabel && (
           <p className="flex items-center gap-1 text-sm text-muted">
             <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <AutoTranslatableText text={locationLabel} />
+            {locationLabel}
           </p>
         )}
 
@@ -320,7 +316,7 @@ export function FamilySearchCard({
               expandable={false}
             />
             <p className="text-xs text-muted">
-              Hosted by <AutoTranslatableText text={hostName} />
+              Hosted by {hostName}
             </p>
           </div>
         )}

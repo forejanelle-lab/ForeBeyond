@@ -90,6 +90,24 @@ export function normalizeLocationPart(value: string | null | undefined): string 
     .trim();
 }
 
+/** Local-language and alternate country names → English canonical key. */
+const COUNTRY_NAME_ALIASES: Record<string, string> = {
+  italia: "italy",
+  italie: "italy",
+  italien: "italy",
+  日本: "japan",
+  nippon: "japan",
+  nihon: "japan",
+  espana: "spain",
+  espagne: "spain",
+  spanien: "spain",
+  frankreich: "france",
+  francia: "france",
+  deutschland: "germany",
+  allemagne: "germany",
+  germania: "germany",
+};
+
 export function normalizeCountryKey(country: string | null | undefined): string {
   const key = normalizeLocationPart(country);
   if (key === "usa" || key === "u.s." || key === "u.s.a." || key === "united states of america") {
@@ -98,7 +116,26 @@ export function normalizeCountryKey(country: string | null | undefined): string 
   if (key === "uk" || key === "u.k." || key === "great britain") {
     return "united kingdom";
   }
-  return key;
+  return COUNTRY_NAME_ALIASES[key] ?? key;
+}
+
+export function displayCountryName(country: string | null | undefined): string {
+  const key = normalizeCountryKey(country);
+  if (!key) return "";
+  return key.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+/** Original plus canonical/alias names so "Italy" matches a listing stored as Italia. */
+export function countrySearchText(country: string | null | undefined): string {
+  const original = country?.trim() ?? "";
+  const canonical = normalizeCountryKey(country);
+  if (!canonical) return original;
+  const aliases = Object.entries(COUNTRY_NAME_ALIASES)
+    .filter(([, value]) => value === canonical)
+    .map(([alias]) => alias);
+  return [...new Set([original, canonical, displayCountryName(country), ...aliases])]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function resolveCityKey(city: string | null | undefined): string {

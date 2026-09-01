@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { shouldOfferTranslation } from "@/lib/language-detect";
 import { DEFAULT_LANGUAGE, parseLanguageCode } from "@/lib/languages";
 import { useLocaleOptional } from "@/components/i18n/LocaleProvider";
-import { useBrowserLanguage } from "@/hooks/use-browser-language";
 
 const translationCache = new Map<string, string>();
 
@@ -36,19 +35,16 @@ async function fetchTranslation(text: string, targetLang: string): Promise<strin
   return data.translatedText;
 }
 
-function useResolvedLocale() {
+function useSiteLocale() {
   const localeContext = useLocaleOptional()?.locale;
-  const browserLanguage = useBrowserLanguage();
-  return parseLanguageCode(localeContext ?? browserLanguage ?? DEFAULT_LANGUAGE);
+  return parseLanguageCode(localeContext ?? DEFAULT_LANGUAGE);
 }
 
 export function useAutoTranslation(text: string | null | undefined, enabled = true) {
-  const targetLang = useResolvedLocale();
+  const targetLang = useSiteLocale();
   const source = text?.trim() ?? "";
   const shouldTranslate =
-    enabled &&
-    parseLanguageCode(targetLang) === DEFAULT_LANGUAGE &&
-    shouldOfferTranslation(source, DEFAULT_LANGUAGE);
+    enabled && Boolean(source) && shouldOfferTranslation(source, targetLang);
 
   const [displayText, setDisplayText] = useState(source);
 
@@ -59,7 +55,7 @@ export function useAutoTranslation(text: string | null | undefined, enabled = tr
 
     let cancelled = false;
 
-    void fetchTranslation(source, DEFAULT_LANGUAGE).then((translated) => {
+    void fetchTranslation(source, targetLang).then((translated) => {
       if (!cancelled && translated) {
         setDisplayText(translated);
       }
@@ -68,7 +64,7 @@ export function useAutoTranslation(text: string | null | undefined, enabled = tr
     return () => {
       cancelled = true;
     };
-  }, [source, shouldTranslate]);
+  }, [source, shouldTranslate, targetLang]);
 
   return displayText;
 }
