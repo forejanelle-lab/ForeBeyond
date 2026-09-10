@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getListingPlaceholderImage } from "@/lib/listing-images";
+import { displayCountryName } from "@/lib/listing-map-coords";
 import { getDestinationCountries } from "@/lib/seo/destination-catalog";
 
 export interface PopularDestination {
@@ -11,6 +12,29 @@ export interface PopularDestination {
 }
 
 const MIN_LISTINGS = 10;
+
+/** Canonical country names that currently have at least one published host listing. */
+export async function getHostCountries(): Promise<string[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("public_listings").select("country");
+    if (error) {
+      console.error("getHostCountries:", error.message);
+      return [];
+    }
+
+    return [
+      ...new Set(
+        (data ?? [])
+          .map((row) => displayCountryName(row.country))
+          .filter(Boolean)
+      ),
+    ].sort((a, b) => a.localeCompare(b));
+  } catch (error) {
+    console.error("getHostCountries:", error);
+    return [];
+  }
+}
 
 /** Countries with more than {@link MIN_LISTINGS} published families. */
 export async function getPopularDestinations(): Promise<PopularDestination[]> {

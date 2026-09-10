@@ -1,6 +1,4 @@
-/** Destination autocomplete for hero search — countries A–Z */
-
-import { COUNTRIES } from "@/lib/countries";
+/** Destination autocomplete for hero search — only countries that currently have hosts. */
 
 export interface DestinationSuggestion {
   label: string;
@@ -8,19 +6,25 @@ export interface DestinationSuggestion {
   city: string;
 }
 
-export const DESTINATION_SUGGESTIONS: DestinationSuggestion[] = COUNTRIES.map((country) => ({
-  label: country,
-  country,
-  city: "",
-}));
+export function hostCountrySuggestions(countries: string[]): DestinationSuggestion[] {
+  return [...new Set(countries.map((country) => country.trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b))
+    .map((country) => ({
+      label: country,
+      country,
+      city: "",
+    }));
+}
 
 export function filterDestinationSuggestions(
   query: string,
+  countries: string[] = [],
   limit?: number
 ): DestinationSuggestion[] {
+  const pool = hostCountrySuggestions(countries);
   const q = query.trim().toLowerCase();
   const matches = q
-    ? DESTINATION_SUGGESTIONS.filter((s) => s.label.toLowerCase().includes(q))
-    : DESTINATION_SUGGESTIONS;
+    ? pool.filter((suggestion) => suggestion.label.toLowerCase().includes(q))
+    : pool;
   return limit ? matches.slice(0, limit) : matches;
 }

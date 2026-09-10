@@ -19,6 +19,7 @@ import {
 import type { PublicListing } from "@/types/database";
 import { createPageMetadata } from "@/lib/site-metadata";
 import { getDestinationCountries } from "@/lib/seo/destination-catalog";
+import { getHostCountries } from "@/lib/destinations";
 import { getServerTranslations } from "@/lib/i18n/server";
 
 export async function generateMetadata({
@@ -140,7 +141,10 @@ export default async function SearchFamiliesPage({
 }) {
   const params = await searchParams;
   const filters = parseSearchParams(params);
-  const { t } = await getServerTranslations();
+  const [{ t }, hostCountries] = await Promise.all([
+    getServerTranslations(),
+    getHostCountries(),
+  ]);
 
   return (
     <>
@@ -167,7 +171,7 @@ export default async function SearchFamiliesPage({
           </div>
 
           <div className="mt-8 md:mt-10">
-            <HeroSearchBar variant="page" />
+            <HeroSearchBar variant="page" availableCountries={hostCountries} />
           </div>
         </Container>
       </section>

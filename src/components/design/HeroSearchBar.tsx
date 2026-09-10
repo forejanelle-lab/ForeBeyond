@@ -31,12 +31,14 @@ interface HeroSearchBarProps {
   disabled?: boolean;
   disabledMessage?: string;
   variant?: "hero" | "page";
+  availableCountries?: string[];
 }
 
 export function HeroSearchBar({
   disabled = false,
   disabledMessage = TRAVELER_ACCOUNT_SEARCH_MESSAGE,
   variant = "hero",
+  availableCountries = [],
 }: HeroSearchBarProps) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -55,7 +57,7 @@ export function HeroSearchBar({
   const [guests, setGuests] = useState("1");
   const [showGuests, setShowGuests] = useState(false);
 
-  const suggestions = filterDestinationSuggestions(where);
+  const suggestions = filterDestinationSuggestions(where, availableCountries);
   const today = useTodayIso();
   const guestLabel = GUEST_OPTIONS.find((g) => g.value === guests)?.label ?? "1 guest";
 
@@ -112,6 +114,9 @@ export function HeroSearchBar({
     if (selectedDestination) {
       if (selectedDestination.country) params.set("country", selectedDestination.country);
       if (selectedDestination.city) params.set("city", selectedDestination.city);
+    } else if (suggestions.length === 1) {
+      params.set("country", suggestions[0].country);
+      if (suggestions[0].city) params.set("city", suggestions[0].city);
     } else if (where.trim()) {
       params.set("q", where.trim());
     }

@@ -1,5 +1,5 @@
 import { getAppUrl } from "@/lib/app-url";
-import { BUSINESS_EMAIL, getResendFromEmail } from "@/lib/email-config";
+import { getNotificationRecipients, getResendFromEmail } from "@/lib/email-config";
 import type { ExitIntentInterest } from "@/types/database";
 
 interface SendExitIntentNotificationEmailInput {
@@ -39,6 +39,7 @@ export async function sendExitIntentNotificationEmail(
     minute: "2-digit",
     timeZoneName: "short",
   });
+  const leadsUrl = `${getAppUrl()}/admin/newsletter`;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -48,15 +49,15 @@ export async function sendExitIntentNotificationEmail(
     },
     body: JSON.stringify({
       from,
-      to: BUSINESS_EMAIL,
-      subject: `Exit popup lead — ${input.email}`,
+      to: getNotificationRecipients(),
+      subject: `Newsletter popup signup — ${input.email}`,
       html: `
-        <p>Someone submitted their email in the exit-intent popup.</p>
+        <p>Someone signed up through the newsletter popup.</p>
         <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
         <p><strong>Interest:</strong> ${escapeHtml(interestLabel)}</p>
         <p><strong>Submitted:</strong> ${escapeHtml(submittedAt)}</p>
-        <p><a href="${getAppUrl()}">Open Fore Beyond</a></p>
-        <p>— Fore Beyond exit intent notification</p>
+        <p><a href="${leadsUrl}">View newsletter signups</a></p>
+        <p>— Fore Beyond newsletter notification</p>
       `,
     }),
   });

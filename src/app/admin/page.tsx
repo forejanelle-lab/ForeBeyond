@@ -20,6 +20,7 @@ export default async function AdminOverviewPage() {
     { count: pendingReviews },
     { count: openReports },
     { count: openSupport },
+    { count: newsletterSignups },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "host"),
@@ -40,6 +41,7 @@ export default async function AdminOverviewPage() {
       .from("support_requests")
       .select("*", { count: "exact", head: true })
       .eq("status", "open"),
+    supabase.from("exit_intent_leads").select("*", { count: "exact", head: true }),
   ]);
 
   return (
@@ -65,6 +67,12 @@ export default async function AdminOverviewPage() {
         />
         <AdminStatCard accent="moderation" label="Open reports" value={openReports ?? 0} href="/admin/reports" />
         <AdminStatCard accent="moderation" label="Open support" value={openSupport ?? 0} href="/admin/support" />
+        <AdminStatCard
+          accent="platform"
+          label="Newsletter popups"
+          value={newsletterSignups ?? 0}
+          href="/admin/newsletter"
+        />
       </div>
     </AdminShell>
   );

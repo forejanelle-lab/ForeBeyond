@@ -42,6 +42,7 @@ export function getAdminNav(): NavItem[] {
     { label: "Reviews", href: "/admin/reviews" },
     { label: "Reports", href: "/admin/reports" },
     { label: "Support", href: "/admin/support" },
+    { label: "Newsletter", href: "/admin/newsletter" },
     { label: "Trust Scores", href: "/admin/trust-scores" },
   ];
 }

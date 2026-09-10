@@ -10,6 +10,7 @@ import {
   Star,
   Flag,
   LifeBuoy,
+  Mail,
   Gauge,
 } from "lucide-react";
 import { ADMIN_NAV } from "@/lib/admin";
@@ -24,6 +25,7 @@ const navIcons: Record<string, typeof LayoutDashboard> = {
   "/admin/reviews": Star,
   "/admin/reports": Flag,
   "/admin/support": LifeBuoy,
+  "/admin/newsletter": Mail,
   "/admin/trust-scores": Gauge,
 };
 

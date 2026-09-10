@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, CheckCircle2, Home, Plane } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getPopularDestinations } from "@/lib/destinations";
+import { getHostCountries, getPopularDestinations } from "@/lib/destinations";
 import { sampleImages } from "@/lib/sample-images";
 import { HeroSearchBar } from "@/components/design/HeroSearchBar";
 import { TrustIndicators } from "@/components/design/TrustIndicators";
@@ -35,7 +35,10 @@ const homeSectionDescription = "text-lg md:text-xl leading-relaxed text-muted";
 
 export default async function HomePage() {
   const { t } = await getServerTranslations();
-  const popularDestinations = await getPopularDestinations();
+  const [popularDestinations, hostCountries] = await Promise.all([
+    getPopularDestinations(),
+    getHostCountries(),
+  ]);
 
   let isLoggedIn = false;
   let searchDisabled = false;
@@ -125,6 +128,7 @@ export default async function HomePage() {
             <HeroSearchBar
               disabled={searchDisabled}
               disabledMessage={TRAVELER_ACCOUNT_SEARCH_MESSAGE}
+              availableCountries={hostCountries}
             />
             {!isLoggedIn && (
               <div className="mt-5 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">

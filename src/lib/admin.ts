@@ -15,6 +15,7 @@ export const ADMIN_NAV: AdminNavEntry[] = [
   { type: "link", href: "/admin/reviews", label: "Reviews" },
   { type: "link", href: "/admin/reports", label: "Reports" },
   { type: "link", href: "/admin/support", label: "Support" },
+  { type: "link", href: "/admin/newsletter", label: "Newsletter" },
   { type: "link", href: "/admin/trust-scores", label: "Trust Scores" },
 ];
 
