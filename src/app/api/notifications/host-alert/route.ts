@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   sendHostNotificationEmail,
+  sendStayApprovedEmail,
   type HostNotificationEvent,
   type StayAlertEvent,
 } from "@/lib/send-host-notification-email";
@@ -12,6 +13,7 @@ const STAY_ALERT_EVENTS: StayAlertEvent[] = [
   "stay_dates_changed",
   "traveler_message",
   "host_message",
+  "stay_approved",
 ];
 
 function firstName(fullName?: string | null) {
@@ -110,6 +112,44 @@ export async function POST(request: Request) {
     .select("id, traveler_id, host_id, listing_id, start_date, end_date")
     .eq("id", body.stayRequestId)
     .single();
+
+  if (body.event === "stay_approved") {
+    if (!stayRequest || stayRequest.host_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const [{ data: travelerProfile }, { data: hostProfile }, { data: listing }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", stayRequest.traveler_id)
+        .single(),
+      supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+      stayRequest.listing_id
+        ? supabase.from("host_listings").select("title").eq("id", stayRequest.listing_id).single()
+        : Promise.resolve({ data: null }),
+    ]);
+
+    const travelerEmail = travelerProfile?.email?.trim();
+    if (!travelerEmail) {
+      return NextResponse.json({ error: "Traveler email not found" }, { status: 400 });
+    }
+
+    const emailResult = await sendStayApprovedEmail({
+      to: travelerEmail,
+      travelerName: firstName(travelerProfile?.full_name),
+      hostName: firstName(hostProfile?.full_name),
+      listingTitle: listing?.title ?? null,
+      startDate: stayRequest.start_date,
+      endDate: stayRequest.end_date,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      emailSent: emailResult.sent,
+      emailError: emailResult.error ?? null,
+    });
+  }
 
   if (!stayRequest || stayRequest.traveler_id !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

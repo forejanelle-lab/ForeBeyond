@@ -10,6 +10,7 @@ import {
   declineStayRequest,
   revertStayRequest,
 } from "@/lib/stay-approval";
+import { dispatchHostAlert } from "@/lib/dispatch-host-alert";
 import { HostIncomeBreakdown } from "@/components/stays/HostIncomeBreakdown";
 import { HostWithdrawStayModal } from "@/components/stays/HostWithdrawStayModal";
 import { StayOverlapNotice } from "@/components/stays/StayOverlapNotice";
@@ -142,6 +143,7 @@ export function HostRequestActions({
       setError(approveError);
     } else {
       posthog.capture("host_approved_stay_request", { stay_request_id: request.id });
+      dispatchHostAlert({ event: "stay_approved", stayRequestId: request.id });
       router.refresh();
     }
     setIsLoading(null);

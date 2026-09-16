@@ -20,7 +20,6 @@ interface StayTravelerPricingBreakdownProps {
   hostCountry?: string | null;
   /** Show service fee due-upon-approval row */
   showDueAtConfirmation?: boolean;
-  showDueAtConfirmation?: boolean;
   footerNote?: string;
   className?: string;
 }
