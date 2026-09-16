@@ -170,8 +170,8 @@ export function HostRequestActions({
       <div>
         <h3 className="font-semibold text-forest">Review request</h3>
         <p className="text-sm text-charcoal-light mt-1">
-          Approve to send the request back to the traveler for final confirmation. Your payout
-          reflects the 12% service charge shown below.
+          Approve to send the request back to the traveler for final confirmation. You receive 100% of
+          your listed rate. Travelers pay a 12% Fore Beyond service fee separately.
         </p>
       </div>
 

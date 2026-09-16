@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { useCurrency } from "@/components/i18n/CurrencyProvider";
 import { DisplayStayRate } from "@/components/i18n/DisplayMoney";
 import { resolveListingPricingCurrency } from "@/lib/currency";
@@ -59,7 +59,6 @@ export function HostIncomeBreakdown({
 
   if (!earnings) return null;
 
-  const serviceChargePct = SERVICE_FEE_RATE * 100;
   const rateLine = (
     <>
       <DisplayStayRate nightlyRateUsd={earnings.effectiveNightlyTotal} listing={pricing} />
@@ -75,7 +74,7 @@ export function HostIncomeBreakdown({
         className={`inline-flex flex-col gap-1 rounded-lg border border-sage-dark/40 bg-gradient-to-br from-sage/50 to-cream/80 px-3 py-2 ${className}`}
       >
         <span className="text-[10px] uppercase tracking-wide font-medium text-charcoal-light">
-          Est. net earnings
+          Listed earnings
         </span>
         <span className="text-lg font-bold text-forest tabular-nums">
           {formatAmount(earnings.netEarnings, sourceCurrency)}
@@ -94,19 +93,14 @@ export function HostIncomeBreakdown({
       </div>
       <div className="p-4 space-y-3">
         <LineItem label={rateLine} amount={formatAmount(earnings.gross, sourceCurrency)} muted />
-        <LineItem
-          label={`Service charge (${serviceChargePct}%)`}
-          amount={formatAmount(earnings.commission, sourceCurrency)}
-          muted
-          negative
-        />
         <div className="flex items-center justify-between gap-4 border-t border-sage-dark/20 pt-3">
-          <span className="text-sm font-semibold text-forest flex items-center gap-1.5">
-            <Minus className="h-3.5 w-3.5 rotate-90 text-charcoal-light" aria-hidden />
-            Net earnings
-          </span>
+          <span className="text-sm font-semibold text-forest">You receive (100% of listed rate)</span>
           <span className="text-xl font-bold tabular-nums">{formatAmount(earnings.netEarnings, sourceCurrency)}</span>
         </div>
+        <p className="text-xs text-charcoal-light">
+          Travelers pay a {SERVICE_FEE_RATE * 100}% Fore Beyond service fee separately. It is not
+          deducted from your listed rate.
+        </p>
       </div>
     </div>
   );

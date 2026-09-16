@@ -106,7 +106,7 @@ const en = {
     trustPillarId: "Identification verification",
     trustPillarVideo: "Video and address verification",
     trustPillarCommunity: "Community vouching system",
-    trustPillarSafety: "24/7 safety support",
+    trustPillarSafety: "Safety support",
     trustPillarReviews: "Transparent reviews",
     trustPillarTraining: "Cultural sensitivity training",
     travelTitleLine1: "Travel the world.",

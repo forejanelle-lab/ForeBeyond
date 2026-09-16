@@ -102,7 +102,7 @@ const ja = {
     trustPillarId: "本人確認",
     trustPillarVideo: "動画・住所確認",
     trustPillarCommunity: "コミュニティ推薦システム",
-    trustPillarSafety: "24時間安全サポート",
+    trustPillarSafety: "安全サポート",
     trustPillarReviews: "透明なレビュー",
     trustPillarTraining: "文化感受性トレーニング",
     travelTitleLine1: "世界を旅する。",

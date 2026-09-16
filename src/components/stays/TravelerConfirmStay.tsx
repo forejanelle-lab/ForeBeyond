@@ -28,6 +28,7 @@ interface TravelerConfirmStayProps {
 
 const INITIAL_ACKNOWLEDGMENTS = {
   accommodationDirect: false,
+  depositNonRefundableOnTravelerCancel: false,
   bookingProtectionNonRefundable: false,
   cancellationPolicy: false,
   termsOfService: false,
@@ -188,11 +189,11 @@ export function TravelerConfirmStay({
                   <p className="text-sm text-charcoal-light mt-2 leading-relaxed">
                     {modalStep === "terms" ? (
                       <>
-                        Your stay total is {formatAmount(pricing.subtotal, sourceCurrency)}. Pay{" "}
-                        {formatAmount(pricing.serviceFee, sourceCurrency)} now (12% service fee) to
-                        confirm. The remaining{" "}
+                        Your listed stay is {formatAmount(pricing.subtotal, sourceCurrency)}. Pay{" "}
+                        {formatAmount(pricing.serviceFee, sourceCurrency)} now (12% service fee, on
+                        top of the listed rate) to confirm. The remaining{" "}
                         {formatAmount(pricing.hostBalance, sourceCurrency)} is paid directly to{" "}
-                        {hostName}.
+                        {hostName}, who keeps 100% of their listed rate.
                       </>
                     ) : (
                       <>
@@ -236,6 +237,19 @@ export function TravelerConfirmStay({
                         I understand the remaining balance (
                         {formatAmount(pricing.hostBalance, sourceCurrency)}) is paid directly to the
                         host.
+                      </span>
+                    </label>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={acknowledgments.depositNonRefundableOnTravelerCancel}
+                        onChange={() => toggleAcknowledgment("depositNonRefundableOnTravelerCancel")}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-sage-dark text-forest focus:ring-forest"
+                      />
+                      <span className="text-sm text-charcoal-light">
+                        I understand that stay payments are coordinated between the traveler and
+                        host, and that any deposits made beforehand are not refundable through Fore
+                        Beyond.
                       </span>
                     </label>
                     <label className="flex items-start gap-3 cursor-pointer">

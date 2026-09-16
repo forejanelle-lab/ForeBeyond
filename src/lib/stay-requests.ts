@@ -150,11 +150,10 @@ export function calculateServiceFee(staySubtotal: number | null) {
   return Math.round(staySubtotal * SERVICE_FEE_RATE * 100) / 100;
 }
 
-/** Amount the guest pays the host after the service fee is paid at confirmation */
+/** Listed stay total the guest pays the host. Hosts keep 100% of this amount. */
 export function calculateHostBalance(staySubtotal: number | null) {
   if (staySubtotal == null) return null;
-  const serviceFee = calculateServiceFee(staySubtotal) ?? 0;
-  return Math.round((staySubtotal - serviceFee) * 100) / 100;
+  return Math.round(staySubtotal * 100) / 100;
 }
 
 export function calculateStayWithServiceFee(
@@ -169,12 +168,17 @@ export function calculateStayWithServiceFee(
   if (subtotal == null) return null;
   const serviceFee = calculateServiceFee(subtotal);
   const hostBalance = calculateHostBalance(subtotal);
+  const travelerTotal =
+    serviceFee != null && hostBalance != null
+      ? Math.round((hostBalance + serviceFee) * 100) / 100
+      : null;
   return {
     nights,
     guestCount: guests,
     subtotal,
     serviceFee,
     hostBalance,
+    travelerTotal,
     rateLabel: formatStayRateLabel(pricing, guestCount),
     effectiveNightlyTotal: calculateEffectiveNightlyTotal(pricing, guestCount),
     dueAtConfirmation: serviceFee,
@@ -189,8 +193,6 @@ export function calculateHostEarnings(
 ) {
   const gross = calculateStayTotal(pricing, startDate, endDate, guestCount);
   if (gross == null) return null;
-  const commission = calculateServiceFee(gross) ?? 0;
-  const netEarnings = Math.round((gross - commission) * 100) / 100;
   const guests = Math.max(guestCount, 1);
   return {
     nights: calculateNights(startDate, endDate),
@@ -198,8 +200,8 @@ export function calculateHostEarnings(
     rateLabel: formatStayRateLabel(pricing, guestCount),
     effectiveNightlyTotal: calculateEffectiveNightlyTotal(pricing, guestCount),
     gross,
-    commission,
-    netEarnings,
+    commission: 0,
+    netEarnings: gross,
   };
 }
 

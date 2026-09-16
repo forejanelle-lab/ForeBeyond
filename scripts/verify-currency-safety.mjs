@@ -29,48 +29,46 @@ function formatJpy(amount) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "JPY" }).format(amount);
 }
 
-test("JPY host net earnings must not format as USD dollars", () => {
-  const gross = calculateStayTotal(12000, 4);
-  const netEarnings = gross - calculateServiceFee(gross);
-  assert.equal(netEarnings, 42240);
+test("JPY host listed earnings must not format as USD dollars", () => {
+  const listedStay = calculateStayTotal(12000, 4);
+  assert.equal(listedStay, 48000);
 
   const wrongUsdLabel = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(netEarnings);
-  assert.match(wrongUsdLabel, /^\$42,240\.00$/);
+  }).format(listedStay);
+  assert.match(wrongUsdLabel, /^\$48,000\.00$/);
 
-  const correctJpyLabel = formatJpy(netEarnings);
-  assert.match(correctJpyLabel, /^¥42,240$/);
+  const correctJpyLabel = formatJpy(listedStay);
+  assert.match(correctJpyLabel, /^¥48,000$/);
   assert.notEqual(wrongUsdLabel, correctJpyLabel);
 });
 
-test("Stripe service fee for JPY listing is 12% converted to traveler currency, not host net", () => {
-  const gross = calculateStayTotal(12000, 4);
-  const serviceFeeJpy = calculateServiceFee(gross);
+test("Stripe service fee for JPY listing is 12% on top of listed stay, converted to traveler currency", () => {
+  const listedStay = calculateStayTotal(12000, 4);
+  const serviceFeeJpy = calculateServiceFee(listedStay);
   assert.equal(serviceFeeJpy, 5760);
+  assert.equal(listedStay, 48000);
 
   const serviceFeeUsd = convertBetweenCurrencies(serviceFeeJpy, "JPY", "USD", FALLBACK_RATES);
   assert.ok(serviceFeeUsd < 100, `expected ~$38 service fee, got $${serviceFeeUsd}`);
 
   const stripeMinorUsd = amountToStripeMinorUnits(serviceFeeUsd, "USD");
-  assert.ok(stripeMinorUsd < 10000, "Stripe charge must be cents-scale USD, not host net in JPY");
+  assert.ok(stripeMinorUsd < 10000, "Stripe charge must be cents-scale USD, not listed stay in JPY");
 
-  const hostNetJpy = gross - serviceFeeJpy;
   assert.notEqual(
-    amountToStripeMinorUnits(hostNetJpy, "USD"),
+    amountToStripeMinorUnits(listedStay, "USD"),
     stripeMinorUsd,
-    "charge must not equal host net misread as USD cents"
+    "charge must not equal listed stay misread as USD cents"
   );
 });
 
-test("mislabeled JPY net as USD would exceed real Stripe charge by orders of magnitude", () => {
-  const gross = calculateStayTotal(12000, 4);
-  const serviceFeeJpy = calculateServiceFee(gross);
+test("mislabeled JPY listed stay as USD would exceed real Stripe charge by orders of magnitude", () => {
+  const listedStay = calculateStayTotal(12000, 4);
+  const serviceFeeJpy = calculateServiceFee(listedStay);
   const serviceFeeUsd = convertBetweenCurrencies(serviceFeeJpy, "JPY", "USD", FALLBACK_RATES);
-  const hostNetJpy = gross - serviceFeeJpy;
 
-  const displayBugUsd = hostNetJpy;
+  const displayBugUsd = listedStay;
   assert.ok(
     displayBugUsd / serviceFeeUsd > 5,
     "display bug amount should be vastly larger than actual Stripe charge"

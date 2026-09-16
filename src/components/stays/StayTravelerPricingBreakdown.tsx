@@ -18,7 +18,8 @@ interface StayTravelerPricingBreakdownProps {
   hostBalance?: number | null;
   listingPricing?: ListingPricing;
   hostCountry?: string | null;
-  /** Show "Due today" row (service fee at confirmation) */
+  /** Show service fee due-upon-approval row */
+  showDueAtConfirmation?: boolean;
   showDueAtConfirmation?: boolean;
   footerNote?: string;
   className?: string;
@@ -41,8 +42,9 @@ export function StayTravelerPricingBreakdown({
   const sourceCurrency = listingPricing
     ? resolveListingPricingCurrency(listingPricing)
     : resolveListingPricingCurrency({ country: hostCountry });
-  const remainingToHost =
-    hostBalance ?? (serviceFee != null ? Math.round((subtotal - serviceFee) * 100) / 100 : null);
+  const remainingToHost = hostBalance ?? subtotal;
+  const travelerTotal =
+    serviceFee != null ? Math.round((subtotal + serviceFee) * 100) / 100 : subtotal;
 
   return (
     <div className={`rounded-xl bg-sage/40 p-4 text-sm space-y-2 ${className}`}>
@@ -55,13 +57,17 @@ export function StayTravelerPricingBreakdown({
           × {nights} night{nights !== 1 ? "s" : ""} · {guests} guest{guests !== 1 ? "s" : ""}
         </p>
       </div>
-      <div className="flex justify-between font-semibold text-forest border-t border-sage-dark/30 pt-2">
-        <span>Total stay</span>
+      <div className="flex justify-between text-charcoal-light border-t border-sage-dark/30 pt-2">
+        <span>Listed stay (paid to host)</span>
         <Money amountUsd={subtotal} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />
       </div>
       <div className="flex justify-between text-charcoal-light">
         <span>Service fee ({SERVICE_FEE_RATE * 100}%)</span>
         <Money amountUsd={serviceFee} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />
+      </div>
+      <div className="flex justify-between font-semibold text-forest">
+        <span>You pay</span>
+        <Money amountUsd={travelerTotal} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />
       </div>
       {remainingToHost != null && (
         <div className="flex justify-between items-start gap-4 text-charcoal-light">
@@ -77,11 +83,13 @@ export function StayTravelerPricingBreakdown({
       {showDueAtConfirmation && serviceFee != null && (
         <>
           <div className="flex justify-between font-semibold text-forest border-t border-sage-dark/30 pt-2">
-            <span>Due today to confirm</span>
+            <span>Due upon approval</span>
             <Money amountUsd={serviceFee} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />
           </div>
           <p className="text-xs text-charcoal-light">
-            Pay the remaining balance directly to your host before or during your stay.
+            The service fee is separate from the listed stay total. Payments are coordinated between
+            the traveler and host. Any deposits made beforehand are not refundable through Fore
+            Beyond.
           </p>
         </>
       )}

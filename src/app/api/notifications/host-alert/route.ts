@@ -3,7 +3,20 @@ import { createClient } from "@/lib/supabase/server";
 import {
   sendHostNotificationEmail,
   type HostNotificationEvent,
+  type StayAlertEvent,
 } from "@/lib/send-host-notification-email";
+import { sendMessageNotificationEmail } from "@/lib/send-message-notification-email";
+
+const STAY_ALERT_EVENTS: StayAlertEvent[] = [
+  "stay_request_submitted",
+  "stay_dates_changed",
+  "traveler_message",
+  "host_message",
+];
+
+function firstName(fullName?: string | null) {
+  return fullName?.trim().split(/\s+/)[0] ?? null;
+}
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -16,20 +29,17 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as {
-    event?: HostNotificationEvent;
+    event?: StayAlertEvent;
     stayRequestId?: string;
     conversationId?: string;
     messagePreview?: string | null;
   };
 
-  if (
-    !body.event ||
-    !["stay_request_submitted", "stay_dates_changed", "traveler_message"].includes(body.event)
-  ) {
+  if (!body.event || !STAY_ALERT_EVENTS.includes(body.event)) {
     return NextResponse.json({ error: "Invalid event" }, { status: 400 });
   }
 
-  if (body.event === "traveler_message") {
+  if (body.event === "traveler_message" || body.event === "host_message") {
     if (!body.conversationId) {
       return NextResponse.json({ error: "conversationId required" }, { status: 400 });
     }
@@ -40,23 +50,25 @@ export async function POST(request: Request) {
       .eq("id", body.conversationId)
       .single();
 
-    if (!conversation || conversation.traveler_id !== user.id) {
+    const senderIsTraveler = body.event === "traveler_message";
+    const expectedSenderId = senderIsTraveler ? conversation?.traveler_id : conversation?.host_id;
+    if (!conversation || expectedSenderId !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const [{ data: hostProfile }, { data: travelerProfile }, { data: stayRequest }] =
+    const recipientId = senderIsTraveler ? conversation.host_id : conversation.traveler_id;
+
+    const [{ data: recipientProfile }, { data: senderProfile }, { data: stayRequest }] =
       await Promise.all([
-        supabase
-          .from("profiles")
-          .select("email, full_name")
-          .eq("id", conversation.host_id)
-          .single(),
+        supabase.from("profiles").select("email, full_name").eq("id", recipientId).single(),
         supabase.from("profiles").select("full_name").eq("id", user.id).single(),
-        supabase
-          .from("stay_requests")
-          .select("listing_id")
-          .eq("id", conversation.stay_request_id)
-          .single(),
+        conversation.stay_request_id
+          ? supabase
+              .from("stay_requests")
+              .select("listing_id")
+              .eq("id", conversation.stay_request_id)
+              .single()
+          : Promise.resolve({ data: null }),
       ]);
 
     const listing = stayRequest?.listing_id
@@ -69,19 +81,17 @@ export async function POST(request: Request) {
         ).data
       : null;
 
-    const hostEmail = hostProfile?.email?.trim();
-    if (!hostEmail) {
-      return NextResponse.json({ error: "Host email not found" }, { status: 400 });
+    const recipientEmail = recipientProfile?.email?.trim();
+    if (!recipientEmail) {
+      return NextResponse.json({ error: "Recipient email not found" }, { status: 400 });
     }
 
-    const emailResult = await sendHostNotificationEmail({
-      to: hostEmail,
-      hostName: hostProfile?.full_name,
-      event: "traveler_message",
-      travelerName: travelerProfile?.full_name?.split(" ")[0] ?? null,
+    const emailResult = await sendMessageNotificationEmail({
+      to: recipientEmail,
+      recipientName: firstName(recipientProfile?.full_name),
+      senderName: firstName(senderProfile?.full_name),
       listingTitle: listing?.title ?? null,
       messagePreview: body.messagePreview,
-      actionPath: `/messages/${conversation.id}`,
     });
 
     return NextResponse.json({
@@ -121,12 +131,11 @@ export async function POST(request: Request) {
   const emailResult = await sendHostNotificationEmail({
     to: hostEmail,
     hostName: hostProfile?.full_name,
-    event: body.event,
-    travelerName: travelerProfile?.full_name?.split(" ")[0] ?? null,
+    event: body.event as HostNotificationEvent,
+    travelerName: firstName(travelerProfile?.full_name),
     listingTitle: listing?.title ?? null,
     startDate: stayRequest.start_date,
     endDate: stayRequest.end_date,
-    actionPath: `/host/requests/${stayRequest.id}`,
   });
 
   return NextResponse.json({

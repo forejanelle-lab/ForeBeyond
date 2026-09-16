@@ -206,9 +206,20 @@ export function ChatThread({
     setIsLoading(false);
     scrollToBottom();
 
-    if (hostIdRef.current && userId !== hostIdRef.current) {
+    const hostId =
+      hostIdRef.current ??
+      (
+        await supabase
+          .from("conversations")
+          .select("host_id")
+          .eq("id", conversationId)
+          .single()
+      ).data?.host_id ??
+      null;
+    if (hostId) {
+      hostIdRef.current = hostId;
       dispatchHostAlert({
-        event: "traveler_message",
+        event: userId === hostId ? "host_message" : "traveler_message",
         conversationId,
         messagePreview:
           payload.messageType === "image"

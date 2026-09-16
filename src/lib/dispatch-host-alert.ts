@@ -1,7 +1,7 @@
-import type { HostNotificationEvent } from "@/lib/send-host-notification-email";
+import type { StayAlertEvent } from "@/lib/send-host-notification-email";
 
 export function dispatchHostAlert(payload: {
-  event: HostNotificationEvent;
+  event: StayAlertEvent;
   stayRequestId?: string;
   conversationId?: string;
   messagePreview?: string | null;

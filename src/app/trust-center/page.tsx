@@ -64,7 +64,7 @@ const trustLayers = [
 ];
 
 const safetyCommitments = [
-  "24/7 safety support hotline for all members",
+  "Safety support for all members",
   "Clear community guidelines and code of conduct",
   "Rapid response team for reported concerns",
   "Regular safety audits and platform improvements",

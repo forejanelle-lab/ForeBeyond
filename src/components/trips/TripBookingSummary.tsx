@@ -31,7 +31,7 @@ export function TripBookingSummary({
     <div className="rounded-xl bg-sage/40 p-4 text-sm space-y-3">
       <HostPaymentCurrencyNotice hostCountry={hostCountry} className="mb-1" />
       <div className="flex justify-between text-charcoal-light">
-        <span>Total stay</span>
+        <span>Listed stay (paid to host)</span>
         <Money amountUsd={totalAmount} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />
       </div>
       {serviceFee != null && (
@@ -43,10 +43,20 @@ export function TripBookingSummary({
           <Money amountUsd={serviceFee} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />
         </div>
       )}
+      <div className="flex justify-between font-semibold text-forest">
+        <span>You pay</span>
+        <Money
+          amountUsd={
+            serviceFee != null ? Math.round((totalAmount + serviceFee) * 100) / 100 : totalAmount
+          }
+          sourceCurrency={sourceCurrency}
+          hostCountry={hostCountry}
+        />
+      </div>
       <div className="flex justify-between items-start gap-4 border-t border-sage-dark/30 pt-3">
         <div>
           <p className="font-semibold text-forest">Remaining balance</p>
-          <p className="text-xs text-charcoal-light mt-0.5">Pay your host directly</p>
+          <p className="text-xs text-charcoal-light mt-0.5">Pay your host directly — 100% of listed rate</p>
         </div>
         <span className="text-lg font-bold text-forest tabular-nums text-right shrink-0">
           <MoneyWithConversionNote
@@ -58,7 +68,8 @@ export function TripBookingSummary({
         </span>
       </div>
       <p className="text-xs text-charcoal-light">
-        The remaining balance is coordinated directly with your host.
+        The service fee is separate from the listed stay total. Payments are coordinated between the
+        traveler and host. Any deposits made beforehand are not refundable through Fore Beyond.
       </p>
     </div>
   );

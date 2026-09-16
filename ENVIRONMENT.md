@@ -128,7 +128,7 @@ Required for travelers to pay the service fee (12% of stay total) when confirmin
 | `STRIPE_WEBHOOK_SECRET` | Yes (prod) | `whsec_...` from webhook setup |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes (webhook) | Supabase → Settings → API → `service_role` |
 
-The service fee is **included in the stay total** — on a $100 stay the guest pays $12 at confirmation and $88 to the host.
+The service fee is charged **on top of the listed stay total** — hosts keep 100% of their listed rate. On a $100 stay the guest pays $12 to Fore Beyond at confirmation and $100 directly to the host.
 
 Register the production webhook endpoint:
 

@@ -545,7 +545,8 @@ export function RequestStayWizard({
             {pricing && (
               <>
                 <p>
-                  <strong>Total stay:</strong> {formatAmount(pricing.subtotal, sourceCurrency)}
+                  <strong>Listed stay (paid to host):</strong>{" "}
+                  {formatAmount(pricing.subtotal, sourceCurrency)}
                 </p>
                 <p>
                   <strong>Service fee at confirmation:</strong>{" "}

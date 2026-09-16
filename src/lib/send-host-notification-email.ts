@@ -1,11 +1,9 @@
-import { getAppUrl } from "@/lib/app-url";
 import { getResendFromEmail } from "@/lib/email-config";
 import { formatDateRange } from "@/lib/stay-requests";
 
-export type HostNotificationEvent =
-  | "stay_request_submitted"
-  | "stay_dates_changed"
-  | "traveler_message";
+export type HostNotificationEvent = "stay_request_submitted" | "stay_dates_changed";
+
+export type StayAlertEvent = HostNotificationEvent | "traveler_message" | "host_message";
 
 interface SendHostNotificationEmailInput {
   to: string;
@@ -15,15 +13,12 @@ interface SendHostNotificationEmailInput {
   listingTitle?: string | null;
   startDate?: string | null;
   endDate?: string | null;
-  messagePreview?: string | null;
-  actionPath: string;
 }
 
 function buildEmailContent(input: SendHostNotificationEmailInput) {
   const greeting = input.hostName?.trim() ? `Hi ${input.hostName.trim()},` : "Hi,";
   const traveler = input.travelerName?.trim() || "A guest";
   const listing = input.listingTitle?.trim() || "your listing";
-  const actionUrl = `${getAppUrl()}${input.actionPath}`;
 
   if (input.event === "stay_request_submitted") {
     const dates = formatDateRange(input.startDate ?? null, input.endDate ?? null);
@@ -32,8 +27,7 @@ function buildEmailContent(input: SendHostNotificationEmailInput) {
       html: `
         <p>${greeting}</p>
         <p><strong>${traveler}</strong> requested a stay at <strong>${listing}</strong>${dates !== "—" ? ` for ${dates}` : ""}.</p>
-        <p>Review the request and respond when you're ready.</p>
-        <p><a href="${actionUrl}">View stay request</a></p>
+        <p>Review the request and respond when you're ready. Sign in to Fore Beyond to view it.</p>
         <p>— Fore Beyond</p>
       `,
     };
@@ -47,24 +41,13 @@ function buildEmailContent(input: SendHostNotificationEmailInput) {
         <p>${greeting}</p>
         <p><strong>${traveler}</strong> updated the dates for their stay request at <strong>${listing}</strong>.</p>
         <p>New dates: ${dates}</p>
-        <p>Please review the updated request.</p>
-        <p><a href="${actionUrl}">View stay request</a></p>
+        <p>Please review the updated request. Sign in to Fore Beyond to view it.</p>
         <p>— Fore Beyond</p>
       `,
     };
   }
 
-  const preview = input.messagePreview?.trim() || "Open the conversation to read their message.";
-  return {
-    subject: `New message from ${traveler}`,
-    html: `
-      <p>${greeting}</p>
-      <p><strong>${traveler}</strong> sent you a message about a stay request.</p>
-      <p>${preview}</p>
-      <p><a href="${actionUrl}">Reply in Fore Beyond</a></p>
-      <p>— Fore Beyond</p>
-    `,
-  };
+  throw new Error(`Unsupported host notification event: ${input.event}`);
 }
 
 export async function sendHostNotificationEmail(

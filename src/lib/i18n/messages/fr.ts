@@ -103,7 +103,7 @@ const fr = {
     trustPillarId: "Vérification d'identification",
     trustPillarVideo: "Vérification vidéo et adresse",
     trustPillarCommunity: "Système de recommandation communautaire",
-    trustPillarSafety: "Support sécurité 24h/24",
+    trustPillarSafety: "Support sécurité",
     trustPillarReviews: "Avis transparents",
     trustPillarTraining: "Formation à la sensibilité culturelle",
     travelTitleLine1: "Voyagez dans le monde.",
