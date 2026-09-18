@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -21,6 +21,15 @@ export function LanguageSelector({ userId, className = "" }: LanguageSelectorPro
   const t = useTranslations();
   const { locale } = useLocale();
   const [isSaving, setIsSaving] = useState(false);
+  const [compact, setCompact] = useState(true);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 639px)");
+    const sync = () => setCompact(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
 
   async function handleChange(nextRaw: string) {
     const next = normalizeLanguageCode(nextRaw);
@@ -47,11 +56,11 @@ export function LanguageSelector({ userId, className = "" }: LanguageSelectorPro
         disabled={isSaving}
         aria-label={t("language.label")}
         title={t("language.menuHint")}
-        className="h-9 appearance-none rounded-full border border-sage-dark/50 bg-white pl-8 pr-8 text-sm font-medium text-forest hover:border-forest/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20 disabled:opacity-60"
+        className="h-9 w-[4.5rem] sm:w-auto sm:min-w-[7.25rem] appearance-none rounded-full border border-sage-dark/50 bg-white pl-8 pr-7 sm:pr-8 text-sm font-medium text-forest hover:border-forest/40 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20 disabled:opacity-60"
       >
         {SUPPORTED_LANGUAGES.map((language) => (
           <option key={language.value} value={language.value}>
-            {language.nativeLabel}
+            {compact ? language.shortLabel : language.nativeLabel}
           </option>
         ))}
       </select>

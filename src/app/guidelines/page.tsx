@@ -59,6 +59,11 @@ export default function CommunityGuidelinesPage() {
           <li>Share contact details only through the platform after a stay is confirmed.</li>
           <li>Withdraw a confirmed stay only when truly necessary, with a clear explanation for the guest.</li>
           <li>Welcome travelers as guests in your home, not as anonymous bookings.</li>
+          <li>
+            Follow local laws, regulations, and any permits that apply to homestays in your area.
+            Fore Beyond does not provide legal advice and does not confirm that hosting is permitted
+            where you live.
+          </li>
         </ul>
       </section>
 

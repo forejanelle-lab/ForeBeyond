@@ -35,10 +35,15 @@ export function Navigation({ user }: NavigationProps) {
   const showSupport = Boolean(user) && !showAdmin;
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-sage-dark/15 overflow-visible">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-sage-dark/15 overflow-x-clip overflow-y-visible">
       <Container className="overflow-visible">
-        <nav className="flex h-16 md:h-[4.25rem] items-center gap-6 overflow-visible">
-          <Logo size="xl" className="-my-6 shrink-0" />
+        <nav className="flex h-16 md:h-[4.25rem] items-center gap-2 sm:gap-4 md:gap-6 min-w-0">
+          <span className="shrink-0 md:hidden">
+            <Logo size="sm" className="-my-1" />
+          </span>
+          <span className="hidden shrink-0 md:inline-flex">
+            <Logo size="xl" className="-my-6" />
+          </span>
 
           <div className="hidden lg:flex items-center justify-center gap-8 flex-1">
             {publicNav.map((item) => (
@@ -52,7 +57,7 @@ export function Navigation({ user }: NavigationProps) {
             ))}
           </div>
 
-          <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-auto">
+          <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-auto min-w-0">
             <Link
               href="/saved"
               className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-2 text-sm font-medium text-charcoal hover:text-forest transition-colors rounded-lg hover:bg-sage/40"
@@ -61,7 +66,7 @@ export function Navigation({ user }: NavigationProps) {
               <span className="hidden md:inline">{t("nav.saved")}</span>
             </Link>
 
-            <LanguageSelector userId={user?.id} />
+            <LanguageSelector userId={user?.id} className="shrink-0" />
 
             {user && <NotificationBell userId={user.id} />}
 

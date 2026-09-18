@@ -30,6 +30,15 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-4">
+        <h2>Host responsibilities</h2>
+        <p>
+          Hosts are responsible for following local laws, regulations, and any permits that apply to
+          homestays in their area. {brand.name} does not provide legal advice and does not confirm
+          that hosting is permitted where you live.
+        </p>
+      </section>
+
+      <section className="space-y-4">
         <h2>Cultural Immersion Stays</h2>
         <p>
           Stays on {brand.name} are cultural immersion experiences with local families. Personal

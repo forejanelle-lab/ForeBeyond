@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PhotoUpload } from "@/components/listings/PhotoUpload";
+import { HostLocalLawsDisclaimer } from "@/components/legal/HostLocalLawsDisclaimer";
 import { IntroVideoUpload } from "@/components/listings/IntroVideoUpload";
 import { ListingBlockedDatesEditor } from "@/components/listings/ListingBlockedDatesEditor";
 import {
@@ -892,6 +893,7 @@ export function ListingWizard({
               <p><strong className="text-forest">Meals:</strong> {meals.length} selected</p>
               <p><strong className="text-forest">Blocked-out dates:</strong> {blockedDates.length} range{blockedDates.length !== 1 ? "s" : ""}</p>
             </div>
+            <HostLocalLawsDisclaimer className="text-xs text-charcoal-light leading-relaxed" />
           </div>
         )}
 

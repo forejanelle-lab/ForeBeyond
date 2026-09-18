@@ -36,10 +36,11 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   body {
-    @apply bg-cream text-charcoal font-sans;
+    @apply bg-cream text-charcoal font-sans overflow-x-hidden;
   }
 
   h1, h2, h3 {

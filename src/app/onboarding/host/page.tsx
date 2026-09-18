@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
+import { HostLocalLawsDisclaimer } from "@/components/legal/HostLocalLawsDisclaimer";
 
 const culturalOfferings = [
   "Home-cooked meals",
@@ -236,6 +237,7 @@ export default function HostOnboardingPage() {
               value={maxGuests}
               onChange={(e) => setMaxGuests(e.target.value)}
             />
+            <HostLocalLawsDisclaimer className="text-xs text-charcoal-light leading-relaxed" />
 
             {error && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">{error}</p>
