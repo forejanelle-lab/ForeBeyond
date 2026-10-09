@@ -11,6 +11,7 @@ import {
   Flag,
   LifeBuoy,
   Mail,
+  Link2,
   Gauge,
 } from "lucide-react";
 import { ADMIN_NAV } from "@/lib/admin";
@@ -26,10 +27,12 @@ const navIcons: Record<string, typeof LayoutDashboard> = {
   "/admin/reports": Flag,
   "/admin/support": LifeBuoy,
   "/admin/newsletter": Mail,
+  "/admin/referrals": Link2,
   "/admin/trust-scores": Gauge,
 };
 
 function isNavActive(pathname: string, href: string) {
+  if (href === "/admin") return pathname === "/admin";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

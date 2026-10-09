@@ -25,7 +25,9 @@ type AdminUserRow = Pick<
   | "created_at"
   | "last_login_at"
   | "last_active_at"
->;
+> & {
+  referralLabel: string | null;
+};
 
 interface AdminUsersPanelProps {
   users: AdminUserRow[];
@@ -178,7 +180,7 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
           {
             key: "name",
             label: "Name",
-            headerClassName: "w-[14%]",
+            headerClassName: "w-[12%]",
             render: (r) => (
               <Link
                 href={`/admin/users/${r.id}`}
@@ -191,12 +193,18 @@ export function AdminUsersPanel({ users: initial }: AdminUsersPanelProps) {
           {
             key: "email",
             label: "Email",
-            headerClassName: "w-[22%]",
+            headerClassName: "w-[18%]",
             render: (r) => (
               <a href={`mailto:${r.email}`} className="text-forest hover:underline break-all">
                 {r.email}
               </a>
             ),
+          },
+          {
+            key: "referral",
+            label: "Referral",
+            headerClassName: "w-[12%]",
+            render: (r) => r.referralLabel ?? "—",
           },
           {
             key: "role",

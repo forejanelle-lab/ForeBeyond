@@ -210,6 +210,7 @@ export interface StayRequest {
   end_date: string | null;
   guest_count: number;
   traveler_display_name: string | null;
+  referral_link_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -236,6 +237,17 @@ export interface StayBooking {
   total_amount: number | null;
   payment_status: BookingPaymentStatus;
   stripe_payment_intent_id: string | null;
+  referral_link_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReferralLink {
+  id: string;
+  name: string;
+  code: string;
+  is_active: boolean;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }

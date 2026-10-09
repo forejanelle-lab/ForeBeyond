@@ -64,6 +64,8 @@
     "db:migration-076": "node scripts/run-sql.mjs supabase/migrations/076_public_listings_host_avatar.sql",
     "db:migration-077": "node scripts/run-sql.mjs supabase/migrations/077_profile_gender.sql",
     "db:migration-078": "node scripts/run-sql.mjs supabase/migrations/078_listing_household_composition.sql",
+    "db:migration-079": "node scripts/run-sql.mjs supabase/migrations/079_referral_links.sql",
+    "db:migrate-referrals": "node scripts/migrate-referrals.mjs",
     "instagram:setup": "node scripts/setup-instagram-api.mjs",
     "supabase:auth-email": "node scripts/setup-auth-email.mjs",
     "resend:domain": "node scripts/setup-resend-domain.mjs",

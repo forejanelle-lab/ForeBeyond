@@ -23,6 +23,7 @@ interface TripSummary {
   totalAmount: number | null;
   nightlyRate: number | null;
   conversationId: string | null;
+  referralLabel: string | null;
 }
 
 interface AdminUserDetailProps {
@@ -51,6 +52,7 @@ interface AdminUserDetailProps {
     "id" | "document_type" | "file_url" | "status" | "created_at" | "reviewed_at" | "notes"
   >[];
   showMessagePrompt?: boolean;
+  referralLabel?: string | null;
 }
 
 function verificationStatusBadgeVariant(status: VerificationStatus) {
@@ -89,10 +91,16 @@ export function AdminUserDetail({
   trips,
   verificationDocuments,
   showMessagePrompt,
+  referralLabel,
 }: AdminUserDetailProps) {
   const guestTrips = trips.filter((t) => t.role === "guest");
   const hostTrips = trips.filter((t) => t.role === "host");
   const messageTrip = trips.find((t) => t.conversationId);
+  const profileReferral =
+    guestTrips.find((trip) => trip.referralLabel)?.referralLabel ??
+    hostTrips.find((trip) => trip.referralLabel)?.referralLabel ??
+    referralLabel ??
+    null;
 
   return (
     <div className="space-y-6">
@@ -119,6 +127,11 @@ export function AdminUserDetail({
           </div>
         </div>
         {profile.bio && <p className="text-sm text-charcoal-light">{profile.bio}</p>}
+        {profileReferral && (
+          <p className="text-sm text-charcoal">
+            Referred by <span className="font-medium text-forest">{profileReferral}</span>
+          </p>
+        )}
         <p className="text-xs text-charcoal-light">
           Joined <AdminDateCell value={profile.created_at} />
         </p>
@@ -285,6 +298,11 @@ export function AdminUserDetail({
               key: "total",
               label: "Total",
               render: (r) => formatMoney(r.totalAmount),
+            },
+            {
+              key: "referral",
+              label: "Referral",
+              render: (r) => r.referralLabel ?? "—",
             },
             {
               key: "trip",

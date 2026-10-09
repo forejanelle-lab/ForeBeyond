@@ -46,6 +46,7 @@ import {
   getRequestStayEligibility,
   documentsMapFromRows,
 } from "@/lib/traveler-verification";
+import { resolveActiveReferralLinkId } from "@/lib/referral";
 import type { DocumentType, Profile, PublicListing, VerificationStatus } from "@/types/database";
 
 interface RequestStayWizardProps {
@@ -220,6 +221,8 @@ export function RequestStayWizard({
       mediaNote: mediaNote.trim() || null,
     });
 
+    const referralLinkId = await resolveActiveReferralLinkId(supabase);
+
     const { data, error: insertError } = await supabase
       .from("stay_requests")
       .insert({
@@ -232,6 +235,7 @@ export function RequestStayWizard({
         guest_count: guests,
         status: "pending",
         traveler_display_name: travelerDisplayName,
+        ...(referralLinkId ? { referral_link_id: referralLinkId } : {}),
       })
       .select("id")
       .single();
@@ -270,6 +274,7 @@ export function RequestStayWizard({
       request_id: data.id,
       guest_count: parseInt(guestCount, 10) || 1,
       nights: pricing?.nights ?? undefined,
+      referral_link_id: referralLinkId ?? undefined,
     });
   }
 

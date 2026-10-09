@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Cookie, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useTranslations } from "@/components/i18n/LocaleProvider";
@@ -17,6 +18,7 @@ type ConsentState = {
 
 export function CookieConsent() {
   const t = useTranslations();
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [analytics, setAnalytics] = useState(false);
@@ -59,7 +61,7 @@ export function CookieConsent() {
     });
   }
 
-  if (!visible) return null;
+  if (pathname?.startsWith("/admin") || !visible) return null;
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 p-4">

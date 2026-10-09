@@ -188,6 +188,7 @@ export async function confirmStayByTraveler(
     total_amount: totalAmount,
     payment_status: "pending",
     stripe_payment_intent_id: options.stripePaymentIntentId,
+    referral_link_id: request.referral_link_id ?? null,
   });
 
   if (bookingError) return { error: bookingError.message, tripId: trip.id };

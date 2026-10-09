@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { SupabaseConfigNotice } from "@/components/layout/SupabaseConfigNotice";
 import { AppProviders } from "@/components/layout/AppProviders";
+import { CaptureReferral } from "@/components/referrals/CaptureReferral";
 import { isPlatformAdmin } from "@/lib/navigation-menu";
 import { getExchangeRates } from "@/lib/exchange-rates";
 import { getServerTranslations } from "@/lib/i18n/server";
@@ -100,6 +101,7 @@ export default async function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <CookieConsent />
+          <CaptureReferral />
           <ExitIntentProvider isLoggedIn={Boolean(navUser)} />
         </AppProviders>
         <Analytics />
