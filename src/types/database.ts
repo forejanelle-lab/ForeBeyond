@@ -437,6 +437,10 @@ export interface HostListing {
   house_rules: string[] | null;
   household_members?: HouseholdMember[] | null;
   preferred_guest_gender?: PreferredGuestGender | null;
+  conversation_topics?: string[] | null;
+  local_recommendations?: string | null;
+  cultural_offerings?: string[] | null;
+  household_description?: string | null;
   budget_per_night: number | null;
   budget_per_night_3_guests: number | null;
   budget_per_night_4_guests: number | null;
@@ -495,6 +499,8 @@ export interface PublicListing {
   house_rules: string[] | null;
   household_members?: HouseholdMember[] | null;
   preferred_guest_gender?: PreferredGuestGender | null;
+  conversation_topics?: string[] | null;
+  local_recommendations?: string | null;
   budget_per_night: number | null;
   budget_per_night_3_guests: number | null;
   budget_per_night_4_guests: number | null;
@@ -510,6 +516,23 @@ export interface PublicListing {
   verification_status: VerificationStatus;
   host_first_name: string | null;
   host_avatar_url?: string | null;
+  cultural_offerings?: string[] | null;
+  household_description?: string | null;
+}
+
+export type GetToKnowDecision = "love_to_stay" | "learn_more" | "not_right_fit";
+
+export interface GetToKnowSession {
+  id: string;
+  traveler_id: string;
+  listing_id: string;
+  host_id: string;
+  answers: Record<string, string>;
+  selected_prompt_id: string | null;
+  interest_decision: GetToKnowDecision | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SavedListing {

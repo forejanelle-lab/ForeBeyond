@@ -37,7 +37,7 @@ export async function loadPublishedListingFallback(
       .maybeSingle(),
     supabase
       .from("host_profiles")
-      .select("host_motivation")
+      .select("host_motivation, cultural_offerings, household_description")
       .eq("user_id", hostListing.host_id)
       .maybeSingle(),
   ]);
@@ -68,6 +68,8 @@ export async function loadPublishedListingFallback(
     house_rules: hostListing.house_rules,
     household_members: hostListing.household_members ?? [],
     preferred_guest_gender: hostListing.preferred_guest_gender ?? "all",
+    conversation_topics: hostListing.conversation_topics ?? [],
+    local_recommendations: hostListing.local_recommendations ?? null,
     budget_per_night: hostListing.budget_per_night,
     budget_per_night_3_guests: hostListing.budget_per_night_3_guests,
     budget_per_night_4_guests: hostListing.budget_per_night_4_guests,
@@ -85,6 +87,11 @@ export async function loadPublishedListingFallback(
     host_avatar_url: typedProfile?.avatar_url?.trim() || null,
     host_motivation:
       (hostProfile as { host_motivation: string | null } | null)?.host_motivation ?? null,
+    cultural_offerings:
+      (hostProfile as { cultural_offerings: string[] | null } | null)?.cultural_offerings ?? [],
+    household_description:
+      (hostProfile as { household_description: string | null } | null)?.household_description ??
+      null,
   };
 }
 

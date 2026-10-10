@@ -19,10 +19,10 @@ export const BUDGET_RANGES = [
 ] as const;
 
 export const TRUST_SCORE_OPTIONS = [
-  { value: "", label: "Any trust score" },
-  { value: "40", label: "40+ Trust Score" },
-  { value: "60", label: "60+ Trust Score" },
-  { value: "80", label: "80+ Trust Score" },
+  { value: "", label: "Any verification activity" },
+  { value: "40", label: "Some activity on file" },
+  { value: "60", label: "More activity on file" },
+  { value: "80", label: "Extensive activity on file" },
 ] as const;
 
 export const COMMON_LANGUAGES = [

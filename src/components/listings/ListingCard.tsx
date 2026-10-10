@@ -5,6 +5,7 @@ import { ListingPreviewMedia } from "@/components/listings/ListingPreviewMedia";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { LISTING_STATUS_LABELS } from "@/lib/listings";
+import { formatEnglishLocation } from "@/lib/listing-map-coords";
 import type { HostListing, ListingPhoto } from "@/types/database";
 
 interface ListingCardProps {
@@ -37,7 +38,7 @@ export function ListingCard({ listing, coverPhoto, hostId }: ListingCardProps) {
         {(listing.city || listing.country) && (
           <p className="flex items-center gap-1 text-sm text-charcoal-light mt-1">
             <MapPin className="h-3.5 w-3.5 shrink-0" />
-            {[listing.city, listing.country].filter(Boolean).join(", ")}
+            {formatEnglishLocation(listing.city, listing.country)}
           </p>
         )}
       </Link>

@@ -1,10 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { MapPin } from "lucide-react";
 import type { Map as LeafletMap, LayerGroup, Marker } from "leaflet";
-import { getListingsMapBounds, type ListingMapPoint } from "@/lib/listing-map-coords";
+import {
+  getInitialMapFocus,
+  getListingsMapBounds,
+  type ListingMapPoint,
+} from "@/lib/listing-map-coords";
 import "leaflet/dist/leaflet.css";
 
 interface SearchFamilyMapProps {
@@ -17,6 +20,22 @@ function escapeHtml(value: string) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function popupHtml(point: ListingMapPoint) {
+  const location = point.locationLabel ? `<p>${escapeHtml(point.locationLabel)}</p>` : "";
+  return `<a href="${point.href}" class="family-map-popup-link">${escapeHtml(point.label)}</a>${location}`;
+}
+
+function markerHtml(point: ListingMapPoint) {
+  const place = point.locationLabel ? escapeHtml(point.locationLabel) : "";
+  return `<div class="family-map-marker">
+    <span class="family-map-pin-dot" aria-hidden="true"></span>
+    <span class="family-map-pin-card">
+      <span class="family-map-pin-name">${escapeHtml(point.label)}</span>
+      ${place ? `<span class="family-map-pin-place">${place}</span>` : ""}
+    </span>
+  </div>`;
 }
 
 export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
@@ -35,19 +54,43 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
       if (cancelled || !mapContainerRef.current) return;
 
       const L = leafletModule.default;
-      const bounds = getListingsMapBounds(mapPoints);
+      const focusPoints = getInitialMapFocus(mapPoints);
+      const bounds = getListingsMapBounds(focusPoints);
 
       if (!mapRef.current) {
         const map = L.map(mapContainerRef.current, {
           scrollWheelZoom: true,
           zoomControl: true,
+          minZoom: 4,
+          maxBounds: [
+            [-48, -180],
+            [72, 180],
+          ],
+          maxBoundsViscosity: 0.7,
+          worldCopyJump: true,
         });
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          maxZoom: 19,
-        }).addTo(map);
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics",
+            maxZoom: 19,
+          }
+        ).addTo(map);
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "",
+            maxZoom: 19,
+          }
+        ).addTo(map);
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "",
+            maxZoom: 19,
+          }
+        ).addTo(map);
 
         mapRef.current = map;
         markersLayerRef.current = L.layerGroup().addTo(map);
@@ -61,37 +104,31 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
       markerRefsRef.current = [];
       markersLayer.clearLayers();
 
-      const pinIcon = L.divIcon({
-        className: "family-map-pin",
-        html: `<span class="family-map-pin-dot" aria-hidden="true"></span>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 20],
-        popupAnchor: [0, -22],
-      });
-
-      const latLngs: [number, number][] = [];
-
       for (const point of mapPoints) {
-        latLngs.push([point.lat, point.lng]);
-        const marker = L.marker([point.lat, point.lng], { icon: pinIcon });
-        marker.bindPopup(
-          `<a href="${point.href}" class="family-map-popup-link">${escapeHtml(point.label)}</a>`,
-          { closeButton: true }
-        );
+        const pinIcon = L.divIcon({
+          className: "family-map-pin",
+          html: markerHtml(point),
+          iconSize: [220, 52],
+          iconAnchor: [10, 24],
+          popupAnchor: [0, -24],
+        });
+        const marker = L.marker([point.lat, point.lng], { icon: pinIcon, title: point.label });
+        marker.bindPopup(popupHtml(point), { closeButton: true, maxWidth: 240 });
         marker.addTo(markersLayer);
         markerRefsRef.current.push(marker);
       }
 
-      if (latLngs.length === 1) {
-        map.setView(latLngs[0], 11);
+      if (focusPoints.length === 1) {
+        map.setView([focusPoints[0].lat, focusPoints[0].lng], 10);
       } else if (bounds) {
         map.fitBounds(
           [
             [bounds.minLat, bounds.minLng],
             [bounds.maxLat, bounds.maxLng],
           ],
-          { padding: [24, 24] }
+          { padding: [48, 48], maxZoom: 8 }
         );
+        if (map.getZoom() < 5) map.setZoom(5);
       }
 
       const invalidate = () => map.invalidateSize({ animate: false });
@@ -107,7 +144,7 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
 
   useEffect(() => {
     const shell = mapShellRef.current;
-    if (!shell || !mapRef.current) return;
+    if (!shell) return;
 
     const observer = new ResizeObserver(() => {
       mapRef.current?.invalidateSize({ animate: false });
@@ -127,6 +164,8 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
     };
   }, []);
 
+  const hiddenCount = Math.max(0, mapPoints.length - getInitialMapFocus(mapPoints).length);
+
   return (
     <div
       ref={mapShellRef}
@@ -134,34 +173,25 @@ export function SearchFamilyMap({ mapPoints }: SearchFamilyMapProps) {
     >
       {mapPoints.length > 0 ? (
         <>
-          <div ref={mapContainerRef} className="absolute inset-0 z-0" aria-hidden="true" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] bg-gradient-to-b from-white/95 via-white/70 to-transparent px-3 py-2.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-charcoal-light">
-              {mapPoints.length} families on map
+          <div ref={mapContainerRef} className="absolute inset-0 z-0" />
+          <div className="pointer-events-none absolute left-3 top-3 z-[500] space-y-2">
+            <p className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-charcoal-light shadow-sm">
+              {mapPoints.length} {mapPoints.length === 1 ? "host" : "hosts"} on the map
             </p>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 z-[500] max-h-[32%] overflow-y-auto border-t border-sage-dark/20 bg-white/95 p-2.5">
-            <ul className="space-y-1">
-              {mapPoints.slice(0, 8).map((point) => (
-                <li key={point.id}>
-                  <Link
-                    href={point.href}
-                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-forest hover:bg-sage/50 transition-colors"
-                  >
-                    <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{point.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {hiddenCount > 0 ? (
+              <p className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-forest shadow-sm">
+                Drag the map to see {hiddenCount} more
+              </p>
+            ) : null}
           </div>
         </>
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-2 bg-sage/30 p-6 text-center">
           <MapPin className="h-8 w-8 text-forest/40" />
           <p className="text-sm font-medium text-forest">Map view</p>
-          <p className="text-xs text-charcoal-light max-w-[14rem]">
-            Add location details to listings or adjust filters to see families on the map.
+          <p className="text-xs text-charcoal-light max-w-[16rem]">
+            We could not place these hosts on the map yet. Try another destination or check listing
+            cities.
           </p>
         </div>
       )}

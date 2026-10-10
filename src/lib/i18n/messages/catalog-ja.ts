@@ -110,6 +110,8 @@ export const catalogJa = {
     filterHint: "予算、言語、食事、認証ステータスで絞り込み",
     hostsFound: "{count}件のホストが見つかりました",
     sortRecommended: "おすすめ",
+    viewList: "リスト",
+    viewMap: "地図",
   },
   host: {
     requestsTitle: "リクエスト",

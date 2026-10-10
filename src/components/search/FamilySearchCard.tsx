@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Heart, MapPin, Shield, Star } from "lucide-react";
+import { Heart, MapPin, Shield, Star, Users } from "lucide-react";
+import { hostListingGetToKnowPath } from "@/lib/get-to-know/paths";
 import { createClient } from "@/lib/supabase/client";
 import { hostListingPath, hostListingSignInPath } from "@/lib/listing-access";
+import { formatEnglishLocation } from "@/lib/listing-map-coords";
 import { DisplayBudget } from "@/components/i18n/DisplayMoney";
 import { HostAvatar } from "@/components/design/HostAvatar";
+import { SearchTrustBadge } from "@/components/trust/SearchTrustBadge";
 import { AutoTranslatableText, useAutoTranslation } from "@/components/i18n/AutoTranslatableText";
 import { SearchCardPhotoGallery } from "@/components/search/SearchCardPhotoGallery";
 import { ListingPreviewMedia } from "@/components/listings/ListingPreviewMedia";
@@ -26,18 +29,23 @@ interface FamilySearchCardProps {
   layout?: "grid" | "list";
 }
 
-function buildTags(listing: PublicListing, max = 3): string[] {
+function buildTags(listing: PublicListing, max = 4): string[] {
   const tags: string[] = [];
-  if (listing.meals?.[0]) tags.push(listing.meals[0]);
-  if (listing.languages?.length) {
+  for (const activity of listing.family_activities ?? []) {
+    if (tags.length >= max) break;
+    tags.push(activity);
+  }
+  for (const offering of listing.cultural_offerings ?? []) {
+    if (tags.length >= max) break;
+    if (!tags.includes(offering)) tags.push(offering);
+  }
+  if (listing.meals?.[0] && tags.length < max) tags.push(listing.meals[0]);
+  if (listing.languages?.length && tags.length < max) {
     tags.push(
       listing.languages.length > 2
-        ? `${listing.languages.slice(0, 2).join(" & ")}`
+        ? listing.languages.slice(0, 2).join(" & ")
         : listing.languages.join(" & ")
     );
-  }
-  if (listing.family_activities?.[0] && tags.length < max) {
-    tags.push(listing.family_activities[0]);
   }
   return tags.slice(0, max);
 }
@@ -50,8 +58,7 @@ function excerptStory(story: string | null | undefined, max = 140) {
 }
 
 function formatListingLocation(city?: string | null, country?: string | null) {
-  const location = [city, country].filter(Boolean).join(", ");
-  return location || null;
+  return formatEnglishLocation(city, country) || null;
 }
 
 export function FamilySearchCard({
@@ -141,35 +148,92 @@ export function FamilySearchCard({
     </button>
   ) : null;
 
+  const reviewLine =
+    hostReviewStats?.avgRating && hostReviewStats.reviewCount > 0 ? (
+      <span className="inline-flex items-center gap-1 text-sm text-charcoal">
+        <Star className="h-4 w-4 fill-gold text-gold shrink-0" />
+        <span className="font-medium">{hostReviewStats.avgRating}</span>
+        <span className="text-muted">
+          ({hostReviewStats.reviewCount}{" "}
+          {hostReviewStats.reviewCount === 1 ? "review" : "reviews"})
+        </span>
+      </span>
+    ) : null;
+
+  const trustBadge = (
+    <SearchTrustBadge
+      listingId={listing.id}
+      score={listing.trust_score}
+      verified={isVerified}
+      breakdown={listing.trust_score_breakdown}
+      className="relative z-[2] pt-1"
+    />
+  );
+
+  const actionRow = (
+    <div className="relative z-[2] flex flex-wrap gap-2 pt-3">
+      <Link
+        href={hostListingGetToKnowPath(listing.id)}
+        className="inline-flex items-center justify-center gap-1.5 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white hover:bg-forest-light"
+      >
+        <Users className="h-3.5 w-3.5" />
+        Get to Know
+      </Link>
+      <Link
+        href={listingHref}
+        className="inline-flex items-center justify-center rounded-full border border-forest/20 bg-white px-4 py-2 text-sm font-medium text-forest hover:bg-sage/40"
+      >
+        View Profile
+      </Link>
+    </div>
+  );
+
   if (layout === "list") {
     return (
       <article className="relative overflow-hidden rounded-[20px] border border-sage-dark/15 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md group">
-        {cardLink}
         <div className="flex flex-col md:flex-row md:items-stretch">
           <div className="md:w-[48%] lg:w-[46%] shrink-0 p-3 md:p-4 md:pr-2 relative">
-            <SearchCardPhotoGallery
-              photos={galleryPhotos}
-              country={listing.country}
-              city={listing.city}
-              title={listing.title}
-            />
+            <Link href={listingHref} aria-label={`View ${listingLabel}`}>
+              <SearchCardPhotoGallery
+                photos={galleryPhotos}
+                country={listing.country}
+                city={listing.city}
+                title={listing.title}
+              />
+            </Link>
             {saveButton}
           </div>
 
           <div className="flex flex-1 flex-col p-4 md:py-5 md:pr-5 md:pl-3 min-w-0">
             <div className="space-y-2">
-              <AutoTranslatableText
-                as="h3"
-                text={listingLabel}
-                className="font-serif text-xl md:text-2xl font-semibold text-forest leading-snug group-hover:text-forest-light transition-colors line-clamp-2"
-              />
-
-              {isVerified && (
-                <p className="inline-flex items-center gap-1 rounded-full bg-sage px-2.5 py-0.5 text-xs font-medium text-forest w-fit">
-                  <Shield className="h-3 w-3 shrink-0" />
-                  Verified Host
-                </p>
+              {hostName && (
+                <div className="flex items-center gap-2.5">
+                  <HostAvatar
+                    avatarUrl={resolvedAvatarUrl}
+                    firstName={listing.host_first_name}
+                    hostName={hostName}
+                    sizeClass="h-11 w-11"
+                    expandable={false}
+                  />
+                  <div>
+                    <p className="font-medium text-charcoal">{hostName}</p>
+                    {isVerified && (
+                      <p className="inline-flex items-center gap-1 text-xs font-medium text-forest">
+                        <Shield className="h-3 w-3 shrink-0" />
+                        Verified
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
+
+              <Link href={listingHref}>
+                <AutoTranslatableText
+                  as="h3"
+                  text={listingLabel}
+                  className="font-serif text-xl md:text-2xl font-semibold text-forest leading-snug group-hover:text-forest-light transition-colors line-clamp-2"
+                />
+              </Link>
 
               {locationLabel && (
                 <p className="flex items-center gap-1.5 text-sm text-muted">
@@ -179,22 +243,7 @@ export function FamilySearchCard({
               )}
 
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 pt-0.5">
-                {hostReviewStats?.avgRating && hostReviewStats.reviewCount > 0 ? (
-                  <span className="inline-flex items-center gap-1 text-sm text-charcoal">
-                    <Star className="h-4 w-4 fill-gold text-gold shrink-0" />
-                    <span className="font-medium">{hostReviewStats.avgRating}</span>
-                    <span className="text-muted">
-                      ({hostReviewStats.reviewCount}{" "}
-                      {hostReviewStats.reviewCount === 1 ? "review" : "reviews"})
-                    </span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-sm text-charcoal">
-                    <Star className="h-4 w-4 fill-gold text-gold shrink-0" />
-                    <span className="font-medium">{listing.trust_score}</span>
-                    <span className="text-muted">Trust score</span>
-                  </span>
-                )}
+                {reviewLine ?? <span />}
                 <span className="text-sm font-semibold text-forest">
                   <DisplayBudget nightlyRateUsd={listing.budget_per_night} listing={listing} />
                 </span>
@@ -220,22 +269,10 @@ export function FamilySearchCard({
                   ))}
                 </div>
               )}
+              {trustBadge}
             </div>
 
-            {hostName && (
-              <div className="relative z-[2] mt-auto pt-4 flex items-center gap-2.5">
-                <HostAvatar
-                  avatarUrl={resolvedAvatarUrl}
-                  firstName={listing.host_first_name}
-                  hostName={hostName}
-                  sizeClass="h-10 w-10"
-                  expandable={false}
-                />
-                <p className="text-sm text-charcoal-light">
-                  Hosted by <span className="font-medium text-charcoal">{hostName}</span>
-                </p>
-              </div>
-            )}
+            {actionRow}
           </div>
         </div>
       </article>
@@ -262,6 +299,19 @@ export function FamilySearchCard({
       </div>
 
       <div className="flex flex-1 flex-col p-4 space-y-2">
+        {hostName && (
+          <div className="relative z-[2] flex items-center gap-2">
+            <HostAvatar
+              avatarUrl={resolvedAvatarUrl}
+              firstName={listing.host_first_name}
+              hostName={hostName}
+              sizeClass="h-8 w-8"
+              expandable={false}
+            />
+            <p className="text-sm font-medium text-charcoal">{hostName}</p>
+          </div>
+        )}
+
         <AutoTranslatableText
           as="h3"
           text={listingLabel}
@@ -275,19 +325,14 @@ export function FamilySearchCard({
           </p>
         )}
 
+        {storyExcerpt && (
+          <p className="relative z-[2] text-sm text-muted leading-relaxed line-clamp-2">
+            {storyExcerpt}
+          </p>
+        )}
+
         <div className="flex items-center justify-between gap-2 pt-1">
-          {hostReviewStats?.avgRating && hostReviewStats.reviewCount > 0 ? (
-            <span className="inline-flex items-center gap-1 text-sm">
-              <Star className="h-3.5 w-3.5 fill-gold text-gold" />
-              <span className="font-medium">{hostReviewStats.avgRating}</span>
-              <span className="text-muted text-xs">({hostReviewStats.reviewCount})</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-sm">
-              <Star className="h-3.5 w-3.5 fill-gold text-gold" />
-              <span className="font-medium">{listing.trust_score}</span>
-            </span>
-          )}
+          {reviewLine ?? <span />}
           <span className="text-sm font-semibold text-forest">
             <DisplayBudget nightlyRateUsd={listing.budget_per_night} listing={listing} />
           </span>
@@ -305,21 +350,9 @@ export function FamilySearchCard({
             ))}
           </div>
         )}
+        {trustBadge}
 
-        {hostName && (
-          <div className="flex items-center gap-2 pt-1 mt-auto">
-            <HostAvatar
-              avatarUrl={resolvedAvatarUrl}
-              firstName={listing.host_first_name}
-              hostName={hostName}
-              sizeClass="h-8 w-8"
-              expandable={false}
-            />
-            <p className="text-xs text-muted">
-              Hosted by {hostName}
-            </p>
-          </div>
-        )}
+        <div className="mt-auto">{actionRow}</div>
       </div>
     </article>
   );

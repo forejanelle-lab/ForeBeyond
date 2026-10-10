@@ -3,6 +3,7 @@ import { MapPin, Calendar } from "lucide-react";
 import { Money } from "@/components/i18n/Money";
 import { resolveListingPricingCurrency } from "@/lib/currency";
 import { formatDateRange, TRIP_STATUS_LABELS } from "@/lib/stay-requests";
+import { formatEnglishLocation } from "@/lib/listing-map-coords";
 import { ListingImage } from "@/components/listings/ListingImage";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -63,7 +64,7 @@ export function TripListCard({
             {listing && (listing.city || listing.country) && (
               <p className="flex items-center gap-1 text-sm text-charcoal-light mt-1">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
-                {[listing.city, listing.country].filter(Boolean).join(", ")}
+                {formatEnglishLocation(listing.city, listing.country)}
               </p>
             )}
             <p className="flex items-center gap-1 text-sm text-charcoal-light mt-2">

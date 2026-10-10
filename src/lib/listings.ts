@@ -34,6 +34,21 @@ export const LISTING_ACTIVITIES = [
   "Religious or cultural ceremonies",
 ] as const;
 
+export const HOST_CONVERSATION_TOPICS = [
+  "Food and cooking",
+  "Everyday family life",
+  "Local traditions",
+  "Hidden places nearby",
+  "Festivals and celebrations",
+  "Language exchange",
+  "Nature and countryside",
+  "History and heritage",
+] as const;
+
+export function isMissingConnectionColumnsError(message: string) {
+  return /conversation_topics|local_recommendations/i.test(message);
+}
+
 export const LISTING_HOUSE_RULES = [
   "No smoking",
   "Quiet hours after 10pm",

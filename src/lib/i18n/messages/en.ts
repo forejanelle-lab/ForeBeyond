@@ -52,11 +52,12 @@ const en = {
       "This is not a vacation rental platform. This is a trust-first cultural immersion platform.",
   },
   home: {
-    heroTitleLine1: "Experience the world",
-    heroTitleLine2: "through local families.",
+    heroTitleLine1: "Before you travel, get to know",
+    heroTitleLine2: "the people who will make the journey special.",
     heroSubtitle:
-      "Trusted host families. Real connections. Unforgettable journeys.",
-    findAHost: "Find a Host",
+      "Discover verified local host families, find common ground, and build a connection before you arrive.",
+    findAHost: "Explore Host Families",
+    howItWorksCta: "How It Works",
     alreadyMember: "Already a member?",
     travelerLogin: "Traveler login",
     hostLogin: "Host login",
@@ -67,9 +68,18 @@ const en = {
     missionTitle: "Not a vacation rental. A cultural bridge.",
     missionDesc:
       "Fore Beyond is a trust-first platform for cultural exchange — connecting verified local hosts and travelers for homestay experiences rooted in authenticity, not transactions.",
-    valueVerifiedTitle: "Verified Families",
+    valueVerifiedTitle: "Verified People",
     valueVerifiedDesc:
-      "Every host is verified for safety and trust.",
+      "Identity verification and transparent profiles — shown only when it's true in our records.",
+    valueGetToKnowTitle: "Get to Know Your Host",
+    valueGetToKnowDesc:
+      "Discover shared interests before booking.",
+    valueConnectionsTitle: "Meaningful Connections",
+    valueConnectionsDesc:
+      "Start conversations around everyday life and culture.",
+    valueAuthenticTitle: "Authentic Experiences",
+    valueAuthenticDesc:
+      "Experience a destination through the people who live there.",
     valueImmersionTitle: "Cultural Immersion",
     valueImmersionDesc:
       "Experience everyday life through local people.",
@@ -90,18 +100,20 @@ const en = {
       "Verification, reviews, and community standards — an alternative to hotels built on human connection.",
     howItWorksTitle: "How It Works",
     howItWorksDesc:
-      "Whether you're traveling or hosting — your path to authentic cultural connection with verified local hosts and travelers.",
+      "Discover → Get to Know → Connect → Stay → Experience. Travelers don't just find a place — they get to know the people they'll meet.",
     step1Title: "Discover",
     step1Desc: "Browse verified host families and destinations that match your travel interests.",
-    step2Title: "Connect",
-    step2Desc: "Send a stay request and message hosts to find the right cultural fit.",
-    step3Title: "Stay",
-    step3Desc: "Live with a local family and experience everyday life in your destination.",
-    step4Title: "Experience",
-    step4Desc: "Share meals, stories, and traditions — create memories that last beyond the trip.",
-    trustTitle: "Built on trust, not transactions",
+    step2Title: "Get to Know",
+    step2Desc: "Use a short, optional conversation to find shared interests before you book.",
+    step3Title: "Connect",
+    step3Desc: "Send a stay request and start a conversation when messaging opens.",
+    step4Title: "Stay",
+    step4Desc: "Live with a local family and experience everyday life in your destination.",
+    step5Title: "Experience",
+    step5Desc: "Share meals, stories, and traditions — create memories that last beyond the trip.",
+    trustTitle: "Trust isn't just verifying an ID.",
     trustDesc:
-      "Every member goes through rigorous verification. Meaningful connection requires genuine trust.",
+      "It's knowing who you're going to meet. Verification is one layer of trust. Getting acquainted is another — it doesn't guarantee a perfect stay, but it helps you decide with more context.",
     exploreTrustCenter: "Explore Trust Center",
     trustPillarId: "Identification verification",
     trustPillarVideo: "Video and address verification",

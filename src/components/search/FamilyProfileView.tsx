@@ -2,10 +2,14 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, MessageSquare, Lock, CalendarCheck, Clock, Users, Star, Shield } from "lucide-react";
 import { FamilyProfileContent } from "@/components/search/FamilyProfileContent";
 import { RequestStayButton } from "@/components/stays/RequestStayButton";
+import { GetToKnowButton } from "@/components/get-to-know/GetToKnowButton";
+import { SharedInterestsPanel } from "@/components/get-to-know/SharedInterestsPanel";
+import { hostProfileFromListing } from "@/lib/get-to-know/match";
 import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
 import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
+import { PublicTrustNote } from "@/components/trust/PublicTrustNote";
 import { ListingPhotoGallery } from "@/components/listings/ListingPhotoGallery";
 import { ShareListingButton } from "@/components/listings/ShareListingButton";
 import { HostAvatar } from "@/components/design/HostAvatar";
@@ -14,6 +18,7 @@ import { formatAverageResponseTime, formatMemberSince } from "@/lib/host-stats";
 import { DisplayStayRateFromPricing } from "@/components/i18n/DisplayMoney";
 import { pickListingPricing } from "@/lib/stay-requests";
 import { formatListingMaxCapacityLabel } from "@/lib/listings";
+import { formatEnglishLocation } from "@/lib/listing-map-coords";
 import {
   formatPreferredGuestGender,
   parsePreferredGuestGender,
@@ -58,6 +63,7 @@ interface FamilyProfileViewProps {
   hostMotivation?: string | null;
   hostAvatarUrl?: string | null;
   hostDisplayName?: string | null;
+  travelerGetToKnowAnswers?: Record<string, string> | null;
 }
 
 export function FamilyProfileView({
@@ -93,6 +99,7 @@ export function FamilyProfileView({
   hostMotivation = null,
   hostAvatarUrl = null,
   hostDisplayName = null,
+  travelerGetToKnowAnswers = null,
 }: FamilyProfileViewProps) {
   const listingPricing = pickListingPricing(listing);
   const isVerified = verificationStatus === "verified";
@@ -152,9 +159,7 @@ export function FamilyProfileView({
             {(listing.city || listing.country) && (
               <p className="flex items-center gap-1.5 text-muted mt-2">
                 <MapPin className="h-4 w-4 shrink-0" />
-                <AutoTranslatableText
-                  text={[listing.city, listing.country].filter(Boolean).join(", ")}
-                />
+                {formatEnglishLocation(listing.city, listing.country)}
               </p>
             )}
 
@@ -168,15 +173,37 @@ export function FamilyProfileView({
                   )}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 text-forest font-medium">
-                Trust score {trustScore}/100
-              </span>
             </div>
 
             <div className="mt-4">
               <VerificationBadgeRow verified={isVerified} />
             </div>
+            <PublicTrustNote score={trustScore} explain className="mt-2" />
+
+            {showBookingActions && (
+              <div className="mt-5">
+                <GetToKnowButton
+                  listingId={listing.id}
+                  hostName={hostNameForDisplay}
+                  size="lg"
+                  className="shadow-md"
+                />
+              </div>
+            )}
           </div>
+
+          {showBookingActions && (
+            <SharedInterestsPanel
+              listingId={listing.id}
+              hostName={hostNameForDisplay ?? "this host"}
+              host={hostProfileFromListing({
+                ...listing,
+                host_first_name: hostFirstName,
+                host_motivation: hostMotivation,
+              })}
+              answers={travelerGetToKnowAnswers}
+            />
+          )}
 
           <FamilyProfileContent
             listing={listing}
@@ -216,6 +243,11 @@ export function FamilyProfileView({
 
             {showBookingActions ? (
               <>
+                <GetToKnowButton
+                  listingId={listing.id}
+                  hostName={hostNameForDisplay}
+                  className="w-full"
+                />
                 {userId ? (
                   <>
                     <RequestStayButton

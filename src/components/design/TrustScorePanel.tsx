@@ -39,8 +39,12 @@ export function TrustScorePanel({
 
   const content = (
     <>
-      <p className="text-sm font-medium text-charcoal-light mb-4">Host Trust Score</p>
-      <TrustScoreRing score={score} size={compact ? "sm" : "md"} />
+      <p className="text-sm font-medium text-charcoal-light mb-4">Trust details</p>
+      <TrustScoreRing score={score} size={compact ? "sm" : "md"} variant="details" />
+      <p className="mt-3 text-xs text-muted leading-relaxed max-w-xs mx-auto">
+        These points come from identity checks, profile completeness, and completed stays. They are
+        not a grade or a rating of this home.
+      </p>
       {(avgRating || reviewCount > 0) && (
         <div className="mt-4 flex flex-col items-center gap-1 text-sm text-forest">
           <div className="flex items-center justify-center gap-1.5">
@@ -61,7 +65,7 @@ export function TrustScorePanel({
       )}
       {canShowHostBreakdown ? (
         <p className="mt-4 inline-flex items-center justify-center gap-1 text-sm font-medium text-forest">
-          View host score breakdown
+          How these points were earned
           <ChevronRight className="h-4 w-4" />
         </p>
       ) : (
@@ -81,7 +85,7 @@ export function TrustScorePanel({
           type="button"
           onClick={() => setBreakdownOpen(true)}
           className="w-full text-left"
-          aria-label="View host trust score breakdown"
+          aria-label="View host trust details"
         >
           <Card variant="elevated" padding={compact ? "md" : "lg"} className={panelClassName}>
             {content}

@@ -200,7 +200,6 @@ export default async function HostRequestDetailPage({
         {" · "}
         <Link href={guestProfileHref} className="text-forest hover:underline">
           View trust profile
-          {travelerProfile?.trust_score != null ? ` (${travelerProfile.trust_score})` : ""}
         </Link>
       </p>
 

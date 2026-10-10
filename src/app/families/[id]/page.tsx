@@ -121,7 +121,7 @@ export default async function FamilyProfilePage({
         .single(),
       supabase
         .from("host_profiles")
-        .select("host_motivation")
+        .select("host_motivation, cultural_offerings, household_description")
         .eq("user_id", user.id)
         .maybeSingle(),
     ]);
@@ -132,6 +132,15 @@ export default async function FamilyProfilePage({
     > | null;
     hostMotivation =
       (hostProfileDetails as { host_motivation: string | null } | null)?.host_motivation ?? null;
+    hostListing = {
+      ...own,
+      cultural_offerings:
+        (hostProfileDetails as { cultural_offerings: string[] | null } | null)?.cultural_offerings ??
+        [],
+      household_description:
+        (hostProfileDetails as { household_description: string | null } | null)
+          ?.household_description ?? null,
+    };
     hostDisplayName = formatMemberDisplayName(profile?.full_name, {
       fallback: "Host",
     });
@@ -158,6 +167,10 @@ export default async function FamilyProfilePage({
       house_rules: typedListing.house_rules,
       household_members: typedListing.household_members ?? [],
       preferred_guest_gender: typedListing.preferred_guest_gender ?? "all",
+      conversation_topics: typedListing.conversation_topics ?? [],
+      local_recommendations: typedListing.local_recommendations ?? null,
+      cultural_offerings: typedListing.cultural_offerings ?? [],
+      household_description: typedListing.household_description ?? null,
       budget_per_night: typedListing.budget_per_night,
       budget_per_night_3_guests: typedListing.budget_per_night_3_guests,
       budget_per_night_4_guests: typedListing.budget_per_night_4_guests,
@@ -320,6 +333,20 @@ export default async function FamilyProfilePage({
     hostAvatarUrl = avatarMap[hostId] ?? null;
   }
 
+  let travelerGetToKnowAnswers: Record<string, string> | null = null;
+  if (user && !isOwnListing) {
+    const { data: gtkSession, error: gtkError } = await supabase
+      .from("get_to_know_sessions")
+      .select("answers")
+      .eq("traveler_id", user.id)
+      .eq("listing_id", id)
+      .maybeSingle();
+    if (!gtkError) {
+      travelerGetToKnowAnswers =
+        ((gtkSession as { answers: Record<string, string> | null } | null)?.answers) ?? null;
+    }
+  }
+
   const showAuthGate = !user && Boolean(typedListing);
 
   const profileView = (
@@ -357,6 +384,7 @@ export default async function FamilyProfilePage({
       hostMotivation={hostMotivation}
       hostAvatarUrl={hostAvatarUrl}
       hostDisplayName={hostDisplayName}
+      travelerGetToKnowAnswers={travelerGetToKnowAnswers}
     />
   );
 

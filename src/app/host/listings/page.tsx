@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Plus, Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/listings/ListingCard";
+import { HostConnectionGuide } from "@/components/host/HostConnectionGuide";
 import { CreateListingButton } from "@/components/listings/CreateListingButton";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
@@ -113,16 +114,19 @@ export default async function ManageListingsPage() {
           </CreateListingButton>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {typedListings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              coverPhoto={coverMap[listing.id] ?? null}
-              hostId={user.id}
-            />
-          ))}
-        </div>
+        <>
+          {typedListings[0] ? <HostConnectionGuide listingId={typedListings[0].id} /> : null}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {typedListings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                coverPhoto={coverMap[listing.id] ?? null}
+                hostId={user.id}
+              />
+            ))}
+          </div>
+        </>
       )}
     </Container>
   );

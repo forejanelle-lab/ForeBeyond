@@ -60,6 +60,12 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   "mexico city": { lat: 19.4326, lng: -99.1332 },
   "ciudad de mexico": { lat: 19.4326, lng: -99.1332 },
   marrakech: { lat: 31.6295, lng: -7.9811 },
+  manassas: { lat: 38.7509, lng: -77.4753 },
+  valliquerville: { lat: 49.6131, lng: 0.6754 },
+  "monteverdi marittimo": { lat: 43.1766, lng: 10.7414 },
+  bolgheri: { lat: 43.233, lng: 10.616 },
+  castiadas: { lat: 39.2374, lng: 9.5012 },
+  toyonaka: { lat: 34.7813, lng: 135.4693 },
 };
 
 /** Alternate spellings → canonical city key in CITY_COORDS */
@@ -76,6 +82,13 @@ const CITY_ALIASES: Record<string, string> = {
   "mexico city": "mexico city",
   "ciudad de mexico": "mexico city",
   cdmx: "mexico city",
+  東京: "tokyo",
+  京都: "kyoto",
+  大阪: "osaka",
+  豊中: "toyonaka",
+  豊中市: "toyonaka",
+  豊中市本町: "toyonaka",
+  monteverdi: "monteverdi marittimo",
 };
 
 export function normalizeLocationPart(value: string | null | undefined): string {
@@ -122,7 +135,27 @@ export function normalizeCountryKey(country: string | null | undefined): string 
 export function displayCountryName(country: string | null | undefined): string {
   const key = normalizeCountryKey(country);
   if (!key) return "";
-  return key.replace(/\b\w/g, (char) => char.toUpperCase());
+  return titleCaseLocation(key);
+}
+
+export function displayCityName(city: string | null | undefined): string {
+  const key = resolveCityKey(city);
+  if (!key) return "";
+  if (/[^\u0000-\u00ff]/.test(key)) {
+    return city?.trim() || key;
+  }
+  return titleCaseLocation(key);
+}
+
+export function formatEnglishLocation(
+  city?: string | null,
+  country?: string | null
+): string {
+  return [displayCityName(city), displayCountryName(country)].filter(Boolean).join(", ");
+}
+
+function titleCaseLocation(value: string) {
+  return value.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 /** Original plus canonical/alias names so "Italy" matches a listing stored as Italia. */
@@ -162,15 +195,15 @@ export function lookupStaticCoords(
   return null;
 }
 
-function hashOffset(id: string) {
+function hashOffset(id: string, spread: number) {
   let hash = 0;
   for (let i = 0; i < id.length; i += 1) {
     hash = (hash << 5) - hash + id.charCodeAt(i);
     hash |= 0;
   }
   return {
-    lat: ((hash % 1000) / 1000 - 0.5) * 0.15,
-    lng: (((hash >> 8) % 1000) / 1000 - 0.5) * 0.15,
+    lat: ((hash % 1000) / 1000 - 0.5) * spread,
+    lng: (((hash >> 8) % 1000) / 1000 - 0.5) * spread,
   };
 }
 
@@ -180,6 +213,10 @@ export interface ListingMapPoint {
   lng: number;
   label: string;
   href: string;
+  locationLabel?: string;
+  hostName?: string | null;
+  trustScore?: number;
+  verified?: boolean;
 }
 
 export function buildListingMapPoint(
@@ -188,15 +225,19 @@ export function buildListingMapPoint(
     city: string | null;
     country: string | null;
     title: string | null;
+    host_first_name?: string | null;
+    trust_score?: number;
+    verification_status?: string | null;
   },
   coords: { lat: number; lng: number },
-  precision: "city" | "country"
+  precision: "city" | "country",
+  extras?: Partial<Pick<ListingMapPoint, "hostName" | "trustScore" | "verified">>
 ): ListingMapPoint {
-  const offset = precision === "country" ? hashOffset(listing.id) : { lat: 0, lng: 0 };
-  const label =
-    [listing.city, listing.country].filter(Boolean).join(", ") ||
-    listing.title?.trim() ||
-    "Host family";
+  const offset = hashOffset(listing.id, precision === "country" ? 0.18 : 0.012);
+  const locationLabel =
+    formatEnglishLocation(listing.city, listing.country) || "Host family";
+  const hostName = extras?.hostName ?? listing.host_first_name ?? null;
+  const label = hostName || listing.title?.trim() || locationLabel;
 
   return {
     id: listing.id,
@@ -204,6 +245,10 @@ export function buildListingMapPoint(
     lng: coords.lng + offset.lng,
     label,
     href: `/families/${listing.id}`,
+    locationLabel,
+    hostName,
+    trustScore: extras?.trustScore ?? listing.trust_score ?? 0,
+    verified: extras?.verified ?? listing.verification_status === "verified",
   };
 }
 
@@ -213,6 +258,9 @@ export function getListingMapPoint(listing: {
   country: string | null;
   title: string | null;
   budget_per_night: number | null;
+  host_first_name?: string | null;
+  trust_score?: number;
+  verification_status?: string | null;
 }): ListingMapPoint | null {
   const countryKey = normalizeCountryKey(listing.country);
   const cityKey = resolveCityKey(listing.city);
@@ -234,8 +282,8 @@ export function getListingsMapBounds(points: Pick<ListingMapPoint, "lat" | "lng"
   const minLng = Math.min(...lngs);
   const maxLng = Math.max(...lngs);
 
-  const latPad = Math.max((maxLat - minLat) * 0.35, 0.25);
-  const lngPad = Math.max((maxLng - minLng) * 0.35, 0.25);
+  const latPad = Math.max((maxLat - minLat) * 0.18, 0.35);
+  const lngPad = Math.max((maxLng - minLng) * 0.18, 0.35);
 
   return {
     minLat: minLat - latPad,
@@ -245,4 +293,32 @@ export function getListingsMapBounds(points: Pick<ListingMapPoint, "lat" | "lng"
     centerLat: (minLat + maxLat) / 2,
     centerLng: (minLng + maxLng) / 2,
   };
+}
+
+function lngDistance(a: number, b: number) {
+  const raw = Math.abs(a - b);
+  return Math.min(raw, 360 - raw);
+}
+
+/** Keep the first view on one readable region instead of the whole globe. */
+export function getInitialMapFocus<T extends Pick<ListingMapPoint, "lat" | "lng">>(
+  points: T[]
+): T[] {
+  if (points.length <= 1) return points;
+
+  const neighborDeg = 22;
+  let focus = [points[0]];
+
+  for (const point of points) {
+    const neighbors = points.filter(
+      (other) =>
+        Math.abs(other.lat - point.lat) <= neighborDeg &&
+        lngDistance(other.lng, point.lng) <= neighborDeg
+    );
+    if (neighbors.length > focus.length) {
+      focus = neighbors;
+    }
+  }
+
+  return focus;
 }

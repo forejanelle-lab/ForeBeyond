@@ -68,6 +68,7 @@ export default async function HomePage() {
     { step: "02", title: t("home.step2Title"), description: t("home.step2Desc") },
     { step: "03", title: t("home.step3Title"), description: t("home.step3Desc") },
     { step: "04", title: t("home.step4Title"), description: t("home.step4Desc") },
+    { step: "05", title: t("home.step5Title"), description: t("home.step5Desc") },
   ];
 
   const trustPillars = [
@@ -101,12 +102,12 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/10 pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/15 pointer-events-none" />
         <Container className="relative z-10 pb-16 md:pb-24 pt-28 md:pt-36">
-          <h1 className="hero-text-shadow text-4xl md:text-5xl lg:text-[3.5rem] font-serif font-semibold text-white leading-[1.1] max-w-2xl text-balance">
+          <h1 className="hero-text-shadow text-4xl md:text-5xl lg:text-[3.5rem] font-serif font-semibold text-white leading-[1.1] max-w-3xl text-balance">
             {t("home.heroTitleLine1")}
             <br />
             {t("home.heroTitleLine2")}
           </h1>
-          <p className="hero-text-shadow mt-5 text-base md:text-lg text-white/90 leading-relaxed max-w-lg">
+          <p className="hero-text-shadow mt-5 text-base md:text-lg text-white/90 leading-relaxed max-w-xl">
             {t("home.heroSubtitle")}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -118,6 +119,14 @@ export default async function HomePage() {
             >
               {t("home.findAHost")}
               <ArrowRight className="h-4 w-4" />
+            </ButtonLink>
+            <ButtonLink
+              href="/#how-it-works"
+              variant="white"
+              size="lg"
+              className="shadow-lg"
+            >
+              {t("home.howItWorksCta")}
             </ButtonLink>
             <BecomeHostButton
               isLoggedIn={isLoggedIn}
@@ -230,7 +239,7 @@ export default async function HomePage() {
             titleClassName={homeSectionTitle}
             descriptionClassName={homeSectionDescription}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
             {steps.map((item) => (
               <div
                 key={item.step}

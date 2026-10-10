@@ -10,6 +10,7 @@ import { ListingReviewAction } from "@/components/reviews/ListingReviewAction";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import type { HostReviewExisting, HostReviewTarget } from "@/lib/listing-review-eligibility";
 import { AutoTranslatableText } from "@/components/i18n/AutoTranslatableText";
+import { displayCityName } from "@/lib/listing-map-coords";
 import { Badge } from "@/components/ui/Badge";
 import type { HostListing, ListingPhoto, PublicListing, PublicReview } from "@/types/database";
 import {
@@ -76,29 +77,32 @@ export function FamilyProfileContent({
 
       {activeTab === "about" && (
         <div className="space-y-8 pt-4">
-          {introVideoUrl && (
-            <section>
-              <h2 className="text-xl font-semibold text-forest mb-3">Meet Your Host</h2>
-              <div className="rounded-2xl overflow-hidden bg-black aspect-video">
-                <HostIntroVideo
-                  src={introVideoUrl}
-                  variant="player"
-                  listingId={listing.id}
-                  className="h-full w-full object-contain"
-                  ariaLabel={
-                    hostName
-                      ? `Introduction video from ${hostName}`
-                      : "Host introduction video"
-                  }
-                />
-              </div>
-              {hostName && (
-                <p className="text-sm text-charcoal-light mt-2">
-                  A personal introduction from {hostName}
-                </p>
-              )}
-            </section>
-          )}
+          <section>
+            <h2 className="text-xl font-semibold text-forest mb-3">Meet Your Host</h2>
+            {hostName && (
+              <p className="text-sm text-charcoal-light mb-3">
+                A personal introduction from {hostName}
+                {listing.city ? ` in ${displayCityName(listing.city)}` : ""}.
+              </p>
+            )}
+            {introVideoUrl && (
+              <>
+                <div className="rounded-2xl overflow-hidden bg-black aspect-video">
+                  <HostIntroVideo
+                    src={introVideoUrl}
+                    variant="player"
+                    listingId={listing.id}
+                    className="h-full w-full object-contain"
+                    ariaLabel={
+                      hostName
+                        ? `Introduction video from ${hostName}`
+                        : "Host introduction video"
+                    }
+                  />
+                </div>
+              </>
+            )}
+          </section>
           {listing.family_story && (
             <section>
               <h2 className="text-xl font-semibold text-forest mb-3">Our Family Story</h2>
@@ -141,10 +145,64 @@ export function FamilyProfileContent({
           )}
           {listing.stay_details && (
             <section>
-              <h2 className="text-xl font-semibold text-forest mb-3">Details</h2>
+              <h2 className="text-xl font-semibold text-forest mb-3">The Home</h2>
               <AutoTranslatableText
                 as="p"
                 text={listing.stay_details}
+                className="text-charcoal-light leading-relaxed"
+              />
+            </section>
+          )}
+          {"household_description" in listing && listing.household_description && (
+            <section>
+              <h2 className="text-xl font-semibold text-forest mb-3">Life in the household</h2>
+              <AutoTranslatableText
+                as="p"
+                text={listing.household_description}
+                className="text-charcoal-light leading-relaxed"
+              />
+            </section>
+          )}
+          {((listing.family_activities && listing.family_activities.length > 0) ||
+            ("cultural_offerings" in listing &&
+              listing.cultural_offerings &&
+              listing.cultural_offerings.length > 0)) && (
+            <section>
+              <h2 className="text-xl font-semibold text-forest mb-3">Interests & experiences they enjoy sharing</h2>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  ...(listing.family_activities ?? []),
+                  ...(("cultural_offerings" in listing ? listing.cultural_offerings : null) ?? []),
+                ]
+                  .filter((item, index, all) => all.indexOf(item) === index)
+                  .map((item) => (
+                    <Badge key={item} variant="default">
+                      {item}
+                    </Badge>
+                  ))}
+              </div>
+            </section>
+          )}
+          {"conversation_topics" in listing &&
+            listing.conversation_topics &&
+            listing.conversation_topics.length > 0 && (
+              <section>
+                <h2 className="text-xl font-semibold text-forest mb-3">Conversation topics</h2>
+                <div className="flex flex-wrap gap-2">
+                  {listing.conversation_topics.map((topic) => (
+                    <Badge key={topic} variant="outline">
+                      {topic}
+                    </Badge>
+                  ))}
+                </div>
+              </section>
+            )}
+          {"local_recommendations" in listing && listing.local_recommendations && (
+            <section>
+              <h2 className="text-xl font-semibold text-forest mb-3">Local recommendations</h2>
+              <AutoTranslatableText
+                as="p"
+                text={listing.local_recommendations}
                 className="text-charcoal-light leading-relaxed"
               />
             </section>

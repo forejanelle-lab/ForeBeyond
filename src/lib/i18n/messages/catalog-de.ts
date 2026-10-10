@@ -110,6 +110,8 @@ export const catalogDe = {
     filterHint: "Filtern nach Budget, Sprache, Mahlzeiten und Verifizierungsstatus",
     hostsFound: "{count} Gastgeber gefunden",
     sortRecommended: "Empfohlen",
+    viewList: "Liste",
+    viewMap: "Karte",
   },
   host: {
     requestsTitle: "Anfragen",

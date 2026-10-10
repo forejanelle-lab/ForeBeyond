@@ -9,8 +9,10 @@ import {
   LISTING_AMENITIES,
   LISTING_ACTIVITIES,
   LISTING_HOUSE_RULES,
+  HOST_CONVERSATION_TOPICS,
   defaultFamilyListingTitle,
   isListingPricingTierEnabled,
+  isMissingConnectionColumnsError,
   parseListingMaxCapacity,
 } from "@/lib/listings";
 import {
@@ -175,6 +177,12 @@ export function ListingWizard({
   const [amenities, setAmenities] = useState<string[]>(listing?.amenities ?? []);
   const [activities, setActivities] = useState<string[]>(listing?.family_activities ?? []);
   const [houseRules, setHouseRules] = useState<string[]>(listing?.house_rules ?? []);
+  const [conversationTopics, setConversationTopics] = useState<string[]>(
+    listing?.conversation_topics ?? []
+  );
+  const [localRecommendations, setLocalRecommendations] = useState(
+    listing?.local_recommendations ?? ""
+  );
   const [householdMembers, setHouseholdMembers] = useState<DraftHouseholdMember[]>(() =>
     draftHouseholdMembersFromListing(listing)
   );
@@ -359,6 +367,8 @@ export function ListingWizard({
       amenities,
       family_activities: activities,
       house_rules: houseRules,
+      conversation_topics: conversationTopics,
+      local_recommendations: localRecommendations.trim() || null,
       ...householdPayload,
       budget_per_night: parsePrice(budgetPerNight),
       budget_per_night_3_guests: isListingPricingTierEnabled(parsedMaxCapacity, "3")
@@ -388,6 +398,13 @@ export function ListingWizard({
       return rest;
     }
 
+    function withoutConnectionFields<T extends Record<string, unknown>>(row: T) {
+      const { conversation_topics, local_recommendations, ...rest } = row;
+      void conversation_topics;
+      void local_recommendations;
+      return rest;
+    }
+
     let activeListingId = listingId;
 
     if (listingId) {
@@ -401,6 +418,15 @@ export function ListingWizard({
         const retry = await supabase
           .from("host_listings")
           .update(withoutHousehold(payload))
+          .eq("id", listingId)
+          .eq("host_id", userId);
+        updateError = retry.error;
+      }
+
+      if (updateError && isMissingConnectionColumnsError(updateError.message)) {
+        const retry = await supabase
+          .from("host_listings")
+          .update(withoutConnectionFields(payload))
           .eq("id", listingId)
           .eq("host_id", userId);
         updateError = retry.error;
@@ -443,6 +469,16 @@ export function ListingWizard({
         const retry = await supabase
           .from("host_listings")
           .insert(withoutHousehold(insertRow))
+          .select("id")
+          .single();
+        data = retry.data;
+        insertError = retry.error;
+      }
+
+      if (insertError && isMissingConnectionColumnsError(insertError.message)) {
+        const retry = await supabase
+          .from("host_listings")
+          .insert(withoutConnectionFields(insertRow))
           .select("id")
           .single();
         data = retry.data;
@@ -649,6 +685,36 @@ export function ListingWizard({
               onChange={(e) => setLanguages(e.target.value)}
               placeholder="English, Japanese..."
               hint="Separate with commas"
+            />
+            <div>
+              <p className="text-sm font-medium text-forest mb-1">Conversation topics</p>
+              <p className="text-xs text-charcoal-light mb-2">
+                Topics you are happy to talk about. Travelers see these when they Get to Know you.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {HOST_CONVERSATION_TOPICS.map((topic) => {
+                  const selected = conversationTopics.includes(topic);
+                  return (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => setConversationTopics((prev) => toggleItem(prev, topic))}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                        selected ? "bg-forest text-white" : "bg-sage text-forest hover:bg-sage-dark"
+                      }`}
+                    >
+                      {topic}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <Textarea
+              label="Local recommendations"
+              value={localRecommendations}
+              onChange={(e) => setLocalRecommendations(e.target.value)}
+              placeholder="A favorite market, a Sunday walk, a dish guests should try..."
+              hint="Optional. Helps travelers start a conversation without sharing your address."
             />
             <div className="space-y-4 rounded-xl border border-sage-dark/40 p-4">
               <div>
@@ -864,7 +930,7 @@ export function ListingWizard({
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-semibold text-forest">Review & publish</h2>
-              <p className="text-sm text-charcoal-light mt-1">Your listing will show your Trust Score and verification badges to travelers.</p>
+              <p className="text-sm text-charcoal-light mt-1">Your listing will show verification badges and trust details from your activity — not a grade.</p>
             </div>
             <div className="rounded-xl bg-sage/40 p-4 space-y-2 text-sm">
               <p><strong className="text-forest">Title:</strong> {title.trim() || defaultFamilyListingTitle(hostName)}</p>

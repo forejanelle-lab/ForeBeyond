@@ -76,7 +76,11 @@ export function GuestTrustProfile({
                   <Shield className="h-3 w-3" />
                   {getVerificationStatusLabel(profile.verification_status)}
                 </Badge>
-                <Badge variant="gold">Trust {profile.trust_score ?? 0}</Badge>
+                {profile.trust_score > 0 && (
+                  <Badge variant="outline">
+                    {profile.trust_score} points from verification and activity
+                  </Badge>
+                )}
               </div>
               {profile.location && (
                 <p className="flex items-center gap-1.5 text-sm text-charcoal-light">
@@ -124,8 +128,8 @@ export function GuestTrustProfile({
 
       <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
         <Card variant="elevated" padding="lg" className="text-center">
-          <p className="text-sm font-medium text-charcoal-light mb-4">Trust Score</p>
-          <TrustScoreRing score={profile.trust_score ?? 0} size="md" />
+          <p className="text-sm font-medium text-charcoal-light mb-4">Trust details</p>
+          <TrustScoreRing score={profile.trust_score ?? 0} size="md" variant="details" />
           <p className="mt-4 text-sm text-charcoal-light">
             Profile {profile.profile_completion ?? 0}% complete
           </p>
@@ -135,7 +139,7 @@ export function GuestTrustProfile({
         </Card>
 
         <Card variant="outline" padding="lg">
-          <h2 className="text-lg font-semibold text-forest mb-4">Score breakdown</h2>
+          <h2 className="text-lg font-semibold text-forest mb-4">How these points were earned</h2>
           <TrustScoreBreakdown
             breakdown={breakdown}
             role={(profile.role as UserRole | null) ?? "traveler"}

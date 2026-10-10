@@ -130,6 +130,38 @@ export function getTrustLevel(score: number): {
   return { label: "New Member", color: "outline" };
 }
 
+/** Public, non-graded copy for listing cards and host profiles. */
+export function getPublicTrustSummary(_score?: number) {
+  return "Trust details on file";
+}
+
+export function formatTrustPoints(score: number) {
+  return `${score} points from verification and activity`;
+}
+
+export function getTrustFill(score: number) {
+  if (!(score > 0)) return 0;
+  return Math.min(1, Math.max(0.12, score / TRUST_SCORE_MAX));
+}
+
+export function countCompletedTrustChecks(
+  breakdown: Record<string, number> | null | undefined,
+  score: number
+) {
+  const total = TRUST_SCORE_FACTORS.length;
+  if (breakdown && typeof breakdown === "object") {
+    const completed = TRUST_SCORE_FACTORS.filter((factor) => (breakdown[factor.key] ?? 0) > 0)
+      .length;
+    if (completed > 0 || score <= 0) return { completed, total };
+  }
+
+  const completed = Math.max(
+    0,
+    Math.min(total, Math.round((Math.max(score, 0) / TRUST_SCORE_MAX) * total))
+  );
+  return { completed, total };
+}
+
 export const BADGE_LABELS: Record<string, string> = {
   identity_verified: "Identity Verified",
   community_vouched: "Community Vouched",

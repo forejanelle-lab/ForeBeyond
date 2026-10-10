@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Globe, Lock } from "lucide-react";
+import { Shield, Globe, Lock, Users, MessageCircle, Compass } from "lucide-react";
 import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 interface TrustIndicatorsProps {
@@ -14,12 +14,13 @@ export function TrustIndicators({ variant = "inline", className = "" }: TrustInd
   if (variant === "values") {
     const values = [
       { icon: Shield, title: t("home.valueVerifiedTitle"), desc: t("home.valueVerifiedDesc") },
-      { icon: Globe, title: t("home.valueImmersionTitle"), desc: t("home.valueImmersionDesc") },
-      { icon: Lock, title: t("home.valueSupportedTitle"), desc: t("home.valueSupportedDesc") },
+      { icon: Users, title: t("home.valueGetToKnowTitle"), desc: t("home.valueGetToKnowDesc") },
+      { icon: MessageCircle, title: t("home.valueConnectionsTitle"), desc: t("home.valueConnectionsDesc") },
+      { icon: Compass, title: t("home.valueAuthenticTitle"), desc: t("home.valueAuthenticDesc") },
     ];
 
     return (
-      <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 ${className}`}>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 ${className}`}>
         {values.map(({ icon: Icon, title, desc }) => (
           <div key={title} className="text-center md:text-left">
             <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-sage/80 text-forest mb-4">

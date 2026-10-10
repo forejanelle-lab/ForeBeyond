@@ -110,6 +110,8 @@ export const catalogPt = {
     filterHint: "Filtrar por orçamento, idioma, refeições e status de verificação",
     hostsFound: "{count} anfitriões encontrados",
     sortRecommended: "Recomendado",
+    viewList: "Lista",
+    viewMap: "Mapa",
   },
   host: {
     requestsTitle: "Solicitações",

@@ -10,7 +10,7 @@ import {
 const geocodeCache = new Map<string, { lat: number; lng: number }>();
 
 function locationCacheKey(city: string, country: string) {
-  return `${city}|${country}`;
+  return `${resolveCityKey(city)}|${normalizeCountryKey(country)}`;
 }
 
 async function fetchCityCoordinates(
@@ -21,20 +21,24 @@ async function fetchCityCoordinates(
   const cached = geocodeCache.get(key);
   if (cached) return cached;
 
-  const query = city && country ? `${city}, ${country}` : country || city;
+  const query = [city, country].filter(Boolean).join(", ");
+  if (!query.trim()) return null;
+
   const params = new URLSearchParams({
     q: query,
     format: "json",
     limit: "1",
+    addressdetails: "0",
   });
 
   try {
     const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
       headers: {
-        "User-Agent": "ForeBeyond/1.0 (family search map)",
+        "User-Agent": "ForeBeyond/1.0 (https://forebeyond.com; family search map)",
         Accept: "application/json",
+        "Accept-Language": "en",
       },
-      next: { revalidate: 60 * 60 * 24 },
+      next: { revalidate: 60 * 60 * 24 * 7 },
     });
 
     if (!response.ok) return null;
@@ -59,10 +63,10 @@ async function resolveCoordsForLocation(city: string, country: string) {
     return { coords: staticCoords, precision: "city" as const };
   }
 
-  const cityKey = resolveCityKey(city);
-  const countryKey = normalizeCountryKey(country);
-  if (cityKey) {
-    const geocoded = await fetchCityCoordinates(cityKey, countryKey);
+  const originalCity = city.trim();
+  const originalCountry = country.trim();
+  if (originalCity) {
+    const geocoded = await fetchCityCoordinates(originalCity, originalCountry);
     if (geocoded) {
       return { coords: geocoded, precision: "city" as const };
     }
@@ -72,8 +76,8 @@ async function resolveCoordsForLocation(city: string, country: string) {
     return { coords: staticCoords, precision: "country" as const };
   }
 
-  if (countryKey) {
-    const geocoded = await fetchCityCoordinates("", countryKey);
+  if (originalCountry) {
+    const geocoded = await fetchCityCoordinates("", originalCountry);
     if (geocoded) {
       return { coords: geocoded, precision: "country" as const };
     }
@@ -89,13 +93,17 @@ export async function resolveListingMapPoints(
     country: string | null;
     title: string | null;
     budget_per_night: number | null;
-  }[]
+    host_first_name?: string | null;
+    trust_score?: number;
+    verification_status?: string | null;
+  }[],
+  hostNamesByListingId?: Record<string, string | null | undefined>
 ): Promise<ListingMapPoint[]> {
   const uniqueLocations = new Map<string, { city: string; country: string }>();
 
   for (const listing of listings) {
-    const city = resolveCityKey(listing.city);
-    const country = normalizeCountryKey(listing.country);
+    const city = listing.city?.trim() ?? "";
+    const country = listing.country?.trim() ?? "";
     if (!city && !country) continue;
 
     const key = locationCacheKey(city, country);
@@ -113,14 +121,6 @@ export async function resolveListingMapPoints(
     const staticCity = lookupStaticCoords(location.city, location.country);
     if (staticCity?.precision === "city") {
       resolvedByKey.set(key, { coords: staticCity, precision: "city" });
-      continue;
-    }
-
-    if (geocodeCache.has(key)) {
-      resolvedByKey.set(key, {
-        coords: geocodeCache.get(key)!,
-        precision: "city",
-      });
     }
   }
 
@@ -135,24 +135,24 @@ export async function resolveListingMapPoints(
   const points: ListingMapPoint[] = [];
 
   for (const listing of listings) {
-    const staticPoint = getListingMapPoint(listing);
-    if (staticPoint && lookupStaticCoords(listing.city, listing.country)?.precision === "city") {
-      points.push(staticPoint);
-      continue;
-    }
-
-    const city = resolveCityKey(listing.city);
-    const country = normalizeCountryKey(listing.country);
+    const extras = {
+      hostName: hostNamesByListingId?.[listing.id] ?? listing.host_first_name ?? null,
+      trustScore: listing.trust_score ?? 0,
+      verified: listing.verification_status === "verified",
+    };
+    const city = listing.city?.trim() ?? "";
+    const country = listing.country?.trim() ?? "";
     const key = locationCacheKey(city, country);
     const resolved = resolvedByKey.get(key);
 
     if (resolved) {
-      points.push(buildListingMapPoint(listing, resolved.coords, resolved.precision));
+      points.push(buildListingMapPoint(listing, resolved.coords, resolved.precision, extras));
       continue;
     }
 
+    const staticPoint = getListingMapPoint(listing);
     if (staticPoint) {
-      points.push(staticPoint);
+      points.push({ ...staticPoint, ...extras, hostName: extras.hostName ?? staticPoint.hostName });
     }
   }
 

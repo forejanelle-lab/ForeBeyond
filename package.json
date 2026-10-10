@@ -11,6 +11,9 @@
     "test:currency": "node scripts/verify-currency-safety.mjs",
     "test:translate": "node scripts/verify-translate.mjs",
     "test:language-detect": "node scripts/verify-language-detect.mjs",
+    "test:get-to-know": "node scripts/verify-get-to-know.mjs",
+    "test:search-map": "node scripts/verify-search-map.mjs",
+    "db:migration-080": "node scripts/run-sql.mjs supabase/migrations/080_get_to_know.sql",
     "db:migrate": "node scripts/run-migrations.mjs",
     "db:fix-signup": "node scripts/run-sql.mjs supabase/migrations/003_fix_signup_trigger.sql",
     "db:phase2": "node scripts/run-sql.mjs supabase/setup-phase2.sql",
@@ -111,7 +114,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@tailwindcss/postcss": "^4.1.8",
-    "@types/leaflet": "^1.9.21",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^22.15.29",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",

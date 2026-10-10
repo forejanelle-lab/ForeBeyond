@@ -69,7 +69,7 @@ export const catalogEn = {
     trustBadge: "Trust-first travel",
     bulletVerified: "Verified host families worldwide",
     bulletImmersion: "Authentic cultural immersion, not tourism",
-    bulletTrust: "Built on trust scores and community reviews",
+    bulletTrust: "Built on verification, stay history, and community reviews",
     welcomeBack: "Welcome back",
     signInSubtitle:
       "Sign in to continue your journey with verified host families and meaningful cultural connection.",
@@ -107,9 +107,11 @@ export const catalogEn = {
       "Discover verified host families and experience a destination through local people, culture, and everyday life.",
     subtitleInLocation:
       "Verified local hosts offering cultural immersion and homestay experiences in {location}.",
-    filterHint: "Refine by location, budget, language, meals, and trust score",
+    filterHint: "Refine by location, budget, language, meals, and verification",
     hostsFound: "{count} hosts found",
     sortRecommended: "Recommended",
+    viewList: "List",
+    viewMap: "Map",
   },
   host: {
     requestsTitle: "Requests",

@@ -26,6 +26,7 @@ interface ChatThreadProps {
   unlocked: boolean;
   lockReason?: string;
   compact?: boolean;
+  initialDraft?: string;
 }
 
 export function ChatThread({
@@ -37,10 +38,11 @@ export function ChatThread({
   unlocked,
   lockReason = "Messaging is not available for this conversation yet.",
   compact = false,
+  initialDraft = "",
 }: ChatThreadProps) {
   const [messages, setMessages] = useState<StayMessage[]>([]);
   const [reads, setReads] = useState<MessageRead[]>([]);
-  const [body, setBody] = useState("");
+  const [body, setBody] = useState(initialDraft);
   const [messageSearch, setMessageSearch] = useState("");
   const [error, setError] = useState("");
   const [senderNames, setSenderNames] = useState<Record<string, string>>({});

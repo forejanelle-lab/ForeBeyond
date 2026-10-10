@@ -69,6 +69,7 @@ interface RequestStayWizardProps {
   blockedDateRanges?: BlockedDateRange[];
   existingStays?: OverlappingStay[];
   profileBio?: string | null;
+  initialIntro?: string | null;
 }
 
 export function RequestStayWizard({
@@ -77,12 +78,13 @@ export function RequestStayWizard({
   blockedDateRanges = [],
   existingStays = [],
   profileBio = null,
+  initialIntro = null,
 }: RequestStayWizardProps) {
   const router = useRouter();
   const { formatAmount, formatAmountWithNote } = useCurrency();
   const minDate = useTodayIso();
   const [step, setStep] = useState(0);
-  const [intro, setIntro] = useState(profileBio?.trim() ?? "");
+  const [intro, setIntro] = useState(initialIntro?.trim() || profileBio?.trim() || "");
   const [stayMotivation, setStayMotivation] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");

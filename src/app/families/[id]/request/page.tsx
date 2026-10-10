@@ -43,10 +43,13 @@ export async function generateMetadata({
 
 export default async function RequestStayPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ intro?: string }>;
 }) {
   const { id } = await params;
+  const { intro: introFromQuery } = await searchParams;
   const supabase = await createClient();
 
   const [{ data: listing }, { data: { user } }] = await Promise.all([
@@ -119,6 +122,7 @@ export default async function RequestStayPage({
               blockedDateRanges={blockedDateRanges}
               existingStays={existingStays}
               profileBio={(profile as { bio: string | null } | null)?.bio ?? null}
+              initialIntro={introFromQuery ?? null}
             />
           ) : (
             <div className="text-center space-y-4 py-6">

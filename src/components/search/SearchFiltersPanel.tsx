@@ -128,7 +128,7 @@ function FilterFields({
         ]}
       />
       <SelectField
-        label="Minimum trust score"
+        label="Verification activity"
         value={filters.minTrustScore}
         onChange={(value) => onChange("minTrustScore", value)}
         options={TRUST_SCORE_OPTIONS.map((option) => ({
@@ -167,6 +167,7 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
 
   function applyFilters(next: SearchFilters) {
     const params = filtersToSearchParams(next);
+    if (searchParams.get("view") === "map") params.set("view", "map");
     const query = params.toString();
     startTransition(() => {
       router.push(query ? `/search?${query}` : "/search");

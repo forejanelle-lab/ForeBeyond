@@ -11,6 +11,7 @@ import {
   type ListingPricing,
 } from "@/lib/stay-requests";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
+import { formatEnglishLocation } from "@/lib/listing-map-coords";
 import type { ListingPhoto, Profile, PublicListing, StayBooking, StayRequest, Trip } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
 import { getServerTranslations } from "@/lib/i18n/server";
@@ -144,7 +145,7 @@ export default async function TripsPage() {
       request,
       listingTitle: listing?.title?.trim() || "Host family",
       location: listing
-        ? [listing.city, listing.country].filter(Boolean).join(", ") || null
+        ? formatEnglishLocation(listing.city, listing.country) || null
         : null,
       hostName: formatMemberDisplayName(hostFullNameById[request.host_id], {
         fallback: listing?.host_first_name ?? "Host",

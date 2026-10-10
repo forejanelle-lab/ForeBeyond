@@ -16,10 +16,13 @@ export const metadata = privatePageMetadata({
 
 export default async function ConversationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ draft?: string }>;
 }) {
   const { id } = await params;
+  const { draft } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/auth/sign-in?redirect=/messages/${id}`);
@@ -91,6 +94,7 @@ export default async function ConversationPage({
         currentUserName={currentUserName}
         unlocked={unlocked}
         lockReason={lockReason}
+        initialDraft={draft ?? ""}
       />
     </Container>
   );

@@ -97,7 +97,7 @@ function FilterFields({
         options={PRICE_RANGES.map((range) => ({ value: range.value, label: range.label }))}
       />
       <SelectField
-        label="Minimum trust score"
+        label="Verification activity"
         value={filters.minTrustScore}
         onChange={(value) => onChange("minTrustScore", value)}
         options={TRUST_SCORE_OPTIONS.map((option) => ({

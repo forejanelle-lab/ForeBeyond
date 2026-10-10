@@ -104,15 +104,15 @@ export function HostTrustScoreBreakdownModal({
           <div className="flex shrink-0 items-start justify-between gap-4 border-b border-sage-dark/20 px-5 py-4 sm:px-6">
             <div className="min-w-0 pr-2">
               <p className="text-xs font-medium uppercase tracking-wide text-gold mb-1">
-                Host trust score
+                Host trust details
               </p>
               <h2 id="host-trust-score-title" className="text-lg font-semibold text-forest">
-                {hostLabel}&apos;s score
+                {hostLabel}&apos;s trust profile
               </h2>
               <p className="text-sm text-charcoal-light mt-1">
-                This is the host&apos;s trust score — not yours. Each line shows points earned
-                (for example, 15 pts from reviews means a perfect review score, not 15 reviews).
-                Personal details are never shared.
+                These are {hostLabel}&apos;s trust details — not a grade and not yours. Each line
+                shows points earned from verification and activity. Personal details are never
+                shared.
               </p>
             </div>
             <button
@@ -127,11 +127,11 @@ export function HostTrustScoreBreakdownModal({
 
           <div className="overflow-y-auto px-5 py-5 sm:px-6 space-y-5">
             <div className="flex justify-center">
-              <TrustScoreRing score={score} size="sm" />
+              <TrustScoreRing score={score} size="sm" variant="details" />
             </div>
 
             {loading && (
-              <p className="text-sm text-charcoal-light text-center">Loading score breakdown...</p>
+              <p className="text-sm text-charcoal-light text-center">Loading trust details...</p>
             )}
 
             {error && (
@@ -140,7 +140,7 @@ export function HostTrustScoreBreakdownModal({
 
             {!loading && !error && (
               <>
-                <p className="text-sm font-medium text-forest">How {hostLabel} earned their score</p>
+                <p className="text-sm font-medium text-forest">How {hostLabel} earned these points</p>
                 <TrustScoreBreakdown
                   breakdown={breakdown}
                   perspective="host-public"

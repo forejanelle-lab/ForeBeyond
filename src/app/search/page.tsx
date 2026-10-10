@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { HeroSearchBar } from "@/components/design/HeroSearchBar";
 import { SearchFiltersPanel } from "@/components/search/SearchFiltersPanel";
-import { SearchResultsGrid } from "@/components/search/SearchResultsGrid";
+import { SearchResultsView } from "@/components/search/SearchResultsView";
+import { resolveListingMapPoints } from "@/lib/geocode-location";
 import { SearchAnalyticsTracker } from "@/components/analytics/SearchAnalyticsTracker";
 import { Container } from "@/components/ui/Container";
 import {
@@ -114,22 +115,27 @@ async function SearchResults({
   }
 
   const resultLabel = t("search.hostsFound", { count: String(filtered.length) });
+  const hostNamesByListingId = Object.fromEntries(
+    filtered.map((listing) => [
+      listing.id,
+      hostDisplayNameById[listing.host_id] ?? listing.host_first_name,
+    ])
+  );
+  const mapPoints = await resolveListingMapPoints(filtered, hostNamesByListingId);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8">
       <SearchFiltersPanel countries={countries} resultCount={filtered.length} />
-      <div className="min-w-0 space-y-6">
-        <SearchResultsGrid
-          listings={filtered}
-          listingPhotoGalleries={listingPhotoGalleries}
-          hostDisplayNames={hostDisplayNameById}
-          hostAvatarUrls={hostAvatarUrls}
-          hostReviewStatsById={hostReviewStatsById}
-          savedListingIds={savedListingIds}
-          layout="list"
-          resultLabel={resultLabel}
-        />
-      </div>
+      <SearchResultsView
+        listings={filtered}
+        mapPoints={mapPoints}
+        listingPhotoGalleries={listingPhotoGalleries}
+        hostDisplayNames={hostDisplayNameById}
+        hostAvatarUrls={hostAvatarUrls}
+        hostReviewStatsById={hostReviewStatsById}
+        savedListingIds={savedListingIds}
+        resultLabel={resultLabel}
+      />
     </div>
   );
 }

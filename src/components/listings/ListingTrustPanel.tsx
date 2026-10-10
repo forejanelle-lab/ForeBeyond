@@ -33,7 +33,10 @@ export function ListingTrustPanel({
         <p className="text-sm text-charcoal-light mb-4">
           Hosted by {hostFirstName ?? "a verified family"}
         </p>
-        <TrustScoreRing score={trustScore} size="md" />
+        <TrustScoreRing score={trustScore} size="md" variant="details" />
+        <p className="mt-3 text-xs text-muted leading-relaxed">
+          Points from verification and activity — not a rating of this stay.
+        </p>
         <div className="mt-4 flex justify-center gap-2 flex-wrap">
           <Badge variant={verificationStatus === "verified" ? "success" : "outline"}>
             <Shield className="h-3 w-3" />
