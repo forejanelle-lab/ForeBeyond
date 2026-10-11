@@ -135,7 +135,9 @@ export function HeroSearchBar({
       <div
         ref={rootRef}
         className={`relative w-full overflow-visible bg-white shadow-lg p-2 md:p-2.5 transition-opacity ${
-          isHero ? "rounded-2xl border border-sage-dark/20 shadow-xl" : "rounded-full border border-sage-dark/25"
+          isHero
+            ? "rounded-2xl border border-sage-dark/20 shadow-xl"
+            : "rounded-2xl border border-sage-dark/25 md:rounded-full"
         } ${disabled ? "opacity-50 select-none [&_input]:pointer-events-none [&_button]:pointer-events-none" : ""}`}
       >
         <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_0.9fr_auto] gap-2 md:gap-0 md:divide-x divide-sage-dark/30 overflow-visible">
@@ -331,7 +333,7 @@ export function HeroSearchBar({
               }`}
             >
               <Search className="h-5 w-5" />
-              {!isHero && <span className="hidden md:inline">Search</span>}
+              {!isHero && <span>Search</span>}
             </button>
           </div>
         </div>
