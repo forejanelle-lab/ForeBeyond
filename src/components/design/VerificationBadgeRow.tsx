@@ -1,10 +1,6 @@
 import { Check } from "lucide-react";
 
-const defaultBadges = [
-  "Verified Identity",
-  "Address Verified",
-  "Community Reviewed",
-];
+const defaultBadges = ["Identity verified"];
 
 interface VerificationBadgeRowProps {
   verified?: boolean;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Check, CheckCheck, Search, Send, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -47,7 +47,10 @@ export function ChatThread({
   const [error, setError] = useState("");
   const [senderNames, setSenderNames] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
+  const didInitialPin = useRef(false);
+  const ignoreScrollRef = useRef(false);
   const readMap = buildReadMap(reads);
   const otherUserIdRef = useRef<string | null>(null);
   const hostIdRef = useRef<string | null>(null);
@@ -58,8 +61,14 @@ export function ChatThread({
     return messages.filter((msg) => msg.body?.toLowerCase().includes(q));
   }, [messages, messageSearch]);
 
-  const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  const pinToLatest = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    ignoreScrollRef.current = true;
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => {
+      ignoreScrollRef.current = false;
+    });
   }, []);
 
   const loadMessages = useCallback(async () => {
@@ -107,8 +116,49 @@ export function ChatThread({
 
   useEffect(() => {
     if (!unlocked) return;
-    loadMessages().then(scrollToBottom);
-  }, [unlocked, loadMessages, scrollToBottom]);
+    void loadMessages();
+  }, [unlocked, loadMessages]);
+
+  useLayoutEffect(() => {
+    stickToBottomRef.current = true;
+    didInitialPin.current = false;
+  }, [conversationId]);
+
+  useLayoutEffect(() => {
+    if (!unlocked || visibleMessages.length === 0) return;
+    if (didInitialPin.current && !stickToBottomRef.current) return;
+    const isInitial = !didInitialPin.current;
+    pinToLatest();
+    didInitialPin.current = true;
+    if (!isInitial) return;
+    const frame = requestAnimationFrame(() => {
+      if (stickToBottomRef.current) pinToLatest();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [visibleMessages, unlocked, pinToLatest]);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el || !unlocked) return;
+
+    const onScroll = () => {
+      if (ignoreScrollRef.current) return;
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      stickToBottomRef.current = distanceFromBottom < 96;
+    };
+
+    const content = el.querySelector<HTMLElement>("[data-message-list]");
+    const observer = new ResizeObserver(() => {
+      if (stickToBottomRef.current) pinToLatest();
+    });
+    if (content) observer.observe(content);
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      observer.disconnect();
+    };
+  }, [unlocked, pinToLatest, visibleMessages.length]);
 
   useEffect(() => {
     if (!unlocked) return;
@@ -147,7 +197,6 @@ export function ChatThread({
           if (msg.sender_id !== userId) {
             markConversationRead(supabase, [msg], userId);
           }
-          setTimeout(scrollToBottom, 50);
         }
       )
       .on(
@@ -170,7 +219,7 @@ export function ChatThread({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, unlocked, userId, scrollToBottom]);
+  }, [conversationId, unlocked, userId]);
 
   async function sendMessage(payload: {
     body?: string;
@@ -200,13 +249,13 @@ export function ChatThread({
       return;
     }
 
+    stickToBottomRef.current = true;
     setMessages((prev) => {
       if (prev.some((m) => m.id === data.id)) return prev;
       return [...prev, data as StayMessage];
     });
     setBody("");
     setIsLoading(false);
-    scrollToBottom();
 
     const hostId =
       hostIdRef.current ??
@@ -310,10 +359,12 @@ export function ChatThread({
       )}
 
       <div
-        className={`flex-1 overflow-y-auto space-y-4 rounded-2xl border border-sage-dark/25 bg-sage/20 p-4 md:p-5 ${
+        ref={listRef}
+        className={`flex-1 overflow-y-auto rounded-2xl border border-sage-dark/25 bg-sage/20 p-4 md:p-5 [overflow-anchor:none] ${
           compact ? "min-h-[24rem] max-h-[min(40rem,70vh)]" : "min-h-0"
         }`}
       >
+        <div data-message-list className="space-y-4">
         {visibleMessages.length === 0 ? (
           <p className="text-sm text-charcoal-light text-center py-12">
             {messageSearch.trim()
@@ -386,7 +437,7 @@ export function ChatThread({
             );
           })
         )}
-        <div ref={bottomRef} />
+        </div>
       </div>
 
       <form onSubmit={handleSend} className="shrink-0 space-y-2 pt-4 border-t border-sage-dark/20">

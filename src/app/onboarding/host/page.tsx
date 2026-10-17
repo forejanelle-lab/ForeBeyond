@@ -99,7 +99,7 @@ export default function HostOnboardingPage() {
         </Badge>
         <h1 className="text-3xl font-bold text-forest">Open your home &amp; heart</h1>
         <p className="mt-2 text-charcoal-light max-w-lg mx-auto">
-          Share your culture, traditions, and daily life with travelers seeking authentic connection.
+          Share your culture, traditions, and daily life with travelers who want to stay with a local family.
         </p>
       </div>
 

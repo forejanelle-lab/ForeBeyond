@@ -68,7 +68,7 @@ export const catalogJa = {
   auth: {
     trustBadge: "信頼第一の旅",
     bulletVerified: "世界中の認証済みホストファミリー",
-    bulletImmersion: "観光ではなく、本物の文化体験",
+    bulletImmersion: "観光ではなく、現地の家族との文化的な滞在",
     bulletTrust: "トラストスコアとコミュニティレビューに基づく",
     welcomeBack: "おかえりなさい",
     signInSubtitle:
@@ -104,7 +104,7 @@ export const catalogJa = {
     title: "ホストファミリーを探す",
     titleInLocation: "{location}のホストファミリー",
     subtitle:
-      "世界中の認証済みファミリーで、本物の文化体験とホームステイを見つけましょう。",
+      "確認済みのホストファミリー。日本、特に大阪と京都から。滞在を申し込む前に、誰と過ごすかを見られます。",
     subtitleInLocation:
       "{location}の認証済みローカルホストによる文化体験とホームステイ。",
     filterHint: "予算、言語、食事、認証ステータスで絞り込み",

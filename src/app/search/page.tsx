@@ -36,7 +36,7 @@ export async function generateMetadata({
     const title = `Homestays in ${city}, ${country}`;
     return createPageMetadata({
       title,
-      description: `Find verified local host families in ${city}, ${country}. Cultural immersion travel and authentic homestay experiences with Fore Beyond.`,
+      description: `Find verified local host families in ${city}, ${country}. Cultural homestays with Fore Beyond — see who you would stay with before you request.`,
       path: `/search?country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}`,
     });
   }
@@ -50,7 +50,7 @@ export async function generateMetadata({
       : `Homestays in ${country}`;
     return createPageMetadata({
       title,
-      description: `Browse verified host families in ${country} for cultural immersion travel and authentic homestay experiences. Travel like a local with Fore Beyond.`,
+      description: `Browse verified host families in ${country} for cultural homestays. See who you would stay with on Fore Beyond.`,
       path: `/search?country=${encodeURIComponent(country)}`,
     });
   }

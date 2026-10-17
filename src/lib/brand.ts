@@ -3,7 +3,7 @@ export const brand = {
   tagline: "Travel deeper. Belong anywhere.",
   secondaryTagline: "Fore the journey. Beyond the destination.",
   mission:
-    "Fore Beyond helps travelers go beyond tourism through trusted local families, authentic cultural experiences, and meaningful human connection.",
+    "Fore Beyond helps travelers go beyond tourism through verified local families, cultural homestays, and meaningful human connection.",
 } as const;
 
 export const colors = {

@@ -68,7 +68,7 @@ export const catalogEs = {
   auth: {
     trustBadge: "Viajes basados en la confianza",
     bulletVerified: "Familias anfitrionas verificadas en todo el mundo",
-    bulletImmersion: "Inmersión cultural auténtica, no turismo",
+    bulletImmersion: "Estancias culturales con familias locales, no turismo",
     bulletTrust: "Basado en puntuaciones de confianza y reseñas de la comunidad",
     welcomeBack: "Bienvenido de nuevo",
     signInSubtitle:
@@ -104,7 +104,7 @@ export const catalogEs = {
     title: "Encuentra tu familia anfitriona",
     titleInLocation: "Familias anfitrionas en {location}",
     subtitle:
-      "Descubre familias verificadas que ofrecen inmersión cultural auténtica y experiencias de homestay en todo el mundo.",
+      "Familias anfitrionas verificadas, con énfasis en Japón — sobre todo Osaka y Kioto. Mira con quién te quedarías antes de solicitar.",
     subtitleInLocation:
       "Anfitriones locales verificados que ofrecen inmersión cultural y experiencias de homestay en {location}.",
     filterHint: "Filtra por presupuesto, idioma, comidas y estado de verificación",

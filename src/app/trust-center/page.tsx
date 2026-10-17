@@ -20,7 +20,7 @@ import { createPageMetadata } from "@/lib/site-metadata";
 
 export const metadata = createPageMetadata({
   title: "Trust Center",
-  description: "Learn how Fore Beyond verifies hosts and travelers for safe, authentic cultural travel.",
+  description: "Learn how Fore Beyond verifies hosts and travelers, and what those checks mean before you request a stay.",
   path: "/trust-center",
 });
 
@@ -29,7 +29,7 @@ const trustLayers = [
     icon: FileCheck,
     title: "Identity Verification",
     description:
-      "Every member verifies their identification. We use industry-leading document verification to confirm authenticity.",
+      "Every member verifies their identification. We check the document against the person who submitted it.",
   },
   {
     icon: BadgeCheck,
@@ -93,7 +93,7 @@ export default async function TrustCenterPage() {
         <Container>
           <SectionHeader
             title="How we build trust"
-            description="Six layers of protection that work together to keep our community safe and authentic."
+            description="Six layers of protection. Profiles only show a check when it is actually on file."
             align="center"
           />
 

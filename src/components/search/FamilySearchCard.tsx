@@ -183,8 +183,11 @@ export function FamilySearchCard({
         href={listingHref}
         className="inline-flex items-center justify-center rounded-full border border-forest/20 bg-white px-4 py-2 text-sm font-medium text-forest hover:bg-sage/40"
       >
-        View Profile
+        View profile
       </Link>
+      <p className="basis-full text-xs text-muted">
+        Get to know them before you request a stay.
+      </p>
     </div>
   );
 

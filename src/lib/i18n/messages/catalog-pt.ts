@@ -68,7 +68,7 @@ export const catalogPt = {
   auth: {
     trustBadge: "Viagens baseadas em confiança",
     bulletVerified: "Famílias anfitriãs verificadas em todo o mundo",
-    bulletImmersion: "Imersão cultural autêntica, não turismo",
+    bulletImmersion: "Estadias culturais com famílias locais, não turismo",
     bulletTrust: "Baseado em pontuações de confiança e avaliações da comunidade",
     welcomeBack: "Bem-vindo de volta",
     signInSubtitle:
@@ -104,7 +104,7 @@ export const catalogPt = {
     title: "Encontre sua família anfitriã",
     titleInLocation: "Famílias anfitriãs em {location}",
     subtitle:
-      "Descubra famílias verificadas que oferecem imersão cultural autêntica e estadias em família no mundo todo.",
+      "Famílias anfitriãs verificadas, com foco no Japão — especialmente Osaka e Quioto. Veja com quem ficaria antes de pedir.",
     subtitleInLocation:
       "Anfitriões locais verificados oferecendo imersão cultural e estadias em família em {location}.",
     filterHint: "Filtrar por orçamento, idioma, refeições e status de verificação",

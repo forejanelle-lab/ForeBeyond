@@ -13,7 +13,7 @@ export const SITE_URL = resolveSiteUrl();
 export const SITE_NAME = "Fore Beyond";
 export const DEFAULT_TITLE = "Fore Beyond | Travel Deeper. Belong Anywhere.";
 export const DEFAULT_DESCRIPTION =
-  "Fore Beyond connects travelers with verified local hosts for cultural immersion travel, homestay experiences, and authentic travel beyond tourism — travel like a local with meaningful connection.";
+  "Fore Beyond connects travelers with verified local hosts for cultural homestays. Start in Osaka and Kyoto, then travel further — and get to know your host before you request a stay.";
 export const OG_IMAGE_PATH = "/opengraph-image";
 export const OG_IMAGE_ALT =
   "Fore Beyond — Travel Deeper. Belong Anywhere.";
@@ -21,7 +21,10 @@ export const OG_IMAGE_ALT =
 export const SITE_KEYWORDS = [
   "Fore Beyond",
   "cultural immersion travel",
-  "authentic travel experiences",
+  "Japan homestay",
+  "Osaka homestay",
+  "Kyoto homestay",
+  "stay with a family in Japan",
   "stay with local family abroad",
   "homestay experiences",
   "cultural exchange travel",

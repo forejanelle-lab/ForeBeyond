@@ -6,7 +6,7 @@ interface OutreachResponse {
   message: string;
 }
 
-const OUTREACH_SYSTEM = `You write short, warm, personalized outreach messages for Fore Beyond — a platform connecting travelers with host families for authentic cultural exchange stays.
+const OUTREACH_SYSTEM = `You write short, warm, personalized outreach messages for Fore Beyond — a platform connecting travelers with host families for cultural homestay stays.
 
 RULES:
 - Use ONLY information supported by the provided evidence. Never invent details.

@@ -68,7 +68,7 @@ export const catalogEn = {
   auth: {
     trustBadge: "Trust-first travel",
     bulletVerified: "Verified host families worldwide",
-    bulletImmersion: "Authentic cultural immersion, not tourism",
+    bulletImmersion: "Cultural homestays with local families, not tourism",
     bulletTrust: "Built on verification, stay history, and community reviews",
     welcomeBack: "Welcome back",
     signInSubtitle:
@@ -104,9 +104,9 @@ export const catalogEn = {
     title: "Stay with someone who calls it home.",
     titleInLocation: "Host families in {location}",
     subtitle:
-      "Discover verified host families and experience a destination through local people, culture, and everyday life.",
+      "Verified host families, with a focus on Japan — especially Osaka and Kyoto. See who you would stay with before you request.",
     subtitleInLocation:
-      "Verified local hosts offering cultural immersion and homestay experiences in {location}.",
+      "Verified local hosts in {location}. Read their story and check verification before you request a stay.",
     filterHint: "Refine by location, budget, language, meals, and verification",
     hostsFound: "{count} hosts found",
     sortRecommended: "Recommended",

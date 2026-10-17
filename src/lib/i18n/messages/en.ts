@@ -52,22 +52,33 @@ const en = {
       "This is not a vacation rental platform. This is a trust-first cultural immersion platform.",
   },
   home: {
-    heroTitleLine1: "Before you travel, get to know",
-    heroTitleLine2: "the people who will make the journey special.",
+    heroTitleLine1: "Stay with a host family in Japan.",
+    heroTitleLine2: "Begin in Osaka and Kyoto.",
     heroSubtitle:
-      "Discover verified local host families, find common ground, and build a connection before you arrive.",
-    findAHost: "Explore Host Families",
-    howItWorksCta: "How It Works",
+      "See who you would live with, what daily life looks like, and which verification checks are on file — before you request a stay.",
+    findAHost: "Find hosts in Japan",
+    howItWorksCta: "See how it works",
+    browseAllHosts: "Browse all hosts",
     alreadyMember: "Already a member?",
     travelerLogin: "Traveler login",
     hostLogin: "Host login",
     popularDestinations: "Popular destinations",
     popularDestinationsDesc:
-      "Verified host families for immersive travel experiences and cultural exchange abroad.",
+      "Verified host families for cultural stays. Most travelers start in Japan.",
     allDestinations: "All destinations",
+    japanEyebrow: "Japan",
+    japanTitle: "Osaka and Kyoto, with a local family",
+    japanDesc:
+      "Share the family table, learn the neighborhood, and get to know your host before you arrive. Tokyo and other cities are here too.",
+    osakaCardTitle: "Osaka",
+    osakaCardDesc: "Family dinners and everyday life in Kansai.",
+    kyotoCardTitle: "Kyoto",
+    kyotoCardDesc: "Neighborhood routines beside the city's seasons.",
+    japanCardCta: "See hosts",
+    japanGuide: "Japan guide",
     missionTitle: "Not a vacation rental. A cultural bridge.",
     missionDesc:
-      "Fore Beyond is a trust-first platform for cultural exchange — connecting verified local hosts and travelers for homestay experiences rooted in authenticity, not transactions.",
+      "Fore Beyond connects verified local hosts and travelers for homestays built on identity checks, reviews, and shared daily life — not a rental listing.",
     valueVerifiedTitle: "Verified People",
     valueVerifiedDesc:
       "Identity verification and transparent profiles — shown only when it's true in our records.",
@@ -77,9 +88,9 @@ const en = {
     valueConnectionsTitle: "Meaningful Connections",
     valueConnectionsDesc:
       "Start conversations around everyday life and culture.",
-    valueAuthenticTitle: "Authentic Experiences",
+    valueAuthenticTitle: "Life with a local family",
     valueAuthenticDesc:
-      "Experience a destination through the people who live there.",
+      "Meals, routines, and the neighborhood — with the people who live there.",
     valueImmersionTitle: "Cultural Immersion",
     valueImmersionDesc:
       "Experience everyday life through local people.",
@@ -92,9 +103,9 @@ const en = {
     pillarHostsTitle: "Verified Hosts & Travelers",
     pillarHostsDesc:
       "Identity-verified hosts and travelers who welcome genuine cultural immersion and exchange.",
-    pillarExperiencesTitle: "Authentic Travel Experiences",
+    pillarExperiencesTitle: "Shared daily life",
     pillarExperiencesDesc:
-      "Home cooking, local customs, and daily life — immersive travel experiences beyond guidebooks.",
+      "Home cooking, local customs, and ordinary days — travel that does not stop at the guidebook.",
     pillarTrustTitle: "Trust-First Safety",
     pillarTrustDesc:
       "Verification, reviews, and community standards — an alternative to hotels built on human connection.",
@@ -121,11 +132,11 @@ const en = {
     trustPillarSafety: "Safety support",
     trustPillarReviews: "Transparent reviews",
     trustPillarTraining: "Cultural sensitivity training",
-    travelTitleLine1: "Travel the world.",
-    travelTitleLine2: "Live like a local.",
+    travelTitleLine1: "Ready for Japan?",
+    travelTitleLine2: "Stay with a family.",
     travelDesc:
-      "Stay with verified local hosts for cultural immersion travel. Browse homestay experiences, local host profiles, and meaningful travel that lasts beyond your trip.",
-    findYourStay: "Find Your Stay",
+      "Start with verified hosts in Osaka and Kyoto. Read their story, get to know them, then request a stay. You are not charged until a stay is confirmed.",
+    findYourStay: "Find hosts in Japan",
     hostTitleLine1: "Open your home.",
     hostTitleLine2: "Open your world.",
     hostDesc:

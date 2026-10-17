@@ -11,7 +11,7 @@ import { ArrowRight } from "lucide-react";
 export const metadata = createPageMetadata({
   title: "Destinations — Cultural Immersion Travel",
   description:
-    "Explore homestay destinations worldwide. Cultural immersion travel with verified local hosts in Japan, Italy, Mexico, Spain, and more.",
+    "Homestay destinations with verified local hosts. Japan is the focus — Osaka, Kyoto, and Tokyo — plus Italy, Mexico, and Spain.",
   path: "/destinations",
 });
 
@@ -25,15 +25,15 @@ export default function DestinationsIndexPage() {
         imageAlt="Travelers exploring destinations for cultural immersion homestays"
         eyebrow="Destinations"
         title="Cultural immersion destinations"
-        subtitle="Verified local hosts for authentic travel experiences and meaningful homestays worldwide."
+        subtitle="Verified local hosts for cultural homestays. Start with Osaka and Kyoto, then look further."
         height="md"
       />
       <Section background="cream">
         <Container>
           <p className="text-lg text-charcoal-light leading-relaxed max-w-3xl mb-10">
-            Fore Beyond is a trust-first platform for cultural exchange travel — not vacation
-            rentals. Browse destination guides and find verified host families ready to welcome
-            travelers seeking immersive experiences.
+            Fore Beyond is a trust-first platform for cultural homestays — not vacation
+            rentals. Start with Osaka and Kyoto, then browse other destination guides and
+            verified host families.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {countries.map((country) => (

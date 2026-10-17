@@ -68,7 +68,7 @@ export const catalogIt = {
   auth: {
     trustBadge: "Viaggi basati sulla fiducia",
     bulletVerified: "Famiglie ospitanti verificate in tutto il mondo",
-    bulletImmersion: "Immersione culturale autentica, non turismo",
+    bulletImmersion: "Soggiorni culturali con famiglie locali, non turismo",
     bulletTrust: "Basato su punteggi fiducia e recensioni della community",
     welcomeBack: "Bentornato",
     signInSubtitle:
@@ -104,7 +104,7 @@ export const catalogIt = {
     title: "Trova la tua famiglia ospitante",
     titleInLocation: "Famiglie ospitanti a {location}",
     subtitle:
-      "Scopri famiglie verificate che offrono immersione culturale autentica e soggiorni in famiglia in tutto il mondo.",
+      "Famiglie ospitanti verificate, con focus sul Giappone — soprattutto Osaka e Kyoto. Vedi con chi soggiorneresti prima di richiedere.",
     subtitleInLocation:
       "Host locali verificati che offrono immersione culturale e soggiorni in famiglia a {location}.",
     filterHint: "Filtra per budget, lingua, pasti e stato di verifica",

@@ -9,6 +9,7 @@ import { SaveFamilyButton } from "@/components/search/SaveFamilyButton";
 import { ReportUserButton } from "@/components/reports/ReportUserButton";
 import { TrustScorePanel } from "@/components/design/TrustScorePanel";
 import { VerificationBadgeRow } from "@/components/design/VerificationBadgeRow";
+import { BADGE_LABELS } from "@/lib/trust-score";
 import { PublicTrustNote } from "@/components/trust/PublicTrustNote";
 import { ListingPhotoGallery } from "@/components/listings/ListingPhotoGallery";
 import { ShareListingButton } from "@/components/listings/ShareListingButton";
@@ -76,6 +77,7 @@ export function FamilyProfileView({
   hostAvgRating = null,
   listingReviewCount = 0,
   verificationStatus,
+  badges,
   reviews,
   isSaved = false,
   showSaveButton = true,
@@ -116,7 +118,7 @@ export function FamilyProfileView({
       : null;
 
   return (
-    <Container className="py-6 md:py-10">
+    <Container className={`py-6 md:py-10 ${showBookingActions ? "pb-28 lg:pb-10" : ""}`}>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 md:mb-8">
         <Link
           href="/search"
@@ -176,7 +178,20 @@ export function FamilyProfileView({
             </div>
 
             <div className="mt-4">
-              <VerificationBadgeRow verified={isVerified} />
+              {badges.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {badges.map((badge) => (
+                    <span
+                      key={badge.id}
+                      className="inline-flex items-center rounded-full bg-sage/80 px-3 py-1 text-xs font-medium text-forest"
+                    >
+                      {BADGE_LABELS[badge.badge_type] ?? badge.badge_type}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <VerificationBadgeRow verified={isVerified} />
+              )}
             </div>
             <PublicTrustNote score={trustScore} explain className="mt-2" />
 
@@ -282,8 +297,8 @@ export function FamilyProfileView({
                   </Link>
                 )}
 
-                <p className="text-xs text-muted text-center">
-                  You won&apos;t be charged yet.
+                <p className="text-xs text-muted text-center leading-relaxed">
+                  Get to know this host, then request a stay. You won&apos;t be charged yet.
                 </p>
                 <p className="flex items-center justify-center gap-1.5 text-xs text-muted">
                   <Lock className="h-3.5 w-3.5" />
@@ -375,6 +390,29 @@ export function FamilyProfileView({
           </Card>
         </div>
       </div>
+
+      {showBookingActions && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-sage-dark/30 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(33,78,52,0.08)] backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-lg items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-forest">
+                <DisplayStayRateFromPricing
+                  pricing={listingPricing}
+                  guestCount={1}
+                  country={listing.country}
+                />
+              </p>
+              <p className="text-xs text-muted">You won&apos;t be charged yet</p>
+            </div>
+            <GetToKnowButton
+              listingId={listing.id}
+              hostName={hostNameForDisplay}
+              size="sm"
+              className="shrink-0"
+            />
+          </div>
+        </div>
+      )}
     </Container>
   );
 }

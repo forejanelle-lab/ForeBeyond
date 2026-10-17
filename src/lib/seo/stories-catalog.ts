@@ -30,7 +30,7 @@ export const TRAVELER_STORIES: TravelerStory[] = [
     image: sampleImages.japanStreet,
     imageAlt: "Tokyo street scene reflecting a traveler's homestay experience",
     excerpt:
-      "I came to Tokyo with a packed itinerary. I left with a second family, a favorite neighborhood bakery, and a completely different definition of authentic travel.",
+      "I came to Tokyo with a packed itinerary. I left with a second family, a favorite neighborhood bakery, and a different idea of what travel can be.",
     sections: [
       {
         heading: "Finding a verified local host",
@@ -51,7 +51,7 @@ export const TRAVELER_STORIES: TravelerStory[] = [
     slug: "naples-family-dinner",
     title: "Dinner in Naples Felt Like Coming Home",
     metaDescription:
-      "A traveler story about Naples cultural stays — homestay experiences, local host hospitality, and authentic travel in Italy.",
+      "A traveler story about Naples cultural stays — homestay meals, local host hospitality, and family life in Italy.",
     heroTitle: "Dinner in Naples felt like coming home",
     heroSubtitle: "How a homestay experience turned a trip into cultural exchange.",
     author: "James R.",
@@ -64,7 +64,7 @@ export const TRAVELER_STORIES: TravelerStory[] = [
     sections: [
       {
         heading: "Requesting a cultural stay",
-        body: "I wanted authentic travel experiences in Italy, not a rental apartment. Fore Beyond's host profiles emphasized family, food, and cultural exchange — exactly what I was looking for in Naples.",
+        body: "I wanted to stay with a family in Italy, not in a rental apartment. Fore Beyond's host profiles emphasized family, food, and cultural exchange — exactly what I was looking for in Naples.",
       },
       {
         heading: "Trust and verification mattered",
