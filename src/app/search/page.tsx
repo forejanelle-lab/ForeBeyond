@@ -7,6 +7,7 @@ import { SearchAnalyticsTracker } from "@/components/analytics/SearchAnalyticsTr
 import { Container } from "@/components/ui/Container";
 import {
   filterListingsClientSide,
+  getListingPlaces,
   getUniqueCountries,
   parseSearchParams,
 } from "@/lib/search";
@@ -36,7 +37,7 @@ export async function generateMetadata({
     const title = `Homestays in ${city}, ${country}`;
     return createPageMetadata({
       title,
-      description: `Find verified local host families in ${city}, ${country}. Cultural homestays with Fore Beyond — see who you would stay with before you request.`,
+      description: `Find verified local host families in ${city}, ${country}. Cultural immersion travel and authentic homestay experiences with Fore Beyond.`,
       path: `/search?country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}`,
     });
   }
@@ -50,7 +51,7 @@ export async function generateMetadata({
       : `Homestays in ${country}`;
     return createPageMetadata({
       title,
-      description: `Browse verified host families in ${country} for cultural homestays. See who you would stay with on Fore Beyond.`,
+      description: `Browse verified host families in ${country} for cultural immersion travel and authentic homestay experiences. Travel like a local with Fore Beyond.`,
       path: `/search?country=${encodeURIComponent(country)}`,
     });
   }
@@ -70,7 +71,7 @@ async function SearchResults({
 }) {
   const { t } = await getServerTranslations();
   const supabase = await createClient();
-  const filters = parseSearchParams(searchParams);
+  const filters = { ...parseSearchParams(searchParams), q: "" };
 
   const [{ data: listings }, { data: { user } }] = await Promise.all([
     supabase.from("public_listings").select("*").order("trust_score", { ascending: false }),
@@ -80,6 +81,7 @@ async function SearchResults({
   const allListings = (listings as PublicListing[]) ?? [];
   const filtered = filterListingsClientSide(allListings, filters);
   const countries = getUniqueCountries(allListings);
+  const places = getListingPlaces(allListings);
   const hostIds = [...new Set(filtered.map((listing) => listing.host_id))];
   const listingIds = filtered.map((listing) => listing.id);
   const listingAvatarByHostId = Object.fromEntries(
@@ -117,7 +119,7 @@ async function SearchResults({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6 lg:gap-8">
-      <SearchFiltersPanel countries={countries} resultCount={filtered.length} />
+      <SearchFiltersPanel countries={countries} places={places} resultCount={filtered.length} />
       <SearchResultsView
         listings={filtered}
         listingPhotoGalleries={listingPhotoGalleries}
@@ -168,7 +170,11 @@ export default async function SearchFamiliesPage({
           </div>
 
           <div className="mt-8 md:mt-10">
-            <HeroSearchBar variant="page" availableCountries={hostCountries} />
+            <HeroSearchBar
+              variant="page"
+              availableCountries={hostCountries}
+              initialCountry={filters.country}
+            />
           </div>
         </Container>
       </section>

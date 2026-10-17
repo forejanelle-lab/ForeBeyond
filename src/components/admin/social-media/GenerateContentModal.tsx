@@ -168,7 +168,7 @@ export function GenerateContentModal({ open, onClose, onGenerate }: GenerateCont
             label="Additional instructions"
             value={additionalInstructions}
             onChange={(e) => setAdditionalInstructions(e.target.value)}
-            placeholder="Focus on everyday life with a host family in Japan, especially Osaka and Kyoto. Avoid sounding salesy."
+            placeholder="Focus on authentic Japanese culture. Highlight cultural immersion and meaningful travel. Avoid sounding salesy."
           />
 
           {error && (

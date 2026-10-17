@@ -48,7 +48,7 @@ export async function openAiChatJson<T>(
 }
 
 export async function generateEditorialImage(prompt: string): Promise<Buffer> {
-  const enhancedPrompt = `${prompt}. ${SOCIAL_BRAND.visual.quality}. Natural light, photorealistic editorial travel photography, warm lived-in moment, no text, no logos, no watermarks, no cartoon style.`;
+  const enhancedPrompt = `${prompt}. ${SOCIAL_BRAND.visual.quality}. Natural light, photorealistic editorial travel photography, warm authentic lifestyle moment, no text, no logos, no watermarks, no cartoon style.`;
 
   async function requestImage(model: string, size: string): Promise<Buffer> {
     const response = await fetch("https://api.openai.com/v1/images/generations", {

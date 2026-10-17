@@ -42,7 +42,7 @@ export async function generateMetadata({
         const title = own.title ?? `Family in ${own.city}`;
         const description =
           own.family_story?.slice(0, 155) ??
-          `Stay with ${title} in ${own.city}, ${own.country}. Get to know this verified host on Fore Beyond before you request a stay.`;
+          `Stay with ${title} in ${own.city}, ${own.country}. Book an authentic cultural immersion with Fore Beyond.`;
         return createPageMetadata({
           title,
           description,
@@ -62,7 +62,7 @@ export async function generateMetadata({
   const title = data.title ?? `Family in ${data.city}`;
   const description =
     data.family_story?.slice(0, 155) ??
-    `Stay with ${title} in ${data.city}, ${data.country}. Get to know this verified host on Fore Beyond before you request a stay.`;
+    `Stay with ${title} in ${data.city}, ${data.country}. Book an authentic cultural immersion with Fore Beyond.`;
   const coverPhoto = await getListingCoverPhotoUrl(supabase, id);
 
   return privatePageMetadata({

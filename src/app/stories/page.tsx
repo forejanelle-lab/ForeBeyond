@@ -11,7 +11,7 @@ import { sampleImages } from "@/lib/sample-images";
 export const metadata = createPageMetadata({
   title: "Traveler Stories — Meaningful Travel",
   description:
-    "Traveler stories of cultural homestays with verified local hosts on Fore Beyond, including stays in Japan.",
+    "Real traveler stories of cultural immersion, homestay experiences, and authentic travel with verified local hosts on Fore Beyond.",
   path: "/stories",
 });
 

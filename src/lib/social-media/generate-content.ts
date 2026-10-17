@@ -47,7 +47,7 @@ function defaultStrategy(goal: SocialMarketingGoal): ContentStrategyWeek[] {
             : "global destinations";
 
   return [
-    { week: 1, topic: "Destination Inspiration", focus: `Showcase ${destination} through everyday homestay moments` },
+    { week: 1, topic: "Destination Inspiration", focus: `Showcase ${destination} through authentic homestay moments` },
     { week: 2, topic: "Cultural Education", focus: "Daily life, food, and customs travelers discover with host families" },
     { week: 3, topic: "Hosting Benefits", focus: "Why local families love sharing their world with travelers" },
     { week: 4, topic: "Travel Planning", focus: "Trust-first tips for meaningful cultural immersion travel" },
@@ -76,7 +76,7 @@ Content strategy weeks:
 ${strategy.map((w) => `Week ${w.week}: ${w.topic} — ${w.focus}`).join("\n")}
 
 Requirements for EACH post:
-- caption: 100-180 words, warm and specific, subtle CTA at end
+- caption: 100-180 words, warm and authentic, subtle CTA at end
 - hashtags: exactly 5 strings without # prefix
 - image_prompt: detailed photorealistic editorial travel photo description
 - theme: short label

@@ -68,7 +68,7 @@ export const catalogFr = {
   auth: {
     trustBadge: "Voyage basé sur la confiance",
     bulletVerified: "Familles hôtes vérifiées dans le monde entier",
-    bulletImmersion: "Séjours culturels chez des familles locales, pas du tourisme",
+    bulletImmersion: "Immersion culturelle authentique, pas du tourisme",
     bulletTrust: "Basé sur les scores de confiance et les avis de la communauté",
     welcomeBack: "Bon retour",
     signInSubtitle:
@@ -104,7 +104,7 @@ export const catalogFr = {
     title: "Trouvez votre famille hôte",
     titleInLocation: "Familles hôtes à {location}",
     subtitle:
-      "Familles hôtes vérifiées, avec un accent sur le Japon — surtout Osaka et Kyoto. Voyez chez qui vous séjourneriez avant de demander.",
+      "Découvrez des familles vérifiées offrant une immersion culturelle authentique et des séjours chez l'habitant dans le monde entier.",
     subtitleInLocation:
       "Hôtes locaux vérifiés proposant immersion culturelle et séjours chez l'habitant à {location}.",
     filterHint: "Filtrer par budget, langue, repas et statut de vérification",

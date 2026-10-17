@@ -5,7 +5,7 @@ import { createPageMetadata } from "@/lib/site-metadata";
 
 export const metadata = createPageMetadata({
   title: "Community Guidelines",
-  description: "Community standards for respectful cultural travel on Fore Beyond.",
+  description: "Community standards for respectful, authentic travel on Fore Beyond.",
   path: "/guidelines",
 });
 
@@ -13,7 +13,7 @@ export default function CommunityGuidelinesPage() {
   return (
     <LegalPageShell title="Community Guidelines">
       <p>
-        {brand.name} connects travelers with host families for cultural homestays — not
+        {brand.name} connects travelers with host families for authentic cultural immersion — not
         short-term rentals or transactional tourism. These guidelines help every member feel safe,
         respected, and welcome. By using the platform, you agree to follow them.
       </p>
@@ -26,7 +26,7 @@ export default function CommunityGuidelinesPage() {
             would expect in return.
           </li>
           <li>
-            <strong>Honesty</strong> — Be honest in your profile, listing, requests, and reviews.
+            <strong>Authenticity</strong> — Be honest in your profile, listing, requests, and reviews.
             Misrepresentation undermines trust for everyone.
           </li>
           <li>

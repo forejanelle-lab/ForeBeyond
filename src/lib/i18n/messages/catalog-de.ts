@@ -68,7 +68,7 @@ export const catalogDe = {
   auth: {
     trustBadge: "Vertrauensbasiertes Reisen",
     bulletVerified: "Verifizierte Gastfamilien weltweit",
-    bulletImmersion: "Kulturelle Aufenthalte bei lokalen Familien, kein Tourismus",
+    bulletImmersion: "Authentische kulturelle Immersion, kein Tourismus",
     bulletTrust: "Basierend auf Vertrauenswerten und Community-Bewertungen",
     welcomeBack: "Willkommen zurück",
     signInSubtitle:
@@ -104,7 +104,7 @@ export const catalogDe = {
     title: "Finden Sie Ihre Gastfamilie",
     titleInLocation: "Gastfamilien in {location}",
     subtitle:
-      "Verifizierte Gastfamilien, mit Schwerpunkt Japan — vor allem Osaka und Kyoto. Sehen Sie, bei wem Sie wohnen würden, bevor Sie anfragen.",
+      "Entdecken Sie verifizierte Familien mit authentischer kultureller Immersion und Gastfamilien-Aufenthalten weltweit.",
     subtitleInLocation:
       "Verifizierte lokale Gastgeber mit kultureller Immersion und Gastfamilien-Aufenthalten in {location}.",
     filterHint: "Filtern nach Budget, Sprache, Mahlzeiten und Verifizierungsstatus",

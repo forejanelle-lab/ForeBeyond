@@ -24,9 +24,9 @@ import { isPlatformAdmin } from "@/lib/navigation-menu";
 import type { Profile } from "@/types/database";
 
 export const metadata = createPageMetadata({
-  title: "Stay with a Host Family in Japan",
+  title: "Cultural Immersion Travel with Verified Local Hosts",
   description:
-    "Stay with a verified host family in Japan. Start in Osaka and Kyoto, see who you would live with, and request a stay only after you get to know them.",
+    "Fore Beyond connects verified local hosts and travelers for cultural immersion travel and authentic homestay experiences. Travel like a local or share your home — meaningful travel beyond hotels and tourism.",
   path: "/",
 });
 
@@ -89,13 +89,14 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={buildHomePageJsonLd()} />
-      <section className="relative min-h-[92vh] flex flex-col justify-end">
+      <section className="relative min-h-[92vh] flex flex-col justify-end overflow-hidden">
         <Image
-          src={sampleImages.japanStreet}
-          alt="A neighborhood street in Japan, where Fore Beyond host families live"
+          src={sampleImages.homeHeroOutdoorMeal}
+          alt="Outdoor dining on a stone terrace overlooking the Tuscan countryside at sunset"
           fill
-          className="object-cover object-center"
+          className="object-cover object-[72%_center] md:object-[68%_center]"
           priority
+          unoptimized
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/10 pointer-events-none" />
@@ -109,43 +110,29 @@ export default async function HomePage() {
           <p className="hero-text-shadow mt-5 text-base md:text-lg text-white/90 leading-relaxed max-w-xl">
             {t("home.heroSubtitle")}
           </p>
-          <div className="mt-6">
-            <TrustIndicators variant="hero" />
-          </div>
-          <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap gap-3">
             <ButtonLink
-              href="/search?country=Japan"
+              href="/search"
               variant="primary"
               size="lg"
-              className="w-full sm:w-auto justify-center shadow-lg"
+              className="shadow-lg"
             >
               {t("home.findAHost")}
               <ArrowRight className="h-4 w-4" />
             </ButtonLink>
             <ButtonLink
-              href="/#japan"
-              variant="white"
-              size="lg"
-              className="w-full sm:w-auto justify-center shadow-lg"
-            >
-              {t("home.japanCardCta")}
-            </ButtonLink>
-            <ButtonLink
               href="/#how-it-works"
               variant="white"
               size="lg"
-              className="w-full sm:w-auto justify-center shadow-lg"
+              className="shadow-lg"
             >
               {t("home.howItWorksCta")}
             </ButtonLink>
+            <BecomeHostButton
+              isLoggedIn={isLoggedIn}
+              className="!mt-0 bg-white/95 !text-forest hover:!bg-white shadow-lg"
+            />
           </div>
-          <Link
-            href="/search"
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-white/90 hover:text-white"
-          >
-            {t("home.browseAllHosts")}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
           <div className="mt-8 relative z-20 max-w-4xl">
             <HeroSearchBar
               disabled={searchDisabled}
@@ -187,50 +174,6 @@ export default async function HomePage() {
       <Section background="white" className="!py-14 md:!py-20">
         <Container>
           <TrustIndicators variant="values" />
-        </Container>
-      </Section>
-
-      <Section id="japan" background="cream" className="!pt-16 md:!pt-24 !pb-16 md:!pb-24">
-        <Container>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
-            <SectionHeader
-              eyebrow={t("home.japanEyebrow")}
-              title={t("home.japanTitle")}
-              description={t("home.japanDesc")}
-              className="!mb-0"
-            />
-            <Link
-              href="/destinations/japan"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-forest hover:text-forest-light hover:gap-2 transition-all shrink-0"
-            >
-              {t("home.japanGuide")}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6 max-w-4xl">
-            <DestinationCard
-              name={t("home.osakaCardTitle")}
-              subtitle={t("home.osakaCardDesc")}
-              image={sampleImages.japanStreet}
-              href="/destinations/japan/osaka"
-              variant="featured"
-            />
-            <DestinationCard
-              name={t("home.kyotoCardTitle")}
-              subtitle={t("home.kyotoCardDesc")}
-              image={sampleImages.teaCeremony}
-              href="/destinations/japan/kyoto"
-              variant="featured"
-            />
-          </div>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <ButtonLink href="/search?country=Japan&city=Osaka" variant="primary" size="md" className="justify-center">
-              {t("home.japanCardCta")} · Osaka
-            </ButtonLink>
-            <ButtonLink href="/search?country=Japan&city=Kyoto" variant="secondary" size="md" className="justify-center">
-              {t("home.japanCardCta")} · Kyoto
-            </ButtonLink>
-          </div>
         </Container>
       </Section>
 
@@ -359,7 +302,7 @@ export default async function HomePage() {
                 {t("home.travelDesc")}
               </p>
               <ButtonLink
-                href="/search?country=Japan"
+                href="/search"
                 variant="primary"
                 size="lg"
                 className="mt-10 hover:shadow-lg hover:-translate-y-0.5 transition-all"

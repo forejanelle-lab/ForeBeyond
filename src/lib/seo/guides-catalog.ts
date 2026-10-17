@@ -21,7 +21,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     slug: "host",
     title: "Host Guide: Welcome Travelers Into Your Home",
     metaDescription:
-      "How to become a Fore Beyond host — create your listing, complete verification, set house rules, and welcome travelers for cultural exchange.",
+      "How to become a Fore Beyond host — create your listing, complete verification, set house rules, and welcome travelers for authentic cultural exchange.",
     heroTitle: "Host guide",
     heroSubtitle: "Share your home, culture, and daily life with travelers who want to belong.",
     publishedAt: "2026-08-01",
@@ -132,7 +132,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     ],
     relatedDestinations: [
       { label: "Japan homestays", href: "/destinations/japan" },
-      { label: "Osaka host families", href: "/destinations/japan/osaka" },
+      { label: "Tokyo local hosts", href: "/destinations/japan/tokyo" },
       { label: "Kyoto cultural stays", href: "/destinations/japan/kyoto" },
     ],
   },
@@ -140,7 +140,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     slug: "homestay-vs-hotel-immersive-travel",
     title: "Homestays vs Hotels: Choosing Immersive Travel",
     metaDescription:
-      "Compare homestays and hotels for cultural travel. Why a verified local host offers something a hotel room cannot.",
+      "Compare homestay experiences and hotels for cultural immersion travel. Why verified local hosts offer authentic travel experiences hotels cannot.",
     heroTitle: "Homestays vs hotels",
     heroSubtitle: "When immersive travel matters more than room service.",
     publishedAt: "2026-02-01",
@@ -160,7 +160,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       },
       {
         heading: "Trust-first platforms matter",
-        body: "A cultural stay needs safety infrastructure: ID verification, reviews, messaging gates, and support. Fore Beyond shows which checks are on file so hosts and travelers can decide with more context.",
+        body: "Authentic travel experiences require safety infrastructure: ID verification, reviews, messaging gates, and support. Fore Beyond prioritizes trust so both hosts and travelers can connect with confidence.",
       },
     ],
     relatedDestinations: [
@@ -172,7 +172,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
     slug: "travel-like-a-local",
     title: "How to Travel Like a Local Abroad",
     metaDescription:
-      "Practical tips for traveling with a local family — cultural exchange, homestays, and how to choose a verified host.",
+      "Practical tips for traveling like a local — cultural exchange travel, staying with host families, and finding authentic travel experiences worldwide.",
     heroTitle: "Travel like a local",
     heroSubtitle: "Meaningful travel experiences start with human connection.",
     publishedAt: "2026-02-20",

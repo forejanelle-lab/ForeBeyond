@@ -114,7 +114,7 @@ const CITY_DATA: Record<
     name: "Kyoto",
     earningRange: "¥70,000–¥130,000 per month (estimate)",
     demandSignal:
-      "Steady demand from Kyoto-based language institutes, cultural immersion programs, and travelers looking for local homestays.",
+      "Steady demand from Kyoto-based language institutes, cultural immersion programs, and travelers seeking authentic local homestays.",
     studentProfile:
       "Travelers exploring traditional culture, serious language learners, and university exchange participants — many on semester or multi-month stays.",
     languageSchoolPresence:

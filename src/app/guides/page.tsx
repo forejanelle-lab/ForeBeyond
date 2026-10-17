@@ -21,7 +21,7 @@ export default function GuidesIndexPage() {
         variant="solid"
         eyebrow="Guides"
         title="Cultural travel guides"
-        subtitle="Practical advice for cultural homestays, especially in Japan, and how to travel with a local family."
+        subtitle="Practical advice for authentic travel experiences, homestays, and cultural exchange."
         height="md"
       />
       <Section background="cream">

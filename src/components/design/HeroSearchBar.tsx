@@ -3,10 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Calendar, Users, ChevronDown } from "lucide-react";
-import {
-  filterDestinationSuggestions,
-  type DestinationSuggestion,
-} from "@/lib/destination-suggestions";
+import { hostCountrySuggestions } from "@/lib/destination-suggestions";
 import { TRAVELER_ACCOUNT_SEARCH_MESSAGE } from "@/lib/traveler-verification";
 import { useTodayIso } from "@/hooks/use-today-iso";
 
@@ -32,6 +29,7 @@ interface HeroSearchBarProps {
   disabledMessage?: string;
   variant?: "hero" | "page";
   availableCountries?: string[];
+  initialCountry?: string;
 }
 
 export function HeroSearchBar({
@@ -39,16 +37,13 @@ export function HeroSearchBar({
   disabledMessage = TRAVELER_ACCOUNT_SEARCH_MESSAGE,
   variant = "hero",
   availableCountries = [],
+  initialCountry = "",
 }: HeroSearchBarProps) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const [where, setWhere] = useState("");
-  const [selectedDestination, setSelectedDestination] = useState<DestinationSuggestion | null>(
-    null
-  );
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const destinations = hostCountrySuggestions(availableCountries);
+  const [country, setCountry] = useState(initialCountry);
 
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -56,8 +51,6 @@ export function HeroSearchBar({
 
   const [guests, setGuests] = useState("1");
   const [showGuests, setShowGuests] = useState(false);
-
-  const suggestions = filterDestinationSuggestions(where, availableCountries);
   const today = useTodayIso();
   const guestLabel = GUEST_OPTIONS.find((g) => g.value === guests)?.label ?? "1 guest";
 
@@ -68,8 +61,11 @@ export function HeroSearchBar({
         ? `${formatDisplayDate(checkIn)} — Check out`
         : "Check in — Check out";
 
+  useEffect(() => {
+    setCountry(initialCountry);
+  }, [initialCountry]);
+
   const closeAll = useCallback(() => {
-    setShowSuggestions(false);
     setShowDates(false);
     setShowGuests(false);
   }, []);
@@ -84,42 +80,11 @@ export function HeroSearchBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [closeAll]);
 
-  function selectDestination(suggestion: DestinationSuggestion) {
-    setWhere(suggestion.label);
-    setSelectedDestination(suggestion);
-    setShowSuggestions(false);
-  }
-
-  function handleWhereKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (!showSuggestions || suggestions.length === 0) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex((i) => Math.min(i + 1, suggestions.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && suggestions[highlightedIndex]) {
-      e.preventDefault();
-      selectDestination(suggestions[highlightedIndex]);
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
-    }
-  }
-
   function handleSearch() {
     if (disabled) return;
     const params = new URLSearchParams();
 
-    if (selectedDestination) {
-      if (selectedDestination.country) params.set("country", selectedDestination.country);
-      if (selectedDestination.city) params.set("city", selectedDestination.city);
-    } else if (suggestions.length === 1) {
-      params.set("country", suggestions[0].country);
-      if (suggestions[0].city) params.set("city", suggestions[0].city);
-    } else if (where.trim()) {
-      params.set("q", where.trim());
-    }
+    if (country) params.set("country", country);
     if (checkIn) params.set("checkIn", checkIn);
     if (checkOut) params.set("checkOut", checkOut);
     if (guests) params.set("guests", guests);
@@ -138,69 +103,39 @@ export function HeroSearchBar({
           isHero
             ? "rounded-2xl border border-sage-dark/20 shadow-xl"
             : "rounded-2xl border border-sage-dark/25 md:rounded-full"
-        } ${disabled ? "opacity-50 select-none [&_input]:pointer-events-none [&_button]:pointer-events-none" : ""}`}
+        } ${disabled ? "opacity-50 select-none [&_select]:pointer-events-none [&_input]:pointer-events-none [&_button]:pointer-events-none" : ""}`}
       >
         <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_0.9fr_auto] gap-2 md:gap-0 md:divide-x divide-sage-dark/30 overflow-visible">
-          <div
-            className={`relative px-2 md:px-0 border-b md:border-b-0 border-sage-dark/20 pb-2 md:pb-0 ${
-              showSuggestions ? "z-30" : ""
-            }`}
-          >
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sage/30 transition-colors">
+          <div className="relative px-2 md:px-0 border-b md:border-b-0 border-sage-dark/20 pb-2 md:pb-0">
+            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
               <MapPin className="h-5 w-5 text-forest shrink-0" />
               <div className="flex-1 min-w-0">
                 <label htmlFor="hero-where" className="text-xs font-medium text-charcoal-light block">
                   Where
                 </label>
-                <input
+                <select
                   id="hero-where"
-                  type="text"
-                  value={where}
-                  disabled={disabled}
+                  value={country}
+                  disabled={disabled || destinations.length === 0}
                   onChange={(e) => {
-                    setWhere(e.target.value);
-                    setSelectedDestination(null);
-                    setShowSuggestions(true);
-                    setHighlightedIndex(0);
+                    setCountry(e.target.value);
                     setShowDates(false);
                     setShowGuests(false);
                   }}
-                  onFocus={() => {
-                    if (disabled) return;
-                    setShowSuggestions(true);
-                    setShowDates(false);
-                    setShowGuests(false);
-                  }}
-                  onKeyDown={handleWhereKeyDown}
-                  placeholder="Where do you want to go?"
-                  autoComplete="off"
-                  className="w-full text-sm text-charcoal placeholder:text-charcoal-light/70 bg-transparent border-0 p-0 focus:outline-none focus:ring-0"
-                />
+                  className="w-full appearance-none bg-transparent text-sm text-charcoal focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {destinations.length === 0 ? "No destinations yet" : "Select a destination"}
+                  </option>
+                  {destinations.map((destination) => (
+                    <option key={destination.country} value={destination.country}>
+                      {destination.label}
+                    </option>
+                  ))}
+                </select>
               </div>
+              <ChevronDown className="h-4 w-4 text-charcoal-light shrink-0 pointer-events-none" />
             </div>
-            {showSuggestions && suggestions.length > 0 && (
-              <ul
-                className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl bg-white border border-sage-dark/30 shadow-lg py-1 max-h-72 overflow-y-auto"
-                role="listbox"
-              >
-                {suggestions.map((s, i) => (
-                  <li key={s.label} role="option" aria-selected={i === highlightedIndex}>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => selectDestination(s)}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                        i === highlightedIndex
-                          ? "bg-sage/60 text-forest"
-                          : "text-charcoal hover:bg-sage/40"
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
 
           <div
@@ -213,7 +148,6 @@ export function HeroSearchBar({
               disabled={disabled}
               onClick={() => {
                 setShowDates((v) => !v);
-                setShowSuggestions(false);
                 setShowGuests(false);
               }}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sage/30 transition-colors text-left w-full disabled:cursor-not-allowed"
@@ -282,7 +216,6 @@ export function HeroSearchBar({
               disabled={disabled}
               onClick={() => {
                 setShowGuests((v) => !v);
-                setShowSuggestions(false);
                 setShowDates(false);
               }}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sage/30 transition-colors text-left w-full disabled:cursor-not-allowed"

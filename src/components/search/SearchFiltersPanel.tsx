@@ -15,11 +15,16 @@ import {
   type SearchFilters,
 } from "@/lib/search";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+
+interface ListingPlace {
+  country: string;
+  city: string;
+}
 
 interface SearchFiltersPanelProps {
   countries: string[];
+  places: ListingPlace[];
   resultCount: number;
 }
 
@@ -52,19 +57,33 @@ function SelectField({
   );
 }
 
+function citiesForCountry(places: ListingPlace[], country: string) {
+  const names = places
+    .filter(
+      (place) =>
+        !country || place.country.trim().toLowerCase() === country.trim().toLowerCase()
+    )
+    .map((place) => place.city);
+  return [...new Set(names)].sort((a, b) => a.localeCompare(b));
+}
+
 function FilterFields({
   filters,
   countries,
+  places,
   resultCount,
   onChange,
   onSubmit,
 }: {
   filters: SearchFilters;
   countries: string[];
+  places: ListingPlace[];
   resultCount: number;
   onChange: (key: keyof SearchFilters, value: string | boolean) => void;
   onSubmit: () => void;
 }) {
+  const cityOptions = citiesForCountry(places, filters.country);
+
   return (
     <form
       className="space-y-4"
@@ -73,26 +92,29 @@ function FilterFields({
         onSubmit();
       }}
     >
-      <Input
-        label="Search"
-        value={filters.q}
-        onChange={(e) => onChange("q", e.target.value)}
-        placeholder="Family, city, culture..."
-      />
       <SelectField
         label="Country"
         value={filters.country}
-        onChange={(value) => onChange("country", value)}
+        onChange={(value) => {
+          onChange("country", value);
+          const nextCities = citiesForCountry(places, value);
+          if (filters.city && !nextCities.some((city) => city.toLowerCase() === filters.city.toLowerCase())) {
+            onChange("city", "");
+          }
+        }}
         options={[
           { value: "", label: "All countries" },
           ...countries.map((country) => ({ value: country, label: country })),
         ]}
       />
-      <Input
+      <SelectField
         label="City"
-        value={filters.city}
-        onChange={(e) => onChange("city", e.target.value)}
-        placeholder="Any city"
+        value={cityOptions.some((city) => city.toLowerCase() === filters.city.toLowerCase()) ? filters.city : ""}
+        onChange={(value) => onChange("city", value)}
+        options={[
+          { value: "", label: "Any city" },
+          ...cityOptions.map((city) => ({ value: city, label: city })),
+        ]}
       />
       <SelectField
         label="Budget"
@@ -154,19 +176,31 @@ function FilterFields({
   );
 }
 
-export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPanelProps) {
+export function SearchFiltersPanel({ countries, places, resultCount }: SearchFiltersPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const appliedFilters = parseSearchParams(Object.fromEntries(searchParams.entries()));
+  const appliedFilters = {
+    ...parseSearchParams(Object.fromEntries(searchParams.entries())),
+    q: "",
+  };
   const [draftFilters, setDraftFilters] = useState<SearchFilters>(appliedFilters);
 
   useEffect(() => {
-    setDraftFilters(parseSearchParams(Object.fromEntries(searchParams.entries())));
+    setDraftFilters({
+      ...parseSearchParams(Object.fromEntries(searchParams.entries())),
+      q: "",
+    });
   }, [searchParams]);
 
   function applyFilters(next: SearchFilters) {
-    const params = filtersToSearchParams(next);
+    const allowedCities = citiesForCountry(places, next.country);
+    const city = allowedCities.some(
+      (option) => option.toLowerCase() === next.city.trim().toLowerCase()
+    )
+      ? next.city
+      : "";
+    const params = filtersToSearchParams({ ...next, city, q: "" });
     const query = params.toString();
     startTransition(() => {
       router.push(query ? `/search?${query}` : "/search");
@@ -197,7 +231,7 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
         <p className="text-sm text-charcoal-light">
           {resultCount} {resultCount === 1 ? "family" : "families"} found
           {hasDraftChanges && !isPending && (
-            <span className="text-gold"> · press Search to apply</span>
+            <span className="text-gold"> · press Show hosts to apply</span>
           )}
         </p>
         {hasActiveFilters && (
@@ -214,6 +248,7 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
       <FilterFields
         filters={draftFilters}
         countries={countries}
+        places={places}
         resultCount={resultCount}
         onChange={updateDraft}
         onSubmit={handleSearch}
@@ -242,7 +277,7 @@ export function SearchFiltersPanel({ countries, resultCount }: SearchFiltersPane
           <Card variant="outline" padding="md" className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-forest font-medium">
               <SlidersHorizontal className="h-4 w-4" />
-              Filters &amp; search
+              Filters
               {hasActiveFilters && (
                 <span className="text-xs font-normal text-gold">(active)</span>
               )}

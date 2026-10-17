@@ -50,12 +50,12 @@ const COUNTRIES: DestinationCountry[] = [
     searchCountry: "Japan",
     pageTitle: "Japan Homestays & Cultural Immersion",
     metaDescription:
-      "Stay with verified host families in Japan. Homestays in Osaka, Kyoto, and Tokyo — see who you will meet before you request a stay.",
-    heroTitle: "Stay with a host family in Japan",
+      "Stay with verified local families in Japan for authentic cultural immersion travel. Homestay experiences in Tokyo, Kyoto, and beyond — travel like a local, not a tourist.",
+    heroTitle: "Cultural immersion in Japan",
     heroSubtitle:
-      "Start in Osaka and Kyoto. Share home-cooked meals and see daily life with a verified local host.",
+      "Stay with verified local hosts, share home-cooked meals, and experience daily life beyond the guidebooks.",
     intro:
-      "Japan is where most Fore Beyond travelers begin. Osaka and Kyoto put you in a real household — morning routines, neighborhood markets, and conversations a hotel cannot offer. Every host profile shows which verification checks are on file before you request a stay.",
+      "Japan rewards travelers who slow down. Fore Beyond connects you with verified host families for meaningful homestay experiences — morning routines, neighborhood markets, and conversations that no hotel can offer.",
     image: sampleImages.japanStreet,
     imageAlt: "Traditional street scene in Japan with local architecture",
     legacyPaths: ["/japan-homestays"],
@@ -71,28 +71,24 @@ const COUNTRIES: DestinationCountry[] = [
     ],
     cities: [
       {
-        slug: "osaka",
-        name: "Osaka",
-        searchCity: "Osaka",
-        pageTitle: "Osaka Homestays — Stay with a Local Family",
+        slug: "tokyo",
+        name: "Tokyo",
+        searchCity: "Tokyo",
+        pageTitle: "Tokyo Homestays — Stay with Local Hosts",
         metaDescription:
-          "Find verified host families in Osaka. See daily life in Kansai, read host stories, and request a stay after you get to know them.",
-        heroTitle: "Osaka homestays with local families",
+          "Find verified Tokyo homestays and local host experiences. Travel like a local in Japan's capital with authentic cultural immersion stays.",
+        heroTitle: "Tokyo homestays with local hosts",
         heroSubtitle:
-          "Street life, family dinners, and a neighborhood you learn from the people who live there.",
+          "Live in real neighborhoods, eat home-cooked food, and discover Tokyo through the people who call it home.",
         intro:
-          "Osaka is easier to love from a kitchen than from a hotel lobby. Fore Beyond host families in Osaka welcome travelers into ordinary days — shared meals, local trains, and the stories behind the city. Check verification on each profile before you request a stay.",
+          "Tokyo is vast, but the best moments are intimate — a morning conversation over rice, a walk to the local shrine, an introduction to a favorite ramen shop. Fore Beyond host families open their doors to travelers seeking authentic experiences.",
         image: sampleImages.japanStreet,
-        imageAlt: "A neighborhood in Japan suited to an Osaka homestay",
-        legacyPaths: ["/osaka-homestays"],
+        imageAlt: "Tokyo neighborhood street with local life and culture",
+        legacyPaths: ["/tokyo-homestays"],
         sections: [
           {
-            title: "Why stay with a family in Osaka",
-            body: "A homestay puts you inside Kansai daily life: home cooking, neighborhood shops, and someone who can tell you how the city actually works. You get to know the host before you arrive.",
-          },
-          {
-            title: "Verified hosts, shown plainly",
-            body: "Host profiles list completed identity checks, reviews, and household details. Request a stay only after you have read who you would be living with.",
+            title: "Immersive travel in Tokyo",
+            body: "Skip the tourist bubble. Verified local hosts welcome you into their daily rhythm — from suburban calm to vibrant city districts — for homestay experiences rooted in cultural exchange.",
           },
         ],
       },
@@ -102,41 +98,19 @@ const COUNTRIES: DestinationCountry[] = [
         searchCity: "Kyoto",
         pageTitle: "Kyoto Local Hosts & Cultural Stays",
         metaDescription:
-          "Stay with verified local hosts in Kyoto. Homestays, cultural exchange, and a look at who you will meet in Japan's historic heart.",
+          "Stay with verified local hosts in Kyoto. Authentic homestay experiences, cultural exchange, and meaningful travel in Japan's historic heart.",
         heroTitle: "Kyoto local hosts & cultural stays",
         heroSubtitle:
           "Experience Kyoto's traditions through the families and hosts who preserve them every day.",
         intro:
-          "Kyoto's temples draw crowds, but its soul lives in kitchens, gardens, and quiet lanes. Fore Beyond connects travelers with verified local hosts for homestays in Japan's cultural capital.",
-        image: sampleImages.teaCeremony,
+          "Kyoto's temples draw crowds, but its soul lives in kitchens, gardens, and quiet lanes. Fore Beyond connects travelers with verified local hosts for immersive homestay experiences in Japan's cultural capital.",
+        image: sampleImages.japanStreet,
         imageAlt: "Kyoto cultural scene with traditional architecture",
         legacyPaths: ["/kyoto-local-hosts"],
         sections: [
           {
             title: "Cultural exchange in Kyoto",
-            body: "From tea traditions to seasonal cooking, Kyoto hosts share living culture — not a performance for visitors. Request a stay with a verified family after you read who you would meet.",
-          },
-        ],
-      },
-      {
-        slug: "tokyo",
-        name: "Tokyo",
-        searchCity: "Tokyo",
-        pageTitle: "Tokyo Homestays — Stay with Local Hosts",
-        metaDescription:
-          "Find verified Tokyo homestays and local host families. See who you would stay with in Japan's capital before you request.",
-        heroTitle: "Tokyo homestays with local hosts",
-        heroSubtitle:
-          "Live in real neighborhoods, eat home-cooked food, and discover Tokyo through the people who call it home.",
-        intro:
-          "Tokyo is vast, but the best moments are intimate — a morning conversation over rice, a walk to the local shrine, an introduction to a favorite ramen shop. Fore Beyond host families open their doors to travelers who want to live with someone who knows the city.",
-        image: sampleImages.japanStreet,
-        imageAlt: "Tokyo neighborhood street with local life and culture",
-        legacyPaths: ["/tokyo-homestays"],
-        sections: [
-          {
-            title: "Immersive travel in Tokyo",
-            body: "Skip the tourist bubble. Verified local hosts welcome you into their daily rhythm — from suburban calm to vibrant city districts — for homestays rooted in cultural exchange.",
+            body: "From tea traditions to seasonal cooking, Kyoto hosts share living culture — not performances for tourists. Request a stay with a verified family and travel with purpose.",
           },
         ],
       },
@@ -146,10 +120,10 @@ const COUNTRIES: DestinationCountry[] = [
     slug: "italy",
     name: "Italy",
     searchCountry: "Italy",
-    pageTitle: "Italy Homestays & Cultural Stays",
+    pageTitle: "Italy Homestays & Authentic Travel",
     metaDescription:
-      "Stay with verified local families in Italy for cultural homestays. Hosts in Naples and across Italy — meaningful travel beyond hotels.",
-    heroTitle: "Stay with a host family in Italy",
+      "Stay with verified local families in Italy for authentic travel experiences and cultural immersion. Homestays in Naples and across Italy — meaningful travel beyond hotels.",
+    heroTitle: "Authentic travel experiences in Italy",
     heroSubtitle:
       "Share tables, stories, and daily life with verified Italian host families.",
     intro:
@@ -170,7 +144,7 @@ const COUNTRIES: DestinationCountry[] = [
         searchCity: "Naples",
         pageTitle: "Naples Cultural Stays with Local Hosts",
         metaDescription:
-          "Discover Naples cultural stays with verified local hosts. Homestay meals, family tables, and immersive travel in southern Italy.",
+          "Discover Naples cultural stays with verified local hosts. Homestay experiences, authentic food, and immersive travel in southern Italy.",
         heroTitle: "Naples cultural stays",
         heroSubtitle:
           "Experience Neapolitan life through verified host families — food, language, and neighborhood stories included.",
@@ -194,12 +168,12 @@ const COUNTRIES: DestinationCountry[] = [
     searchCountry: "Mexico",
     pageTitle: "Mexico Local Hosts & Homestay Experiences",
     metaDescription:
-      "Stay with verified local hosts in Mexico for cultural homestays. Travel with a family, not a hotel, on Fore Beyond.",
+      "Stay with verified local hosts in Mexico for cultural immersion travel and authentic homestay experiences. Travel like a local with Fore Beyond.",
     heroTitle: "Mexico local hosts",
     heroSubtitle:
       "Connect with verified families for immersive travel experiences rooted in Mexican culture and hospitality.",
     intro:
-      "Mexico's richness lives in its people. Fore Beyond homestays connect travelers with verified local hosts for cultural exchange — shared meals, language practice, and daily life in real communities.",
+      "Mexico's richness lives in its people. Fore Beyond homestays connect travelers with verified local hosts for authentic cultural exchange — shared meals, language practice, and daily life in real communities.",
     image: sampleImages.morocco,
     imageAlt: "Vibrant street scene reflecting Latin American travel culture",
     legacyPaths: ["/mexico-local-hosts"],
@@ -217,12 +191,12 @@ const COUNTRIES: DestinationCountry[] = [
     searchCountry: "Spain",
     pageTitle: "Spain Homestays & Cultural Exchange Travel",
     metaDescription:
-      "Find verified homestays in Spain for cultural exchange travel and local host stays. Travel with a family on Fore Beyond.",
+      "Find verified homestays in Spain for cultural exchange travel and authentic local host experiences. Travel like a local with Fore Beyond.",
     heroTitle: "Spain homestays",
     heroSubtitle:
       "Stay with verified local hosts for meaningful travel experiences across Spain.",
     intro:
-      "Spain invites travelers who want more than monuments. Fore Beyond connects you with verified host families for homestays built on trust, verification, and cultural exchange.",
+      "Spain invites travelers who want more than monuments. Fore Beyond connects you with verified host families for homestay experiences built on trust, verification, and authentic cultural exchange.",
     image: sampleImages.italyVillage,
     imageAlt: "European town scene suited to Spanish homestay travel",
     legacyPaths: ["/spain-homestays"],

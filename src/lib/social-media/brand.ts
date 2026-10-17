@@ -2,7 +2,7 @@
 export const SOCIAL_BRAND = {
   name: "Fore Beyond",
   mission:
-    "Connect travelers with verified local host families for cultural homestays, starting in Japan.",
+    "Connect travelers with trusted local host families for authentic cultural experiences.",
   tone: ["Warm", "Authentic", "Inspirational", "Premium", "Human"],
   avoid: ["Salesy", "Clickbait", "Spammy", "Corporate"],
   visual: {
@@ -22,7 +22,7 @@ export const SOCIAL_BRAND = {
   caption: {
     wordMin: 100,
     wordMax: 180,
-    voice: "Warm, trustworthy, specific — never advertising-heavy",
+    voice: "Warm, trustworthy, inspirational, authentic — never advertising-heavy",
     cta: "End with a subtle, natural call-to-action",
   },
   hashtags: {
@@ -44,7 +44,7 @@ ${SOCIAL_BRAND.caption.voice}. ${SOCIAL_BRAND.caption.cta}.
 Always provide exactly ${SOCIAL_BRAND.hashtags.count} hashtags (without # prefix in the array).
 
 Image prompts must describe photorealistic editorial travel photography:
-- Natural lighting, bright, warm, human, lifestyle
+- Natural lighting, bright, warm, authentic, human, lifestyle
 - ${SOCIAL_BRAND.visual.avoid.join("; ")}
 - No text, logos, or watermarks in the image`;
 }

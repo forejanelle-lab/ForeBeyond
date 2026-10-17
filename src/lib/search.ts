@@ -123,7 +123,10 @@ export function filterListingsClientSide(
     ) {
       return false;
     }
-    if (filters.city && !listing.city?.toLowerCase().includes(filters.city.toLowerCase())) {
+    if (
+      filters.city &&
+      listing.city?.trim().toLowerCase() !== filters.city.trim().toLowerCase()
+    ) {
       return false;
     }
     if (filters.language && !listing.languages?.some(
@@ -168,6 +171,25 @@ export function filterListingsClientSide(
     }
     return true;
   });
+}
+
+export function getListingPlaces(listings: PublicListing[]) {
+  const seen = new Set<string>();
+  const places: { country: string; city: string }[] = [];
+
+  for (const listing of listings) {
+    const country = displayCountryName(listing.country);
+    const city = listing.city?.trim() ?? "";
+    if (!country || !city) continue;
+    const key = `${country.toLowerCase()}|${city.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    places.push({ country, city });
+  }
+
+  return places.sort(
+    (a, b) => a.country.localeCompare(b.country) || a.city.localeCompare(b.city)
+  );
 }
 
 export function getUniqueCountries(listings: PublicListing[]) {
