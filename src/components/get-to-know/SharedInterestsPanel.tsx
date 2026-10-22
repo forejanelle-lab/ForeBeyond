@@ -26,7 +26,7 @@ export function SharedInterestsPanel({
             What you might have in common
           </h2>
           <p className="text-sm text-muted mt-1">
-            Based on Get to Know answers and this host&apos;s profile — not a compatibility score.
+            Based on Get to Know answers and this host&apos;s profile. You should talk more to find what else you share.
           </p>
         </div>
       </div>

@@ -439,7 +439,7 @@ export function GetToKnowFlow({
               </h2>
               <p className="text-sm text-muted">
                 These notes come from your answers and what {hostName} has shared on their
-                profile — not a compatibility score.
+                profile. You should talk more to find what else you have in common.
               </p>
               <ul className="space-y-3">
                 {matches.map((match) => (
