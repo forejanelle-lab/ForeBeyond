@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { finalizeEndedConfirmedTrips } from "@/lib/finalize-ended-trips";
 
 export interface HostListingStats {
   bookingCount: number;
@@ -54,6 +55,8 @@ export async function getHostListingStats(
   hostId: string,
   listingId: string
 ): Promise<HostListingStats> {
+  await finalizeEndedConfirmedTrips();
+
   const [{ count: completedTripCount }, { count: listingReviewCount }, { data: requests }] =
     await Promise.all([
       supabase

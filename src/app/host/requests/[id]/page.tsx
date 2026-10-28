@@ -31,6 +31,7 @@ import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import type { Profile, HostListing, PublicReview, Review, StayRequest, StayRequestPhoto, TravelerProfile, Trip } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
+import { finalizeEndedConfirmedTrips } from "@/lib/finalize-ended-trips";
 
 export const metadata = privatePageMetadata({
   title: "Review Request",
@@ -59,6 +60,8 @@ export default async function HostRequestDetailPage({
   if ((profile as Pick<Profile, "role"> | null)?.role !== "host") {
     redirect("/profile/complete");
   }
+
+  await finalizeEndedConfirmedTrips();
 
   const { data: request } = await supabase
     .from("stay_requests")

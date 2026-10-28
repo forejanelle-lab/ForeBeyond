@@ -7,6 +7,7 @@ import { HostRequestsList, type HostRequestRow } from "@/components/stays/HostRe
 import type { Profile, HostListing, StayRequest } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
 import { getServerTranslations } from "@/lib/i18n/server";
+import { finalizeEndedConfirmedTrips } from "@/lib/finalize-ended-trips";
 
 export const metadata = privatePageMetadata({
   title: "Requests",
@@ -28,6 +29,8 @@ export default async function HostRequestsPage() {
   if ((profile as Pick<Profile, "role"> | null)?.role !== "host") {
     redirect("/trips");
   }
+
+  await finalizeEndedConfirmedTrips();
 
   const { data: requests } = await supabase
     .from("stay_requests")

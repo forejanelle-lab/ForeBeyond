@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/Card";
 import type { Profile, TrustBadge, VerificationDocument, VerificationStatus } from "@/types/database";
 import type { TrustScoreBreakdown as Breakdown } from "@/lib/trust-score";
 import { privatePageMetadata } from "@/lib/site-metadata";
+import { finalizeEndedConfirmedTrips } from "@/lib/finalize-ended-trips";
 
 export const metadata = privatePageMetadata({
   title: "Trust Dashboard",
@@ -24,6 +25,8 @@ export default async function TrustDashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/trust-center");
+
+  await finalizeEndedConfirmedTrips();
 
   const { data: profile } = await supabase
     .from("profiles")

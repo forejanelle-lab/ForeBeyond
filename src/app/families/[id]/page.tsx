@@ -11,6 +11,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { buildListingJsonLd } from "@/lib/json-ld";
 import { formatAverageRating } from "@/lib/reviews";
 import { getHostListingStats } from "@/lib/host-stats";
+import { finalizeEndedConfirmedTrips } from "@/lib/finalize-ended-trips";
 import { getHostReviewEligibility } from "@/lib/listing-review-eligibility";
 import { formatMemberDisplayName } from "@/lib/member-display-name";
 import { hostHasMessagedStayRequest, isStayMessagingOpen } from "@/lib/messaging";
@@ -80,6 +81,7 @@ export default async function FamilyProfilePage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  await finalizeEndedConfirmedTrips();
 
   const [{ data: { user } }, typedListing] = await Promise.all([
     supabase.auth.getUser(),

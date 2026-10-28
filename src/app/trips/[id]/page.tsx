@@ -19,6 +19,7 @@ import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import type { ListingContactDetails, Profile, PublicListing, Review, StayBooking, StayRequest, Trip } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
+import { finalizeEndedConfirmedTrips } from "@/lib/finalize-ended-trips";
 
 export const metadata = privatePageMetadata({
   title: "Trip Details",
@@ -35,6 +36,8 @@ export default async function TripDetailPage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/auth/sign-in?redirect=/trips/${id}`);
+
+  await finalizeEndedConfirmedTrips();
 
   const { data: trip } = await supabase
     .from("trips")
