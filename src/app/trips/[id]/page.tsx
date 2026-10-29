@@ -20,6 +20,7 @@ import { Container } from "@/components/ui/Container";
 import type { ListingContactDetails, Profile, PublicListing, Review, StayBooking, StayRequest, Trip } from "@/types/database";
 import { privatePageMetadata } from "@/lib/site-metadata";
 import { finalizeEndedConfirmedTrips } from "@/lib/finalize-ended-trips";
+import { isPlatformAdmin } from "@/lib/platform-admin";
 
 export const metadata = privatePageMetadata({
   title: "Trip Details",
@@ -27,30 +28,61 @@ export const metadata = privatePageMetadata({
   path: "/trips",
 });
 
+const USER_ID_PARAM = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default async function TripDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { id } = await params;
+  const { from } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/auth/sign-in?redirect=/trips/${id}`);
 
   await finalizeEndedConfirmedTrips();
 
-  const { data: trip } = await supabase
-    .from("trips")
-    .select("*")
-    .eq("id", id)
-    .or(`traveler_id.eq.${user.id},host_id.eq.${user.id}`)
-    .single();
+  const { data: viewerProfile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const viewerIsAdmin = isPlatformAdmin(
+    user.email ?? "",
+    (viewerProfile as { is_admin?: boolean } | null)?.is_admin ?? false
+  );
+
+  let tripQuery = supabase.from("trips").select("*").eq("id", id);
+  if (!viewerIsAdmin) {
+    tripQuery = tripQuery.or(`traveler_id.eq.${user.id},host_id.eq.${user.id}`);
+  }
+
+  const { data: trip } = await tripQuery.maybeSingle();
 
   if (!trip) notFound();
 
   const typedTrip = trip as Trip;
+  const isParticipant =
+    typedTrip.traveler_id === user.id || typedTrip.host_id === user.id;
   const isTraveler = typedTrip.traveler_id === user.id;
-  const otherUserId = isTraveler ? typedTrip.host_id : typedTrip.traveler_id;
+  const fromUserId = from && USER_ID_PARAM.test(from) ? from : null;
+  const otherUserId = isParticipant
+    ? isTraveler
+      ? typedTrip.host_id
+      : typedTrip.traveler_id
+    : fromUserId === typedTrip.host_id
+      ? typedTrip.traveler_id
+      : typedTrip.host_id;
+  const backHref = isParticipant
+    ? "/trips"
+    : fromUserId
+      ? `/admin/users/${fromUserId}`
+      : "/admin/users";
+  const backLabel = isParticipant ? "All trips" : "Back to user";
 
   const [{ data: listing }, { data: otherProfile }, { data: booking }, { data: stayRequest }, { data: conversation }, { data: tripReviews }, { data: userReview }, { data: listingContact }] =
     await Promise.all([
@@ -82,7 +114,7 @@ export default async function TripDetailPage({
 
   const otherFullName = formatMessagingDisplayName(
     (otherProfile as Pick<Profile, "full_name"> | null)?.full_name,
-    isTraveler ? "Host" : "Guest",
+    otherUserId === typedTrip.host_id ? "Host" : "Guest",
     { stayStatus: requestData?.status ?? "approved" }
   );
   const otherName = otherFullName;
@@ -101,13 +133,15 @@ export default async function TripDetailPage({
         ? { contact_email: hostEmail, contact_address: null }
         : null;
   const canCompleteTrip =
-    typedTrip.status !== "completed" && isTripPastEndDate(typedTrip.end_date);
+    isParticipant &&
+    typedTrip.status !== "completed" &&
+    isTripPastEndDate(typedTrip.end_date);
 
   return (
     <Container className="py-10 md:py-16">
-      <Link href="/trips" className="inline-flex items-center gap-2 text-sm text-forest hover:underline mb-6">
+      <Link href={backHref} className="inline-flex items-center gap-2 text-sm text-forest hover:underline mb-6">
         <ArrowLeft className="h-4 w-4" />
-        All trips
+        {backLabel}
       </Link>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -166,7 +200,7 @@ export default async function TripDetailPage({
         </div>
 
         <div className="space-y-4">
-          {conversationId && (
+          {isParticipant && conversationId && (
             <ButtonLink href={`/messages/${conversationId}`} variant="secondary" size="md" className="w-full">
               <MessageSquare className="h-4 w-4" />
               Message {otherName}

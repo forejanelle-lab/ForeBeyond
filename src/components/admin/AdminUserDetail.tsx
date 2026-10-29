@@ -10,6 +10,13 @@ import { formatAdminDateTime } from "@/lib/admin";
 import { formatDocumentType } from "@/lib/verification-documents";
 import { getDocumentVerificationStatusLabel, getProfileVerificationStatusLabel } from "@/lib/verification-labels";
 import { ViewVerificationDocumentButton } from "@/components/admin/ViewVerificationDocumentButton";
+import { useCurrencyOptional } from "@/components/i18n/CurrencyProvider";
+import {
+  convertToUsd,
+  FALLBACK_EXCHANGE_RATES,
+  formatNightlyMoneyAmount,
+  type SupportedCurrencyCode,
+} from "@/lib/currency";
 import type { Profile, UserLoginEvent, VerificationDocument, VerificationStatus } from "@/types/database";
 
 interface TripSummary {
@@ -22,6 +29,7 @@ interface TripSummary {
   status: string;
   totalAmount: number | null;
   nightlyRate: number | null;
+  pricingCurrency: SupportedCurrencyCode;
   conversationId: string | null;
   referralLabel: string | null;
 }
@@ -62,9 +70,26 @@ function verificationStatusBadgeVariant(status: VerificationStatus) {
   return "outline" as const;
 }
 
-function formatMoney(amount: number | null) {
-  if (amount == null) return "—";
-  return `$${amount.toLocaleString()}`;
+function StayAmount({
+  amount,
+  currency,
+}: {
+  amount: number | null;
+  currency: SupportedCurrencyCode;
+}) {
+  const prefs = useCurrencyOptional();
+  if (amount == null) return <>—</>;
+
+  const primary = formatNightlyMoneyAmount(amount, currency);
+  if (currency === "USD") return <>{primary}</>;
+
+  const usd = convertToUsd(amount, currency, prefs?.rates ?? FALLBACK_EXCHANGE_RATES);
+  return (
+    <>
+      {primary}{" "}
+      <span className="text-muted">({formatNightlyMoneyAmount(usd, "USD")})</span>
+    </>
+  );
 }
 
 function formatDateRange(start: string | null, end: string | null) {
@@ -292,12 +317,12 @@ export function AdminUserDetail({
             {
               key: "rate",
               label: "Nightly",
-              render: (r) => formatMoney(r.nightlyRate),
+              render: (r) => <StayAmount amount={r.nightlyRate} currency={r.pricingCurrency} />,
             },
             {
               key: "total",
               label: "Total",
-              render: (r) => formatMoney(r.totalAmount),
+              render: (r) => <StayAmount amount={r.totalAmount} currency={r.pricingCurrency} />,
             },
             {
               key: "referral",
@@ -308,7 +333,10 @@ export function AdminUserDetail({
               key: "trip",
               label: "",
               render: (r) => (
-                <Link href={`/trips/${r.id}`} className="text-sm text-forest hover:underline">
+                <Link
+                  href={`/trips/${r.id}?from=${profile.id}`}
+                  className="text-sm text-forest hover:underline"
+                >
                   View trip
                 </Link>
               ),
@@ -346,18 +374,21 @@ export function AdminUserDetail({
             {
               key: "rate",
               label: "Nightly",
-              render: (r) => formatMoney(r.nightlyRate),
+              render: (r) => <StayAmount amount={r.nightlyRate} currency={r.pricingCurrency} />,
             },
             {
               key: "total",
               label: "Total",
-              render: (r) => formatMoney(r.totalAmount),
+              render: (r) => <StayAmount amount={r.totalAmount} currency={r.pricingCurrency} />,
             },
             {
               key: "trip",
               label: "",
               render: (r) => (
-                <Link href={`/trips/${r.id}`} className="text-sm text-forest hover:underline">
+                <Link
+                  href={`/trips/${r.id}?from=${profile.id}`}
+                  className="text-sm text-forest hover:underline"
+                >
                   View trip
                 </Link>
               ),

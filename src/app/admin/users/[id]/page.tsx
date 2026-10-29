@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminUserDetail } from "@/components/admin/AdminUserDetail";
 import { privatePageMetadata } from "@/lib/site-metadata";
 import { formatReferralAttribution } from "@/lib/referral";
+import { resolveListingPricingCurrency } from "@/lib/currency";
 import type {
   HostListing,
   Profile,
@@ -113,7 +114,10 @@ export default async function AdminUserDetailPage({
   const [{ data: listings }, { data: profiles }, { data: bookings }, { data: conversations }, { data: referredRequests }] =
     await Promise.all([
       listingIds.length
-        ? supabase.from("host_listings").select("id, title").in("id", listingIds)
+        ? supabase
+            .from("host_listings")
+            .select("id, title, pricing_currency, country")
+            .in("id", listingIds)
         : Promise.resolve({ data: [] }),
       otherUserIds.length
         ? supabase.from("profiles").select("id, full_name").in("id", otherUserIds)
@@ -145,8 +149,10 @@ export default async function AdminUserDetailPage({
         .then((result) => (result.error ? { data: [] } : result)),
     ]);
 
-  const listingTitleById = Object.fromEntries(
-    ((listings as Pick<HostListing, "id" | "title">[]) ?? []).map((l) => [l.id, l.title])
+  const listingById = Object.fromEntries(
+    (
+      (listings as Pick<HostListing, "id" | "title" | "pricing_currency" | "country">[]) ?? []
+    ).map((listing) => [listing.id, listing])
   );
   const nameById = Object.fromEntries(
     ((profiles as Pick<Profile, "id" | "full_name">[]) ?? []).map((p) => [p.id, p.full_name])
@@ -194,13 +200,16 @@ export default async function AdminUserDetailPage({
       return {
         id: trip.id,
         role: "guest" as const,
-        listingTitle: trip.listing_id ? listingTitleById[trip.listing_id] ?? null : null,
+        listingTitle: trip.listing_id ? listingById[trip.listing_id]?.title ?? null : null,
         otherPartyName: nameById[trip.host_id] ?? null,
         startDate: trip.start_date,
         endDate: trip.end_date,
         status: trip.status,
         nightlyRate: booking?.nightly_rate ?? null,
         totalAmount: booking?.total_amount ?? null,
+        pricingCurrency: resolveListingPricingCurrency(
+          trip.listing_id ? listingById[trip.listing_id] ?? {} : {}
+        ),
         conversationId: trip.stay_request_id
           ? conversationByRequest[trip.stay_request_id] ?? null
           : null,
@@ -212,13 +221,16 @@ export default async function AdminUserDetailPage({
       return {
         id: trip.id,
         role: "host" as const,
-        listingTitle: trip.listing_id ? listingTitleById[trip.listing_id] ?? null : null,
+        listingTitle: trip.listing_id ? listingById[trip.listing_id]?.title ?? null : null,
         otherPartyName: nameById[trip.traveler_id] ?? null,
         startDate: trip.start_date,
         endDate: trip.end_date,
         status: trip.status,
         nightlyRate: booking?.nightly_rate ?? null,
         totalAmount: booking?.total_amount ?? null,
+        pricingCurrency: resolveListingPricingCurrency(
+          trip.listing_id ? listingById[trip.listing_id] ?? {} : {}
+        ),
         conversationId: trip.stay_request_id
           ? conversationByRequest[trip.stay_request_id] ?? null
           : null,
