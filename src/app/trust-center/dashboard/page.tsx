@@ -83,6 +83,7 @@ export default async function TrustDashboardPage() {
               emailVerified={emailVerified}
               phoneVerified={phoneVerified}
               documentStatuses={docMap}
+              role={typedProfile?.role}
             />
             <ButtonLink href="/verification-center" variant="primary" size="sm" className="mt-4">
               Continue Verification

@@ -16,6 +16,7 @@ export default async function AdminOverviewPage() {
     { count: userCount },
     { count: hostCount },
     { count: listingCount },
+    { count: openStayRequests },
     { count: pendingVerifications },
     { count: pendingReviews },
     { count: openReports },
@@ -25,6 +26,10 @@ export default async function AdminOverviewPage() {
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "host"),
     supabase.from("host_listings").select("*", { count: "exact", head: true }),
+    supabase
+      .from("stay_requests")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["pending", "host_approved", "approved"]),
     supabase
       .from("verification_documents")
       .select("*", { count: "exact", head: true })
@@ -53,6 +58,12 @@ export default async function AdminOverviewPage() {
         <AdminStatCard accent="platform" label="Total users" value={userCount ?? 0} href="/admin/users" />
         <AdminStatCard accent="platform" label="Hosts" value={hostCount ?? 0} href="/admin/users?role=host" />
         <AdminStatCard accent="platform" label="Listings" value={listingCount ?? 0} href="/admin/listings" />
+        <AdminStatCard
+          accent="platform"
+          label="Open stay requests"
+          value={openStayRequests ?? 0}
+          href="/admin/requests"
+        />
         <AdminStatCard
           accent="moderation"
           label="Pending verifications"

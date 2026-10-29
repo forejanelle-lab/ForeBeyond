@@ -21,7 +21,9 @@ export function TrustScoreBreakdown({
 }: TrustScoreBreakdownProps) {
   return (
     <div className="space-y-3">
-      {TRUST_SCORE_FACTORS.map((factor) => {
+      {TRUST_SCORE_FACTORS.filter(
+        (factor) => !(role === "traveler" && factor.key === "address_verification")
+      ).map((factor) => {
         const earned = breakdown[factor.key] ?? 0;
         const detail = metricDetails?.[factor.key];
         const percent = factor.maxPoints > 0 ? (earned / factor.maxPoints) * 100 : 0;

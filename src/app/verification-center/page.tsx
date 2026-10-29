@@ -249,9 +249,12 @@ export default function VerificationCenterPage() {
     return docStatus && docStatus !== "unverified" && docStatus !== "rejected";
   });
 
-  const hasRejectedDocs = verificationSteps.some(
-    (s) => documents[s.type] === "rejected"
-  );
+  const steps =
+    userRole === "traveler"
+      ? verificationSteps.filter((step) => step.type !== "address_proof")
+      : verificationSteps;
+
+  const hasRejectedDocs = steps.some((s) => documents[s.type] === "rejected");
 
   const canContinueOnboarding = !onboardingComplete;
   const isHost = userRole === "host";
@@ -296,7 +299,7 @@ export default function VerificationCenterPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
-            {verificationSteps.map((step) => (
+            {steps.map((step) => (
               <Card key={step.type} variant="outline" padding="md">
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sage/60 text-forest">
@@ -361,7 +364,7 @@ export default function VerificationCenterPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
-          {verificationSteps.map((step) => {
+          {steps.map((step) => {
             const status = documents[step.type] || "unverified";
             const config = statusConfig[status];
             const canSubmit = status === "unverified" || status === "rejected";

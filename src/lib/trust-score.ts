@@ -223,3 +223,10 @@ export const VERIFICATION_WORKFLOWS = [
     points: 0,
   },
 ] as const;
+
+export function verificationWorkflowsForRole(role?: UserRole | null) {
+  if (role === "traveler") {
+    return VERIFICATION_WORKFLOWS.filter((workflow) => workflow.id !== "address");
+  }
+  return VERIFICATION_WORKFLOWS;
+}

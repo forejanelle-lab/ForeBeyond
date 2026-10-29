@@ -1,6 +1,6 @@
 import {
   TRUST_SCORE_FACTORS,
-  VERIFICATION_WORKFLOWS,
+  verificationWorkflowsForRole,
   getTrustScoreFactorDescription,
   type TrustScoreBreakdown,
 } from "@/lib/trust-score";
@@ -50,7 +50,7 @@ export function buildTrustScoreDetailItems(input: {
   const { breakdown, emailVerified, phoneVerified, documentStatuses, role } = input;
   const items: TrustScoreDetailItem[] = [];
 
-  for (const workflow of VERIFICATION_WORKFLOWS) {
+  for (const workflow of verificationWorkflowsForRole(role)) {
     let status: TrustDetailItemStatus = "missing";
     let earned = 0;
 
