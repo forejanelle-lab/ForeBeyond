@@ -2,6 +2,7 @@
 
 import {
   currencyForCountry,
+  normalizeCurrencyCode,
   type SupportedCurrencyCode,
 } from "@/lib/currency";
 import { useCurrencyOptional } from "@/components/i18n/CurrencyProvider";
@@ -9,15 +10,19 @@ import { Info } from "lucide-react";
 
 interface HostPaymentCurrencyNoticeProps {
   hostCountry?: string | null;
+  pricingCurrency?: string | null;
   className?: string;
 }
 
 export function HostPaymentCurrencyNotice({
   hostCountry,
+  pricingCurrency,
   className = "",
 }: HostPaymentCurrencyNoticeProps) {
   const currency = useCurrencyOptional();
-  const hostCurrency = currencyForCountry(hostCountry);
+  const hostCurrency = pricingCurrency?.trim()
+    ? normalizeCurrencyCode(pricingCurrency)
+    : currencyForCountry(hostCountry);
   const displayCurrency = currency?.displayCurrency ?? ("USD" as SupportedCurrencyCode);
 
   if (!hostCountry?.trim()) return null;

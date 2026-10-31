@@ -1,3 +1,5 @@
+import { normalizeCountryKey } from "./listing-map-coords";
+
 export const BASE_CURRENCY = "USD";
 
 export const SUPPORTED_CURRENCIES = [
@@ -59,7 +61,7 @@ export function normalizeCurrencyCode(code: string | null | undefined): Supporte
 
 export function currencyForCountry(country: string | null | undefined): SupportedCurrencyCode {
   if (!country?.trim()) return BASE_CURRENCY as SupportedCurrencyCode;
-  const key = country.trim().toLowerCase();
+  const key = normalizeCountryKey(country);
   return COUNTRY_CURRENCY[key] ?? (BASE_CURRENCY as SupportedCurrencyCode);
 }
 
@@ -196,6 +198,36 @@ export function formatNightlyMoneyAmount(
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   }).format(amount);
+}
+
+type ListingMoneySource = { pricing_currency?: string | null; country?: string | null };
+
+/** Listing amount converted into the host's local currency. `listed` is set when that differs from the listing currency. */
+export function formatHostLocalMoney(
+  amount: number | null | undefined,
+  listing: ListingMoneySource,
+  rates: Record<string, number>
+): { primary: string; listed: string | null; localCurrency: SupportedCurrencyCode } {
+  const localCurrency = currencyForCountry(listing.country);
+  if (amount == null || !Number.isFinite(amount) || amount <= 0) {
+    return { primary: "—", listed: null, localCurrency };
+  }
+
+  const source = resolveListingPricingCurrency(listing);
+  const listedLabel = formatNightlyMoneyAmount(amount, source);
+  if (source === localCurrency) {
+    return { primary: listedLabel, listed: null, localCurrency };
+  }
+
+  const converted = roundMoneyForCurrency(
+    convertBetweenCurrencies(amount, source, localCurrency, rates),
+    localCurrency
+  );
+  return {
+    primary: formatNightlyMoneyAmount(converted, localCurrency),
+    listed: listedLabel,
+    localCurrency,
+  };
 }
 
 export function formatStoredAmount(

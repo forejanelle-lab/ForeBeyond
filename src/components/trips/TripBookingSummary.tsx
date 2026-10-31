@@ -29,7 +29,11 @@ export function TripBookingSummary({
 
   return (
     <div className="rounded-xl bg-sage/40 p-4 text-sm space-y-3">
-      <HostPaymentCurrencyNotice hostCountry={hostCountry} className="mb-1" />
+      <HostPaymentCurrencyNotice
+        hostCountry={hostCountry}
+        pricingCurrency={sourceCurrency}
+        className="mb-1"
+      />
       <div className="flex justify-between text-charcoal-light">
         <span>Listed stay (paid to host)</span>
         <Money amountUsd={totalAmount} sourceCurrency={sourceCurrency} hostCountry={hostCountry} />

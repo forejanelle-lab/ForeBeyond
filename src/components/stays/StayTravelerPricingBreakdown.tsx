@@ -47,7 +47,11 @@ export function StayTravelerPricingBreakdown({
 
   return (
     <div className={`rounded-xl bg-sage/40 p-4 text-sm space-y-2 ${className}`}>
-      <HostPaymentCurrencyNotice hostCountry={hostCountry} className="mb-3" />
+      <HostPaymentCurrencyNotice
+        hostCountry={hostCountry}
+        pricingCurrency={sourceCurrency}
+        className="mb-3"
+      />
       <div className="text-charcoal-light space-y-1">
         <p>
           <DisplayStayRate nightlyRateUsd={nightlyRateUsd} listing={listingPricing} />

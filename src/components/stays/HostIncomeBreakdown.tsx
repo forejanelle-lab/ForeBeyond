@@ -1,9 +1,12 @@
 "use client";
 
 import { TrendingUp } from "lucide-react";
-import { useCurrency } from "@/components/i18n/CurrencyProvider";
-import { DisplayStayRate } from "@/components/i18n/DisplayMoney";
-import { resolveListingPricingCurrency } from "@/lib/currency";
+import { useCurrencyOptional } from "@/components/i18n/CurrencyProvider";
+import {
+  FALLBACK_EXCHANGE_RATES,
+  formatHostLocalMoney,
+  getCurrencyLabel,
+} from "@/lib/currency";
 import {
   calculateHostEarnings,
   type ListingPricing,
@@ -45,8 +48,9 @@ export function HostIncomeBreakdown({
   variant = "full",
   className = "",
 }: HostIncomeBreakdownProps) {
-  const { formatAmount } = useCurrency();
-  const sourceCurrency = resolveListingPricingCurrency(pricing);
+  const currency = useCurrencyOptional();
+  const rates = currency?.rates ?? FALLBACK_EXCHANGE_RATES;
+  const formatLocal = (amount: number) => formatHostLocalMoney(amount, pricing, rates);
 
   if (!request.start_date || !request.end_date) return null;
 
@@ -59,9 +63,16 @@ export function HostIncomeBreakdown({
 
   if (!earnings) return null;
 
+  const nightly =
+    earnings.effectiveNightlyTotal != null
+      ? formatLocal(earnings.effectiveNightlyTotal)
+      : null;
+  const gross = formatLocal(earnings.gross);
+  const net = formatLocal(earnings.netEarnings);
+
   const rateLine = (
     <>
-      <DisplayStayRate nightlyRateUsd={earnings.effectiveNightlyTotal} listing={pricing} />
+      {nightly ? `${nightly.primary}/night` : "Rate on request"}
       {" × "}
       {earnings.nights} night{earnings.nights !== 1 ? "s" : ""} · {earnings.guestCount} guest
       {earnings.guestCount !== 1 ? "s" : ""}
@@ -77,7 +88,7 @@ export function HostIncomeBreakdown({
           Listed earnings
         </span>
         <span className="text-lg font-bold text-forest tabular-nums">
-          {formatAmount(earnings.netEarnings, sourceCurrency)}
+          {net.primary}
         </span>
       </div>
     );
@@ -92,11 +103,16 @@ export function HostIncomeBreakdown({
         <h3 className="font-semibold text-forest text-sm">Estimated host earnings</h3>
       </div>
       <div className="p-4 space-y-3">
-        <LineItem label={rateLine} amount={formatAmount(earnings.gross, sourceCurrency)} muted />
+        <LineItem label={rateLine} amount={gross.primary} muted />
         <div className="flex items-center justify-between gap-4 border-t border-sage-dark/20 pt-3">
           <span className="text-sm font-semibold text-forest">You receive (100% of listed rate)</span>
-          <span className="text-xl font-bold tabular-nums">{formatAmount(earnings.netEarnings, sourceCurrency)}</span>
+          <span className="text-xl font-bold tabular-nums">{net.primary}</span>
         </div>
+        {net.listed && (
+          <p className="text-xs text-charcoal-light">
+            Listed as {net.listed}. Shown in {getCurrencyLabel(net.localCurrency)}.
+          </p>
+        )}
         <p className="text-xs text-charcoal-light">
           Travelers pay a {SERVICE_FEE_RATE * 100}% Fore Beyond service fee separately. It is not
           deducted from your listed rate.

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { ListingMoneyOrDash } from "@/components/i18n/Money";
+import { HostLocalAmount } from "@/components/stays/HostLocalAmount";
 import { formatBookingReference, formatDateRange, STAY_REQUEST_STATUS_LABELS, type ListingPricing } from "@/lib/stay-requests";
 import { Badge } from "@/components/ui/Badge";
 import type { StayRequest } from "@/types/database";
@@ -61,8 +61,8 @@ export function StayRequestTableRow({
         </Link>
       </td>
       <td className="px-4 py-4 align-middle text-right">
-        <Link href={href} className="block text-sm font-bold text-forest tabular-nums whitespace-nowrap">
-          <ListingMoneyOrDash amount={incomeTotal} listing={listingPricing} />
+        <Link href={href} className="block text-sm font-bold text-forest tabular-nums">
+          <HostLocalAmount amount={incomeTotal} listing={listingPricing} />
         </Link>
       </td>
       <td className="px-4 py-4 align-middle">
@@ -128,7 +128,7 @@ export function StayRequestListCard({
             Value
           </p>
           <p className="text-sm font-bold text-forest tabular-nums">
-            <ListingMoneyOrDash amount={incomeTotal} listing={listingPricing} />
+            <HostLocalAmount amount={incomeTotal} listing={listingPricing} />
           </p>
         </div>
 
